@@ -3,6 +3,7 @@ from dataclasses import asdict
 from enum import Enum
 from typing import Dict, Optional
 from torchrl.envs import EnvBase
+from torchrl.data import CompositeSpec
 import importlib
 import os
 import os.path as osp
@@ -53,3 +54,19 @@ class Task(Enum):
 
     def supports_discrete_actions(self) -> bool:
         raise NotImplementedError
+
+    def state_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
+        raise NotImplementedError
+
+    def observation_spec(self, env: EnvBase) -> CompositeSpec:
+        raise NotImplementedError
+
+    def info_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
+        raise NotImplementedError
+
+    def __repr__(self):
+        cls_name = self.__class__.__name__
+        return f"{cls_name}.{self.name}, config={self.config}"
+
+    def __str__(self):
+        return self.__repr__()
