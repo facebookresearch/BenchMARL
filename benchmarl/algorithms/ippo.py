@@ -15,7 +15,8 @@ from torchrl.data import (
 )
 from torchrl.data.replay_buffers.samplers import SamplerWithoutReplacement
 from torchrl.data.replay_buffers.storages import LazyTensorStorage
-from torchrl.modules import MaskedCategorical, ProbabilisticActor, TanhNormal
+from torchrl.modules import ProbabilisticActor, TanhNormal
+from torchrl.modules.distributions import MaskedCategorical
 from torchrl.objectives import ClipPPOLoss, LossModule, ValueEstimators
 from torchrl.objectives.utils import TargetNetUpdater
 
@@ -24,7 +25,7 @@ from benchmarl.models.common import ModelConfig
 from benchmarl.utils import DEVICE_TYPING
 
 
-class Mappo(Algorithm):
+class Ippo(Algorithm):
     def __init__(
         self,
         share_param_actor: bool,
@@ -201,7 +202,7 @@ class Mappo(Algorithm):
     def _get_policy_for_collection(
         self, policy_for_loss: TensorDictModule, group: str, continuous: bool
     ) -> TensorDictModule:
-        # MAPPO uses the same stochastic actor for collection
+        # IPPO uses the same stochastic actor for collection
         return policy_for_loss
 
     def process_batch(self, group: str, batch: TensorDictBase) -> TensorDictBase:
@@ -260,76 +261,44 @@ class Mappo(Algorithm):
 
     def get_critic(self, group: str) -> TensorDictModule:
         n_agents = len(self.group_map[group])
-        if self.share_param_critic:
-            critic_output_spec = CompositeSpec(
-                {"state_value": UnboundedContinuousTensorSpec(shape=(1,))}
-            )
-        else:
-            critic_output_spec = CompositeSpec(
-                {
-                    group: CompositeSpec(
-                        {
-                            "state_value": UnboundedContinuousTensorSpec(
-                                shape=(n_agents, 1)
-                            )
-                        },
-                        shape=(n_agents,),
-                    )
-                }
-            )
 
-        if self.state_spec is not None:
-            value_module = self.model_config.get_model(
-                input_spec=self.state_spec,
-                output_spec=critic_output_spec,
-                n_agents=n_agents,
-                centralised=True,
-                input_has_agent_dim=False,
-                agent_group=group,
-                share_params=self.share_param_critic,
-                device=self.device,
-            )
-
-        else:
-            critic_input_spec = CompositeSpec(
-                {
-                    group: CompositeSpec(
-                        {
-                            "observation": self.observation_spec[group]["observation"]
-                            .clone()
-                            .to(self.device)
-                        },
-                        shape=(n_agents,),
-                    )
-                }
-            )
-            value_module = self.model_config.get_model(
-                input_spec=critic_input_spec,
-                output_spec=critic_output_spec,
-                n_agents=n_agents,
-                centralised=True,
-                input_has_agent_dim=True,
-                agent_group=group,
-                share_params=self.share_param_critic,
-                device=self.device,
-            )
-        if self.share_param_critic:
-            expand_module = TensorDictModule(
-                lambda value: value.unsqueeze(-1).expand(
-                    *value.shape[:-1], n_agents, 1
-                ),
-                in_keys=["state_value"],
-                out_keys=[(group, "state_value")],
-            )
-            value_module = TensorDictSequential(value_module, expand_module)
+        critic_input_spec = CompositeSpec(
+            {
+                group: CompositeSpec(
+                    {
+                        "observation": self.observation_spec[group]["observation"]
+                        .clone()
+                        .to(self.device)
+                    },
+                    shape=(n_agents,),
+                )
+            }
+        )
+        critic_output_spec = CompositeSpec(
+            {
+                group: CompositeSpec(
+                    {"state_value": UnboundedContinuousTensorSpec(shape=(n_agents, 1))},
+                    shape=(n_agents,),
+                )
+            }
+        )
+        value_module = self.model_config.get_model(
+            input_spec=critic_input_spec,
+            output_spec=critic_output_spec,
+            n_agents=n_agents,
+            centralised=False,
+            input_has_agent_dim=True,
+            agent_group=group,
+            share_params=self.share_param_critic,
+            device=self.device,
+        )
 
         return value_module
 
 
 @dataclass
-class MappoConfig(AlgorithmConfig):
-
-    # You can add any kwargs from benchmarl.algorithms.Mappo
+class IppoConfig(AlgorithmConfig):
+    # You can add any kwargs from benchmarl.algorithms.Ippo
 
     share_param_actor: bool = True
     share_param_critic: bool = True
@@ -342,4 +311,4 @@ class MappoConfig(AlgorithmConfig):
 
     @staticmethod
     def associated_class() -> Type[Algorithm]:
-        return Mappo
+        return Ippo

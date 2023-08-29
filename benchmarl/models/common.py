@@ -1,88 +1,139 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from typing import Tuple, Sequence
+from dataclasses import asdict, dataclass
+from typing import List, Sequence
 
-import torch
-from dataclasses import asdict
-from torch import nn
+from tensordict import TensorDictBase
+from tensordict.nn import TensorDictModuleBase, TensorDictSequential
+from torchrl.data import CompositeSpec, UnboundedContinuousTensorSpec
 
 from benchmarl.utils import DEVICE_TYPING
 
 
-class Model(nn.Module, ABC):
+def _check_spec(tensordict, spec):
+    if not spec.is_in(tensordict):
+        raise ValueError(f"TensorDict {tensordict} not in spec {spec}")
+
+
+def output_has_agent_dim(share_params: bool, centralised: bool) -> bool:
+    if share_params and centralised:
+        return False
+    else:
+        return True
+
+
+class Model(TensorDictModuleBase, ABC):
     def __init__(
         self,
+        input_spec: CompositeSpec,
+        output_spec: CompositeSpec,
+        agent_group: str,
+        input_has_agent_dim: bool,
         n_agents: int,
-        input_features_shape: Tuple[int],
-        output_features_shape: Tuple[int],
         centralised: bool,
         share_params: bool,
         device: DEVICE_TYPING,
-        **kwargs
+        **kwargs,
     ):
-        nn.Module.__init__(self)
+        TensorDictModuleBase.__init__(self)
 
-        self.n_agents = n_agents
-        self.input_features_shape = input_features_shape
-        self.output_features_shape = output_features_shape
+        self.input_spec = input_spec
+        self.output_spec = output_spec
+        self.agent_group = agent_group
+        self.input_has_agent_dim = input_has_agent_dim
         self.centralised = centralised
         self.share_params = share_params
         self.device = device
+        self.n_agents = n_agents
+
+        self.in_keys = list(self.input_spec.keys(True, True))
+        self.out_keys = list(self.output_spec.keys(True, True))
+
+        self.in_key = self.in_keys[0]
+        self.out_key = self.out_keys[0]
+        self.input_leaf_spec = self.input_spec[self.in_key]
+        self.output_leaf_spec = self.output_spec[self.out_key]
+
+        self._perform_checks()
+
+    @property
+    def output_has_agent_dim(self) -> bool:
+        return output_has_agent_dim(self.share_params, self.centralised)
+
+    def _perform_checks(self):
+        if not self.input_has_agent_dim and not self.centralised:
+            assert False
+
+        if len(self.in_keys) > 1:
+            assert False
+        if len(self.out_keys) > 1:
+            assert False
+
+        if self.agent_group in self.input_spec.keys() and self.input_spec[
+            self.agent_group
+        ].shape != (self.n_agents,):
+            assert False
+        if self.agent_group in self.output_spec.keys() and self.output_spec[
+            self.agent_group
+        ].shape != (self.n_agents,):
+            assert False
+
+    def forward(self, tensordict: TensorDictBase) -> TensorDictBase:
+        _check_spec(tensordict, self.input_spec)
+        tensordict = self._forward(tensordict)
+        _check_spec(tensordict, self.output_spec)
+        return tensordict
+
+    ###############################
+    # Abstract methods to implement
+    ###############################
+
+    @abstractmethod
+    def _forward(self, tensordict: TensorDictBase) -> TensorDictBase:
+        raise NotImplementedError
 
 
 class SequenceModel(Model):
     def __init__(
         self,
-        models: Sequence[Model],
+        models: List[Model],
     ):
-        for model in models:
-            if model.n_agents != models[0].n_agents:
-                raise ValueError(
-                    "n_agents hase different values for models in the sequence"
-                )
-            if model.centralised != models[0].centralised:
-                raise ValueError(
-                    "centralised hase different values for models in the sequence"
-                )
-            if model.share_params != models[0].share_params:
-                raise ValueError(
-                    "share_params hase different values for models in the sequence"
-                )
-            if model.device != models[0].device:
-                raise ValueError(
-                    "n_agents hase different values for models in the sequence"
-                )
 
         super().__init__(
             n_agents=models[0].n_agents,
-            input_features_shape=models[0].input_features_shape,
-            output_features_shape=models[-1].output_features_shape,
+            input_spec=models[0].input_spec,
+            output_spec=models[-1].output_spec,
             centralised=models[0].centralised,
             share_params=models[0].share_params,
             device=models[0].device,
+            agent_group=models[0].agent_group,
+            input_has_agent_dim=models[0].input_has_agent_dim,
         )
-        self.sequence = nn.Sequential(*models)
+        self.models = TensorDictSequential(*models)
 
-    def forward(self, *inputs):
-        return self.sequence.forward(*inputs)
+    def _forward(self, tensordict: TensorDictBase) -> TensorDictBase:
+        return self.models(tensordict)
 
 
 @dataclass
 class ModelConfig(ABC):
     def get_model(
         self,
+        input_spec: CompositeSpec,
+        output_spec: CompositeSpec,
+        agent_group: str,
+        input_has_agent_dim: bool,
         n_agents: int,
-        input_features_shape: Tuple[int],
-        output_features_shape: Tuple[int],
         centralised: bool,
         share_params: bool,
         device: DEVICE_TYPING,
     ) -> Model:
         return self.associated_class()(
             **asdict(self),
+            input_spec=input_spec,
+            output_spec=output_spec,
+            agent_group=agent_group,
+            input_has_agent_dim=input_has_agent_dim,
             n_agents=n_agents,
-            input_features_shape=input_features_shape,
-            output_features_shape=output_features_shape,
             centralised=centralised,
             share_params=share_params,
             device=device,
@@ -94,14 +145,69 @@ class ModelConfig(ABC):
         raise NotImplementedError
 
 
+@dataclass
 class SequenceModelConfig(ModelConfig):
-    def __init__(self, model_configs: Sequence[ModelConfig]):
-        self.model_configs = model_configs
 
-    def get_model(self, **kwargs) -> Model:
-        return SequenceModel(
-            [model_config.get_model(**kwargs) for model_config in self.model_configs]
-        )
+    model_configs: Sequence[ModelConfig]
+    intermediate_sizes: Sequence[int]
+
+    def get_model(
+        self,
+        input_spec: CompositeSpec,
+        output_spec: CompositeSpec,
+        agent_group: str,
+        input_has_agent_dim: bool,
+        n_agents: int,
+        centralised: bool,
+        share_params: bool,
+        device: DEVICE_TYPING,
+    ) -> Model:
+
+        n_models = len(self.model_configs)
+        assert n_models > 0
+        assert len(self.intermediate_sizes) == n_models - 1
+
+        out_has_agent_dim = output_has_agent_dim(share_params, centralised)
+        next_centralised = not out_has_agent_dim
+        intermediate_specs = [
+            CompositeSpec(
+                {
+                    f"_{agent_group}_intermediate_{i}": UnboundedContinuousTensorSpec(
+                        shape=(n_agents, size) if out_has_agent_dim else (size,)
+                    )
+                }
+            )
+            for i, size in enumerate(self.intermediate_sizes)
+        ] + [output_spec]
+
+        models = [
+            self.model_configs[0].get_model(
+                input_spec=input_spec,
+                output_spec=intermediate_specs[0],
+                agent_group=agent_group,
+                input_has_agent_dim=input_has_agent_dim,
+                n_agents=n_agents,
+                centralised=centralised,
+                share_params=share_params,
+                device=device,
+            )
+        ]
+
+        next_models = [
+            self.model_configs[i].get_model(
+                input_spec=intermediate_specs[i - 1],
+                output_spec=intermediate_specs[i],
+                agent_group=agent_group,
+                input_has_agent_dim=out_has_agent_dim,
+                n_agents=n_agents,
+                centralised=next_centralised,
+                share_params=share_params,
+                device=device,
+            )
+            for i in range(1, n_models)
+        ]
+        models += next_models
+        return SequenceModel(models)
 
     @staticmethod
     def associated_class():

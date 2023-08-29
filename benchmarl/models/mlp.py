@@ -1,60 +1,93 @@
 from dataclasses import dataclass
-from typing import Optional, Sequence, Type, Tuple
+from typing import Optional, Sequence, Type
 
 import torch
+from tensordict import TensorDictBase
 from torch import nn
-from torchrl.modules import MultiAgentMLP
+from torchrl.modules import MLP, MultiAgentMLP
 
-
-from benchmarl.models.common import ModelConfig, Model
-from benchmarl.utils import DEVICE_TYPING
+from benchmarl.models.common import Model, ModelConfig
 
 
 class Mlp(Model):
     def __init__(
         self,
-        n_agents: int,
-        input_features_shape: Tuple[int],
-        output_features_shape: Tuple[int],
-        centralised: bool,
-        share_params: bool,
-        device: DEVICE_TYPING,
         **kwargs,
     ):
         super().__init__(
-            n_agents=n_agents,
-            input_features_shape=input_features_shape,
-            output_features_shape=output_features_shape,
-            centralised=centralised,
-            share_params=share_params,
-            device=device,
-        )
-        if len(self.input_features_shape) != 1:
-            raise ValueError(
-                f"Input feature shape of MLP must be one dimensional, got {self.input_features_shape}"
-            )
-        if len(self.output_features_shape) != 1:
-            raise ValueError(
-                f"Output feature shape of MLP must be one dimensional, got {self.output_features_shape}"
-            )
-
-        self.mlp = MultiAgentMLP(
-            n_agent_inputs=self.input_features_shape[0],
-            n_agent_outputs=self.output_features_shape[0],
-            n_agents=self.n_agents,
-            centralised=self.centralised,
-            share_params=self.share_params,
-            device=self.device,
-            **kwargs,
+            input_spec=kwargs.pop("input_spec"),
+            output_spec=kwargs.pop("output_spec"),
+            agent_group=kwargs.pop("agent_group"),
+            input_has_agent_dim=kwargs.pop("input_has_agent_dim"),
+            n_agents=kwargs.pop("n_agents"),
+            centralised=kwargs.pop("centralised"),
+            share_params=kwargs.pop("share_params"),
+            device=kwargs.pop("device"),
         )
 
-    def forward(self, *inputs: Tuple[torch.Tensor]) -> torch.Tensor:
-        return self.mlp.forward(*inputs)
+        self.input_features = self.input_leaf_spec.shape[-1]
+        self.output_features = self.output_leaf_spec.shape[-1]
+
+        if self.input_has_agent_dim:
+            self.mlp = MultiAgentMLP(
+                n_agent_inputs=self.input_features,
+                n_agent_outputs=self.output_features,
+                n_agents=self.n_agents,
+                centralised=self.centralised,
+                share_params=self.share_params,
+                device=self.device,
+                **kwargs,
+            )
+        else:
+            self.mlp = nn.ModuleList(
+                [
+                    MLP(
+                        in_features=self.input_features,
+                        out_features=self.output_features,
+                        device=self.device,
+                        **kwargs,
+                    )
+                    for _ in range(self.n_agents if not self.share_params else 1)
+                ]
+            )
+
+    def _perform_checks(self):
+        super()._perform_checks()
+
+        if self.input_has_agent_dim and self.input_leaf_spec.shape[-2] != self.n_agents:
+            assert False
+        if (
+            self.output_has_agent_dim
+            and self.output_leaf_spec.shape[-2] != self.n_agents
+        ):
+            assert False
+
+    def _forward(self, tensordict: TensorDictBase) -> TensorDictBase:
+        # Gather in_key
+        input = tensordict.get(self.in_key)
+
+        # Has multi-agent input dimension
+        if self.input_has_agent_dim:
+            res = self.mlp.forward(input)
+            if not self.output_has_agent_dim:
+                res = res[..., 0, :]
+
+        # Does not have multi-agent input dimension
+        else:
+            if not self.share_params:
+                res = torch.stack(
+                    [net(input) for net in self.mlp],
+                    dim=-2,
+                )
+            else:
+                res = self.mlp[0](input)
+
+        tensordict.set(self.out_key, res)
+        return tensordict
 
 
 @dataclass
 class MlpConfig(ModelConfig):
-
     # You can add any kwargs from torchrl.modules.MLP
 
     num_cells: Sequence[int] = (256, 256)
@@ -69,16 +102,3 @@ class MlpConfig(ModelConfig):
     @staticmethod
     def associated_class():
         return Mlp
-
-
-if __name__ == "__main__":
-    print(
-        MlpConfig().get_model(
-            n_agents=3,
-            input_features_shape=(30,),
-            output_features_shape=(20,),
-            centralised=True,
-            share_params=False,
-            device="cpu",
-        )
-    )

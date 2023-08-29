@@ -1,12 +1,11 @@
-import sys
-from dataclasses import asdict
-from enum import Enum
-from typing import Dict, Optional
-from torchrl.envs import EnvBase
-from torchrl.data import CompositeSpec
 import importlib
 import os
 import os.path as osp
+from enum import Enum
+from typing import Dict, List, Optional
+
+from torchrl.data import CompositeSpec
+from torchrl.envs import EnvBase
 
 
 def load_config(name: str):
@@ -14,7 +13,7 @@ def load_config(name: str):
         name += ".py"
 
     pathname = None
-    for dirpath, dirnames, filenames in os.walk(osp.dirname(__file__)):
+    for dirpath, _, filenames in os.walk(osp.dirname(__file__)):
         if pathname is None:
             for filename in filenames:
                 if filename == name:
@@ -27,7 +26,7 @@ def load_config(name: str):
     spec = importlib.util.spec_from_file_location("", pathname)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    config = asdict(module.TaskConfig())
+    config = module.TaskConfig().__dict__
     return config
 
 
@@ -55,7 +54,7 @@ class Task(Enum):
     def supports_discrete_actions(self) -> bool:
         raise NotImplementedError
 
-    def state_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
+    def group_map(self, env: EnvBase) -> Dict[str, List[str]]:
         raise NotImplementedError
 
     def observation_spec(self, env: EnvBase) -> CompositeSpec:
@@ -64,9 +63,18 @@ class Task(Enum):
     def info_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
         raise NotImplementedError
 
+    def state_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
+        raise NotImplementedError
+
+    def action_spec(self, env: EnvBase) -> CompositeSpec:
+        raise NotImplementedError
+
+    def action_mask_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
+        raise NotImplementedError
+
     def __repr__(self):
         cls_name = self.__class__.__name__
-        return f"{cls_name}.{self.name}, config={self.config}"
+        return f"{cls_name}.{self.name}: (config={self.config})"
 
     def __str__(self):
         return self.__repr__()
