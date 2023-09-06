@@ -5,6 +5,7 @@ from .maddpg import Maddpg, MaddpgConfig
 from .mappo import Mappo, MappoConfig
 from .masac import Masac, MasacConfig
 from .qmix import Qmix, QmixConfig
+from .vdn import Vdn, VdnConfig
 
 all_algorithm_configs = (
     IppoConfig,
@@ -14,4 +15,5 @@ all_algorithm_configs = (
     MasacConfig,
     IsacConfig,
     QmixConfig,
+    VdnConfig,
 )
