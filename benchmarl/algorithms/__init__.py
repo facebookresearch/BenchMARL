@@ -4,6 +4,7 @@ from .isac import Isac, IsacConfig
 from .maddpg import Maddpg, MaddpgConfig
 from .mappo import Mappo, MappoConfig
 from .masac import Masac, MasacConfig
+from .qmix import Qmix, QmixConfig
 
 all_algorithm_configs = (
     IppoConfig,
@@ -12,4 +13,5 @@ all_algorithm_configs = (
     IddpgConfig,
     MasacConfig,
     IsacConfig,
+    QmixConfig,
 )
