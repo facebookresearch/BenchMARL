@@ -74,10 +74,9 @@ class Maddpg(Algorithm):
             # Loss
             loss_module = DDPGLoss(
                 actor_network=policy_for_loss,
-                value_network=self.get_critic(group),
+                value_network=self.get_value_module(group),
                 delay_value=self.delay_value,
                 loss_function=self.loss_function,
-                gamma=self.experiment_config.gamma,
             )
             loss_module.set_keys(
                 state_action_value=(group, "state_action_value"),
@@ -214,7 +213,7 @@ class Maddpg(Algorithm):
     # Custom new methods
     #####################
 
-    def get_critic(self, group: str) -> TensorDictModule:
+    def get_value_module(self, group: str) -> TensorDictModule:
         n_agents = len(self.group_map[group])
         modules = []
 
@@ -314,7 +313,7 @@ class Maddpg(Algorithm):
         if self.share_param_critic:
             modules.append(
                 TensorDictModule(
-                    lambda value: value.unsqueeze(-1).expand(
+                    lambda value: value.unsqueeze(-2).expand(
                         *value.shape[:-1], n_agents, 1
                     ),
                     in_keys=["state_action_value"],

@@ -315,7 +315,7 @@ class Mappo(Algorithm):
             )
         if self.share_param_critic:
             expand_module = TensorDictModule(
-                lambda value: value.unsqueeze(-1).expand(
+                lambda value: value.unsqueeze(-2).expand(
                     *value.shape[:-1], n_agents, 1
                 ),
                 in_keys=["state_value"],
