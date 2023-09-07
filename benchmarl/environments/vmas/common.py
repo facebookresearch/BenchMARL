@@ -1,14 +1,18 @@
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from torchrl.data import CompositeSpec
 from torchrl.envs import EnvBase
 from torchrl.envs.libs.vmas import VmasEnv
 
-from benchmarl.environments.common import load_config, Task
+from benchmarl.environments.common import Task
+
+
+def get_from_yaml(task_name: str) -> Dict[str, Any]:
+    return Task.get_from_yaml("vmas", task_name)
 
 
 class VmasTask(Task):
-    BALANCE = load_config("balance")
+    BALANCE = get_from_yaml("balance")
 
     def get_env(
         self,

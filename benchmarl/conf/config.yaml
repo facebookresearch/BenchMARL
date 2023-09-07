@@ -1,0 +1,7 @@
+defaults:
+  - _self_
+  - experiment: base_experiment
+  - algorithm: mappo
+  - task: vmas/balance
+
+seed: 0

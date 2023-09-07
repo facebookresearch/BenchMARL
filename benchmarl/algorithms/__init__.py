@@ -8,6 +8,8 @@ from .masac import Masac, MasacConfig
 from .qmix import Qmix, QmixConfig
 from .vdn import Vdn, VdnConfig
 
+algorithm_config_registry = {"mappo": MappoConfig}
+
 all_algorithm_configs = (
     IppoConfig,
     MappoConfig,

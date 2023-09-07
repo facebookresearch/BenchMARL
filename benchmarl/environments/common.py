@@ -1,14 +1,16 @@
 import importlib
 import os
 import os.path as osp
+import pathlib
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from torchrl.data import CompositeSpec
 from torchrl.envs import EnvBase
+from utils import read_yaml_file
 
 
-def load_config(name: str):
+def _load_config(name: str, config: Dict[str, Any]):
     if not name.endswith(".py"):
         name += ".py"
 
@@ -26,8 +28,7 @@ def load_config(name: str):
     spec = importlib.util.spec_from_file_location("", pathname)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    config = module.TaskConfig().__dict__
-    return config
+    return module.TaskConfig(**config).__dict__
 
 
 class Task(Enum):
@@ -39,6 +40,10 @@ class Task(Enum):
 
     def __init__(self, config: Dict):
         self.config = config
+
+    def update_config(self, config: Dict[str, Any]):
+        self.config.update(config)
+        return self
 
     def get_env(
         self,
@@ -78,3 +83,17 @@ class Task(Enum):
 
     def __str__(self):
         return self.__repr__()
+
+    @staticmethod
+    def get_from_yaml(environment_name: str, task_name: str) -> Dict[str, Any]:
+        yaml_path = (
+            pathlib.Path(__file__).parent.parent
+            / "conf"
+            / "task"
+            / environment_name
+            / f"{task_name.lower()}.yaml"
+        )
+        config = read_yaml_file(str(yaml_path.resolve()))
+        del config["defaults"]
+        config = _load_config(task_name, config)
+        return config

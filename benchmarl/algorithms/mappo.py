@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+import pathlib
+from dataclasses import dataclass, MISSING
 from typing import Dict, Type
 
 import torch
@@ -242,18 +243,6 @@ class Mappo(Algorithm):
         del loss_vals["loss_entropy"]
         return loss_vals
 
-    @staticmethod
-    def supports_continuous_actions() -> bool:
-        return True
-
-    @staticmethod
-    def supports_discrete_actions() -> bool:
-        return True
-
-    @staticmethod
-    def on_policy() -> bool:
-        return True
-
     #####################
     # Custom new methods
     #####################
@@ -329,17 +318,32 @@ class Mappo(Algorithm):
 @dataclass
 class MappoConfig(AlgorithmConfig):
 
-    # You can add any kwargs from benchmarl.algorithms.Mappo
+    share_param_actor: bool = MISSING
+    share_param_critic: bool = MISSING
+    clip_epsilon: float = MISSING
+    entropy_coef: float = MISSING
+    critic_coef: float = MISSING
+    loss_critic_type: str = MISSING
+    lmbda: float = MISSING
 
-    share_param_actor: bool = True
-    share_param_critic: bool = True
-
-    clip_epsilon: float = 0.2
-    entropy_coef: bool = 0.0
-    critic_coef: float = 1.0
-    loss_critic_type: str = "l2"
-    lmbda: float = 0.9
+    @staticmethod
+    def get_from_yaml():
+        return MappoConfig(
+            **MappoConfig._load_from_yaml(name=MappoConfig.associated_class().__name__)
+        )
 
     @staticmethod
     def associated_class() -> Type[Algorithm]:
         return Mappo
+
+    @staticmethod
+    def supports_continuous_actions() -> bool:
+        return True
+
+    @staticmethod
+    def supports_discrete_actions() -> bool:
+        return True
+
+    @staticmethod
+    def on_policy() -> bool:
+        return True

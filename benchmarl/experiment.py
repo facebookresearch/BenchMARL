@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, MISSING
+from typing import Any
 
 from torchrl.collectors import SyncDataCollector
 
@@ -11,25 +12,25 @@ from benchmarl.utils import DEVICE_TYPING
 @dataclass
 class ExperimentConfig:
 
-    sampling_device: DEVICE_TYPING = "cpu"
-    train_device: DEVICE_TYPING = "cpu"
+    sampling_device: str = MISSING
+    train_device: str = MISSING
 
-    gamma: float = 0.9
-    polyak_tau: float = 0.005
+    gamma: float = MISSING
+    polyak_tau: float = MISSING
 
-    lr: float = 3e-5
-    n_optimizer_steps: int = 10
-    collected_frames_per_batch: int = 1000
-    n_collection_envs: int = 1
-    n_iters: int = 100
-    prefer_continuous_actions: bool = True
+    lr: float = MISSING
+    n_optimizer_steps: int = MISSING
+    collected_frames_per_batch: int = MISSING
+    n_collection_envs: int = MISSING
+    n_iters: int = MISSING
+    prefer_continuous_actions: bool = MISSING
 
-    on_policy_minibatch_size: int = 100
+    on_policy_minibatch_size: int = MISSING
 
-    off_policy_memory_size: int = 100_000
-    off_policy_train_batch_size: int = 10_000
-    off_policy_prioritised_alpha: float = 0.7
-    off_policy_prioritised_beta: float = 0.5
+    off_policy_memory_size: int = MISSING
+    off_policy_train_batch_size: int = MISSING
+    off_policy_prioritised_alpha: float = MISSING
+    off_policy_prioritised_beta: float = MISSING
 
     def train_batch_size(self, on_policy: bool) -> int:
         return (
@@ -87,7 +88,7 @@ class Experiment:
 
     @property
     def on_policy(self) -> bool:
-        return self.algorithm_config.associated_class().on_policy()
+        return self.algorithm_config.on_policy()
 
     def _setup(self):
         self._set_action_type()
@@ -98,23 +99,23 @@ class Experiment:
     def _set_action_type(self):
         if (
             self.task.supports_continuous_actions()
-            and self.algorithm_config.associated_class().supports_continuous_actions()
+            and self.algorithm_config.supports_continuous_actions()
             and self.config.prefer_continuous_actions
         ):
             self.continuous_actions = True
         elif (
             self.task.supports_discrete_actions()
-            and self.algorithm_config.associated_class().supports_discrete_actions()
+            and self.algorithm_config.supports_discrete_actions()
         ):
             self.continuous_actions = False
         elif (
             self.task.supports_continuous_actions()
-            and self.algorithm_config.associated_class().supports_continuous_actions()
+            and self.algorithm_config.supports_continuous_actions()
         ):
             self.continuous_actions = True
         else:
             raise ValueError(
-                f"Algorithm {self.algorithm_config.associated_class()} is not compatible"
+                f"Algorithm {self.algorithm_config} is not compatible"
                 f" with the action space of task {self.task} "
             )
 

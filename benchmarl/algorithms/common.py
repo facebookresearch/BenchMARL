@@ -1,6 +1,7 @@
+import pathlib
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple, Type
+from dataclasses import dataclass, MISSING
+from typing import Any, Dict, List, Optional, Tuple, Type
 
 import torch.optim
 from tensordict import TensorDictBase
@@ -15,7 +16,7 @@ from torchrl.objectives import LossModule
 from torchrl.objectives.utils import TargetNetUpdater
 
 from benchmarl.models.common import ModelConfig
-from benchmarl.utils import DEVICE_TYPING
+from benchmarl.utils import DEVICE_TYPING, read_yaml_file
 
 
 class Algorithm(ABC):
@@ -210,6 +211,51 @@ class Algorithm(ABC):
     ) -> TensorDictBase:
         return loss_vals
 
+
+@dataclass
+class AlgorithmConfig:
+    def get_algorithm(
+        self,
+        experiment_config,
+        model_config: ModelConfig,
+        observation_spec: CompositeSpec,
+        action_spec: CompositeSpec,
+        state_spec: CompositeSpec,
+        action_mask_spec: Optional[CompositeSpec],
+        group_map: Dict[str, List[str]],
+    ) -> Algorithm:
+        return self.associated_class(
+            **self.__dict__,
+            experiment_config=experiment_config,
+            model_config=model_config,
+            observation_spec=observation_spec,
+            action_spec=action_spec,
+            state_spec=state_spec,
+            action_mask_spec=action_mask_spec,
+            group_map=group_map,
+        )
+
+    @staticmethod
+    def _load_from_yaml(name: str) -> Dict[str, Any]:
+        yaml_path = (
+            pathlib.Path(__file__).parent.parent
+            / "conf"
+            / "algorithm"
+            / f"{name.lower()}.yaml"
+        )
+        config = read_yaml_file(str(yaml_path.resolve()))
+        del config["defaults"]
+        return config
+
+    @staticmethod
+    def get_from_yaml():
+        raise NotImplementedError
+
+    @staticmethod
+    @abstractmethod
+    def associated_class() -> Type[Algorithm]:
+        raise NotImplementedError
+
     @staticmethod
     @abstractmethod
     def on_policy() -> bool:
@@ -223,33 +269,4 @@ class Algorithm(ABC):
     @staticmethod
     @abstractmethod
     def supports_discrete_actions() -> bool:
-        raise NotImplementedError
-
-
-@dataclass
-class AlgorithmConfig(ABC):
-    def get_algorithm(
-        self,
-        experiment_config,
-        model_config: ModelConfig,
-        observation_spec: CompositeSpec,
-        action_spec: CompositeSpec,
-        state_spec: CompositeSpec,
-        action_mask_spec: Optional[CompositeSpec],
-        group_map: Dict[str, List[str]],
-    ) -> Algorithm:
-        return self.associated_class()(
-            **self.__dict__,
-            experiment_config=experiment_config,
-            model_config=model_config,
-            observation_spec=observation_spec,
-            action_spec=action_spec,
-            state_spec=state_spec,
-            action_mask_spec=action_mask_spec,
-            group_map=group_map,
-        )
-
-    @staticmethod
-    @abstractmethod
-    def associated_class() -> Type[Algorithm]:
         raise NotImplementedError
