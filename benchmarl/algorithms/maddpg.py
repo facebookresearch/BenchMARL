@@ -1,5 +1,5 @@
-from dataclasses import dataclass
-from typing import Dict, Type
+from dataclasses import dataclass, MISSING
+from typing import Dict, Optional, Type
 
 import torch
 from black import Tuple
@@ -25,7 +25,7 @@ from torchrl.objectives.utils import TargetNetUpdater
 
 from benchmarl.algorithms.common import Algorithm, AlgorithmConfig
 from benchmarl.models.common import ModelConfig
-from benchmarl.utils import DEVICE_TYPING
+from benchmarl.utils import DEVICE_TYPING, read_yaml_config
 
 
 class Maddpg(Algorithm):
@@ -197,18 +197,6 @@ class Maddpg(Algorithm):
 
         return batch
 
-    @staticmethod
-    def supports_continuous_actions() -> bool:
-        return True
-
-    @staticmethod
-    def supports_discrete_actions() -> bool:
-        return False
-
-    @staticmethod
-    def on_policy() -> bool:
-        return False
-
     #####################
     # Custom new methods
     #####################
@@ -326,14 +314,36 @@ class Maddpg(Algorithm):
 
 @dataclass
 class MaddpgConfig(AlgorithmConfig):
-    # You can add any kwargs from benchmarl.algorithms.Maddpg
 
-    share_param_actor: bool = True
-    share_param_critic: bool = True
+    share_param_actor: bool = MISSING
+    share_param_critic: bool = MISSING
 
-    loss_function: str = "l2"
-    delay_value: bool = True
+    loss_function: str = MISSING
+    delay_value: bool = MISSING
 
     @staticmethod
     def associated_class() -> Type[Algorithm]:
         return Maddpg
+
+    @staticmethod
+    def supports_continuous_actions() -> bool:
+        return True
+
+    @staticmethod
+    def supports_discrete_actions() -> bool:
+        return False
+
+    @staticmethod
+    def on_policy() -> bool:
+        return False
+
+    @staticmethod
+    def get_from_yaml(path: Optional[str] = None):
+        if path is None:
+            return MaddpgConfig(
+                **AlgorithmConfig._load_from_yaml(
+                    name=MaddpgConfig.associated_class().__name__,
+                )
+            )
+        else:
+            return MaddpgConfig(**read_yaml_config(path))

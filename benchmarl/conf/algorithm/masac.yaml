@@ -1,0 +1,17 @@
+defaults:
+  - _self_
+  - masac_config
+
+
+share_param_actor: True
+share_param_critic: True
+
+num_qvalue_nets: 2
+loss_function: "l2"
+delay_qvalue: True
+target_entropy: "auto"
+
+alpha_init: 1.0
+min_alpha: null
+max_alpha: null
+fixed_alpha: False

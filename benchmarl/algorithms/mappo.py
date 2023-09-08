@@ -326,17 +326,6 @@ class MappoConfig(AlgorithmConfig):
     lmbda: float = MISSING
 
     @staticmethod
-    def get_from_yaml(path: Optional[str] = None):
-        if path is None:
-            return MappoConfig(
-                **MappoConfig._load_from_yaml(
-                    name=MappoConfig.associated_class().__name__,
-                )
-            )
-        else:
-            return MappoConfig(**read_yaml_config(path))
-
-    @staticmethod
     def associated_class() -> Type[Algorithm]:
         return Mappo
 
@@ -351,3 +340,14 @@ class MappoConfig(AlgorithmConfig):
     @staticmethod
     def on_policy() -> bool:
         return True
+
+    @staticmethod
+    def get_from_yaml(path: Optional[str] = None):
+        if path is None:
+            return MappoConfig(
+                **AlgorithmConfig._load_from_yaml(
+                    name=MappoConfig.associated_class().__name__,
+                )
+            )
+        else:
+            return MappoConfig(**read_yaml_config(path))

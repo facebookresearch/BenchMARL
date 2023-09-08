@@ -1,0 +1,8 @@
+defaults:
+  - _self_
+  - iql_config
+
+
+delay_value: True
+loss_function: "l2"
+share_params: True

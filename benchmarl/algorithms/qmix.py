@@ -1,5 +1,5 @@
-from dataclasses import dataclass
-from typing import Dict, Type
+from dataclasses import dataclass, MISSING
+from typing import Dict, Optional, Type
 
 import torch
 from black import Tuple
@@ -19,7 +19,7 @@ from torchrl.objectives.utils import SoftUpdate, TargetNetUpdater
 
 from benchmarl.algorithms.common import Algorithm, AlgorithmConfig
 from benchmarl.models.common import ModelConfig
-from benchmarl.utils import DEVICE_TYPING
+from benchmarl.utils import DEVICE_TYPING, read_yaml_config
 
 
 class Qmix(Algorithm):
@@ -191,18 +191,6 @@ class Qmix(Algorithm):
 
         return batch
 
-    @staticmethod
-    def supports_continuous_actions() -> bool:
-        return False
-
-    @staticmethod
-    def supports_discrete_actions() -> bool:
-        return True
-
-    @staticmethod
-    def on_policy() -> bool:
-        return False
-
     #####################
     # Custom new methods
     #####################
@@ -234,13 +222,35 @@ class Qmix(Algorithm):
 
 @dataclass
 class QmixConfig(AlgorithmConfig):
-    # You can add any kwargs from benchmarl.algorithms.Qmix
 
-    mixing_embed_dim: int = 32
-    delay_value: bool = True
-    loss_function: str = "l2"
-    share_params: bool = True
+    mixing_embed_dim: int = MISSING
+    delay_value: bool = MISSING
+    loss_function: str = MISSING
+    share_params: bool = MISSING
 
     @staticmethod
     def associated_class() -> Type[Algorithm]:
         return Qmix
+
+    @staticmethod
+    def supports_continuous_actions() -> bool:
+        return False
+
+    @staticmethod
+    def supports_discrete_actions() -> bool:
+        return True
+
+    @staticmethod
+    def on_policy() -> bool:
+        return False
+
+    @staticmethod
+    def get_from_yaml(path: Optional[str] = None):
+        if path is None:
+            return QmixConfig(
+                **AlgorithmConfig._load_from_yaml(
+                    name=QmixConfig.associated_class().__name__,
+                )
+            )
+        else:
+            return QmixConfig(**read_yaml_config(path))
