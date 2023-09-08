@@ -4,6 +4,7 @@ from benchmarl.environments import VmasTask
 from benchmarl.experiment import ExperimentConfig
 from benchmarl.models.common import SequenceModelConfig
 from benchmarl.models.mlp import MlpConfig
+from torch import nn
 
 if __name__ == "__main__":
 
@@ -20,8 +21,8 @@ if __name__ == "__main__":
     # Model still need to be refactored for hydra loading
     model_config = SequenceModelConfig(
         model_configs=[
-            MlpConfig(num_cells=[64, 64]),
-            MlpConfig(num_cells=[256]),
+            MlpConfig.get_from_yaml(),
+            MlpConfig(num_cells=[256], layer_class=nn.Linear, activation_class=nn.Tanh),
         ],
         intermediate_sizes=[128],
     )

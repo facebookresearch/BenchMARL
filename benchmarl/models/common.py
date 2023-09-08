@@ -1,17 +1,29 @@
+import pathlib
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass
-from typing import List, Sequence
+from typing import Any, Dict, List, Optional, Sequence
 
+from hydra.utils import get_class
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModuleBase, TensorDictSequential
 from torchrl.data import CompositeSpec, UnboundedContinuousTensorSpec
 
-from benchmarl.utils import DEVICE_TYPING
+from benchmarl.utils import DEVICE_TYPING, read_yaml_config
 
 
 def _check_spec(tensordict, spec):
     if not spec.is_in(tensordict):
         raise ValueError(f"TensorDict {tensordict} not in spec {spec}")
+
+
+def parse_model_config(cfg: Dict[str, Any]) -> Dict[str, Any]:
+    del cfg["name"]
+    kwargs = {}
+    for key, value in cfg.items():
+        if key.endswith("class") and value is not None:
+            value = get_class(cfg[key])
+        kwargs.update({key: value})
+    return kwargs
 
 
 def output_has_agent_dim(share_params: bool, centralised: bool) -> bool:
@@ -144,6 +156,23 @@ class ModelConfig(ABC):
     def associated_class():
         raise NotImplementedError
 
+    @staticmethod
+    def _load_from_yaml(name: str) -> Dict[str, Any]:
+        yaml_path = (
+            pathlib.Path(__file__).parent.parent
+            / "conf"
+            / "model"
+            / "layers"
+            / f"{name.lower()}.yaml"
+        )
+        cfg = read_yaml_config(str(yaml_path.resolve()))
+        return parse_model_config(cfg)
+
+    @staticmethod
+    @abstractmethod
+    def get_from_yaml(path: Optional[str] = None):
+        raise NotImplementedError
+
 
 @dataclass
 class SequenceModelConfig(ModelConfig):
@@ -211,4 +240,8 @@ class SequenceModelConfig(ModelConfig):
 
     @staticmethod
     def associated_class():
+        raise NotImplementedError
+
+    @staticmethod
+    def get_from_yaml(path: Optional[str] = None):
         raise NotImplementedError
