@@ -8,16 +8,14 @@ from .masac import Masac, MasacConfig
 from .qmix import Qmix, QmixConfig
 from .vdn import Vdn, VdnConfig
 
-algorithm_config_registry = {"mappo": MappoConfig}
-
-all_algorithm_configs = (
-    IppoConfig,
-    MappoConfig,
-    MaddpgConfig,
-    IddpgConfig,
-    MasacConfig,
-    IsacConfig,
-    QmixConfig,
-    VdnConfig,
-    IqlConfig,
-)
+algorithm_config_registry = {
+    "mappo": MappoConfig,
+    "ippo": IppoConfig,
+    "maddpg": MaddpgConfig,
+    "iddpg": IddpgConfig,
+    "masac": MasacConfig,
+    "isac": IsacConfig,
+    "qmix": QmixConfig,
+    "vdn": VdnConfig,
+    "iql": IqlConfig,
+}

@@ -2,11 +2,15 @@ import pathlib
 from dataclasses import dataclass, MISSING
 from typing import Optional
 
+from omegaconf import DictConfig
 from torchrl.collectors import SyncDataCollector
 
+from benchmarl import algorithm_config_registry
+
 from benchmarl.algorithms.common import AlgorithmConfig
-from benchmarl.environments import Task
+from benchmarl.environments import Task, task_config_registry
 from benchmarl.models.common import ModelConfig
+from benchmarl.models.mlp import MlpConfig
 from benchmarl.utils import read_yaml_config
 
 
@@ -229,3 +233,21 @@ class Experiment:
             if self.n_iters_performed >= self.config.n_iters:
                 break
         self.collector.shutdown()
+
+
+def load_experiment_from_hydra_config(
+    cfg: DictConfig, algo_name: str, task_name: str
+) -> Experiment:
+    algorithm_config = algorithm_config_registry[algo_name](**cfg.algorithm)
+    task_config = task_config_registry[task_name].update_config(cfg.task)
+    experiment_config = ExperimentConfig(**cfg.experiment)
+
+    model_config = MlpConfig(num_cells=[64, 64])
+
+    return Experiment(
+        task=task_config,
+        algorithm_config=algorithm_config,
+        model_config=model_config,
+        seed=cfg.seed,
+        config=experiment_config,
+    )

@@ -290,7 +290,7 @@ class IppoConfig(AlgorithmConfig):
     share_param_actor: bool = MISSING
     share_param_critic: bool = MISSING
     clip_epsilon: float = MISSING
-    entropy_coef: bool = MISSING
+    entropy_coef: float = MISSING
     critic_coef: float = MISSING
     loss_critic_type: str = MISSING
     lmbda: float = MISSING
