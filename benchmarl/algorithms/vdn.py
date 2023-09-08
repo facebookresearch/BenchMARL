@@ -13,7 +13,7 @@ from torchrl.data import (
 )
 from torchrl.data.replay_buffers.samplers import PrioritizedSampler
 from torchrl.data.replay_buffers.storages import LazyTensorStorage
-from torchrl.modules import EGreedyWrapper, QValueModule, VDNMixer
+from torchrl.modules import EGreedyModule, QValueModule, VDNMixer
 from torchrl.objectives import ClipPPOLoss, LossModule, QMixerLoss, ValueEstimators
 from torchrl.objectives.utils import SoftUpdate, TargetNetUpdater
 
@@ -136,11 +136,13 @@ class Vdn(Algorithm):
             device=self.device,
         )
         if self.action_mask_spec is not None:
-            raise NotImplementedError(
-                "action mask is not yet compatible with q value modules"
-            )
+            action_mask_key = (group, "action_mask")
+        else:
+            action_mask_key = None
+
         value_module = QValueModule(
             action_value_key=(group, "action_value"),
+            action_mask_key=action_mask_key,
             out_keys=[
                 (group, "action"),
                 (group, "action_value"),
@@ -155,15 +157,20 @@ class Vdn(Algorithm):
     def _get_policy_for_collection(
         self, policy_for_loss: TensorDictModule, group: str, continuous: bool
     ) -> TensorDictModule:
+        if self.action_mask_spec is not None:
+            action_mask_key = (group, "action_mask")
+        else:
+            action_mask_key = None
 
-        return EGreedyWrapper(
-            policy_for_loss,
+        greedy = EGreedyModule(
             annealing_num_steps=self.experiment_config.exploration_annealing_num_frames,
             action_key=(group, "action"),
             spec=self.action_spec[(group, "action")],
+            action_mask_key=action_mask_key,
             # eps_init = 1.0,
             # eps_end = 0.1,
         )
+        return TensorDictSequential(*policy_for_loss, greedy)
 
     def process_batch(self, group: str, batch: TensorDictBase) -> TensorDictBase:
         keys = list(batch.keys(True, True))

@@ -2,6 +2,7 @@ import pathlib
 from dataclasses import dataclass, MISSING
 from typing import Optional
 
+from tensordict.nn import TensorDictSequential
 from torchrl.collectors import SyncDataCollector
 
 from benchmarl.algorithms.common import AlgorithmConfig
@@ -175,6 +176,13 @@ class Experiment:
 
     def _setup_collector(self):
         self.policy = self.algorithm.get_policy_for_collection()
+
+        self.group_policies = {}
+        for group in self.group_map.keys():
+            group_policy = self.policy.select_subsequence(out_keys=[(group, "action")])
+            assert len(group_policy) == 1
+            self.group_policies.update({group: group_policy[0]})
+
         self.collector = SyncDataCollector(
             self.env,
             self.policy,
@@ -219,8 +227,14 @@ class Experiment:
                                 assert False
                         if self.target_updaters[group] is not None:
                             self.target_updaters[group].step()
-            if hasattr(self.policy, "step"):  # Step exploration annealing
-                self.policy.step(current_frames)
+
+                if isinstance(self.group_policies[group], TensorDictSequential):
+                    explore_layer = self.group_policies[group][-1]
+                else:
+                    explore_layer = self.group_policies[group]
+                if hasattr(explore_layer, "step"):  # Step exploration annealing
+                    explore_layer.step(current_frames)
+
             self.collector.update_policy_weights_()
 
             self.n_iters_performed += 1

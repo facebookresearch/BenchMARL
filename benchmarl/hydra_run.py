@@ -2,8 +2,7 @@ import hydra
 from hydra.core.hydra_config import HydraConfig
 from omegaconf import DictConfig
 
-from benchmarl import algorithm_config_registry
-
+from benchmarl.algorithms import algorithm_config_registry
 from benchmarl.environments import task_config_registry
 from benchmarl.experiment import Experiment, ExperimentConfig
 from benchmarl.models.common import ModelConfig

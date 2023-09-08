@@ -140,7 +140,7 @@ class Algorithm(ABC):
             )
         return self._policies_for_loss[group]
 
-    def get_policy_for_collection(self) -> TensorDictModule:
+    def get_policy_for_collection(self) -> TensorDictSequential:
         policies = []
         for group in self.group_map.keys():
             if group not in self._policies_for_collection.keys():

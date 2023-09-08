@@ -2,11 +2,8 @@ import pytest
 
 from benchmarl.algorithms import algorithm_config_registry
 from benchmarl.environments import VmasTask
-from benchmarl.experiment import (
-    Experiment,
-    ExperimentConfig,
-    load_experiment_from_hydra_config,
-)
+from benchmarl.experiment import Experiment, ExperimentConfig
+from benchmarl.hydra_run import load_experiment_from_hydra_config
 from benchmarl.models.common import SequenceModelConfig
 from benchmarl.models.mlp import MlpConfig
 from hydra import compose, initialize
@@ -47,7 +44,14 @@ def test_all_algos_hydra(algo_config):
         )
         task_name = cfg.hydra.runtime.choices.task
         algo_name = cfg.hydra.runtime.choices.algorithm
+        model_config = SequenceModelConfig(
+            model_configs=[
+                MlpConfig(num_cells=[8]),
+                MlpConfig(num_cells=[4]),
+            ],
+            intermediate_sizes=[5],
+        )
         experiment = load_experiment_from_hydra_config(
-            cfg, algo_name=algo_name, task_name=task_name
+            cfg, algo_name=algo_name, task_name=task_name, model_config=model_config
         )
         experiment.run()
