@@ -1,4 +1,3 @@
-from benchmarl.algorithms import IppoConfig, MaddpgConfig
 from benchmarl.algorithms.mappo import MappoConfig
 from benchmarl.benchmark import Benchmark
 from benchmarl.environments import VmasTask
@@ -8,12 +7,8 @@ from benchmarl.models.mlp import MlpConfig
 
 if __name__ == "__main__":
 
-    tasks = [VmasTask.BALANCE]
-    algorithm_configs = [
-        MaddpgConfig(),
-        MappoConfig(),
-        IppoConfig(),
-    ]
+    tasks = [VmasTask.BALANCE.get_from_yaml()]
+    algorithm_configs = [MappoConfig.get_from_yaml()]
     seeds = {0}
 
     model_config = SequenceModelConfig(
@@ -23,7 +18,7 @@ if __name__ == "__main__":
         ],
         intermediate_sizes=[128],
     )
-    experiment_config = ExperimentConfig(n_iters=2, prefer_continuous_actions=False)
+    experiment_config = ExperimentConfig.get_from_yaml()
 
     benchmark = Benchmark(
         algorithm_configs=algorithm_configs,

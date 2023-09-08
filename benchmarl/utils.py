@@ -6,8 +6,10 @@ import yaml
 DEVICE_TYPING = Union[torch.device, str, int]
 
 
-# step 1: Read the file. Since file is small, we are doing a whole read.
-def read_yaml_file(config_file: str) -> Dict[str, Any]:
+def read_yaml_config(config_file: str) -> Dict[str, Any]:
     with open(config_file) as config:
         yaml_string = config.read()
-    return yaml.safe_load(yaml_string)
+    config_dict = yaml.safe_load(yaml_string)
+    if "defaults" in config_dict.keys():
+        del config_dict["defaults"]
+    return config_dict

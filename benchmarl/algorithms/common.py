@@ -1,6 +1,6 @@
 import pathlib
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, MISSING
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple, Type
 
 import torch.optim
@@ -16,7 +16,7 @@ from torchrl.objectives import LossModule
 from torchrl.objectives.utils import TargetNetUpdater
 
 from benchmarl.models.common import ModelConfig
-from benchmarl.utils import DEVICE_TYPING, read_yaml_file
+from benchmarl.utils import DEVICE_TYPING, read_yaml_config
 
 
 class Algorithm(ABC):
@@ -29,11 +29,13 @@ class Algorithm(ABC):
         state_spec: Optional[CompositeSpec],
         action_mask_spec: Optional[CompositeSpec],
         group_map: Dict[str, List[str]],
+        on_policy: bool,
     ):
         self.device: DEVICE_TYPING = experiment_config.train_device
 
         self.experiment_config = experiment_config
         self.model_config = model_config
+        self.on_policy = on_policy
         self.group_map = group_map
         self.observation_spec = observation_spec
         self.action_spec = action_spec
@@ -110,18 +112,18 @@ class Algorithm(ABC):
     def get_replay_buffer(
         self,
         group: str,
-    ) -> Dict[str, ReplayBuffer]:
+    ) -> ReplayBuffer:
         return self._get_replay_buffer(
             group=group,
             memory_size=self.experiment_config.replay_buffer_memory_size(
-                self.on_policy()
+                self.on_policy
             ),
-            sampling_size=self.experiment_config.train_minibatch_size(self.on_policy()),
+            sampling_size=self.experiment_config.train_minibatch_size(self.on_policy),
             traj_len=self.experiment_config.traj_len,
             storing_device=self.device,
         )
 
-    def get_policy_for_loss(self, group: str) -> List[TensorDictModule]:
+    def get_policy_for_loss(self, group: str) -> TensorDictModule:
         if group not in self._policies_for_loss.keys():
             action_space = self.action_spec[group, "action"]
             continuous = not isinstance(
@@ -224,7 +226,7 @@ class AlgorithmConfig:
         action_mask_spec: Optional[CompositeSpec],
         group_map: Dict[str, List[str]],
     ) -> Algorithm:
-        return self.associated_class(
+        return self.associated_class()(
             **self.__dict__,
             experiment_config=experiment_config,
             model_config=model_config,
@@ -233,6 +235,7 @@ class AlgorithmConfig:
             state_spec=state_spec,
             action_mask_spec=action_mask_spec,
             group_map=group_map,
+            on_policy=self.on_policy(),
         )
 
     @staticmethod
@@ -243,12 +246,11 @@ class AlgorithmConfig:
             / "algorithm"
             / f"{name.lower()}.yaml"
         )
-        config = read_yaml_file(str(yaml_path.resolve()))
-        del config["defaults"]
-        return config
+        return read_yaml_config(str(yaml_path.resolve()))
 
     @staticmethod
-    def get_from_yaml():
+    @abstractmethod
+    def get_from_yaml(path: Optional[str] = None):
         raise NotImplementedError
 
     @staticmethod

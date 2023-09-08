@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional
 
 from torchrl.data import CompositeSpec
 from torchrl.envs import EnvBase
-from utils import read_yaml_file
+from utils import read_yaml_config
 
 
 def _load_config(name: str, config: Dict[str, Any]):
@@ -38,11 +38,14 @@ class Task(Enum):
         obj._value_ = value
         return obj
 
-    def __init__(self, config: Dict):
+    def __init__(self, config: Dict[str, Any]):
         self.config = config
 
     def update_config(self, config: Dict[str, Any]):
-        self.config.update(config)
+        if self.config is None:
+            self.config = config
+        else:
+            self.config.update(config)
         return self
 
     def get_env(
@@ -77,6 +80,9 @@ class Task(Enum):
     def action_mask_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
         raise NotImplementedError
 
+    def get_from_yaml(self, path: Optional[str] = None):
+        raise NotImplementedError
+
     def __repr__(self):
         cls_name = self.__class__.__name__
         return f"{cls_name}.{self.name}: (config={self.config})"
@@ -85,15 +91,8 @@ class Task(Enum):
         return self.__repr__()
 
     @staticmethod
-    def get_from_yaml(environment_name: str, task_name: str) -> Dict[str, Any]:
+    def _load_from_yaml(name: str) -> Dict[str, Any]:
         yaml_path = (
-            pathlib.Path(__file__).parent.parent
-            / "conf"
-            / "task"
-            / environment_name
-            / f"{task_name.lower()}.yaml"
+            pathlib.Path(__file__).parent.parent / "conf" / "task" / f"{name}.yaml"
         )
-        config = read_yaml_file(str(yaml_path.resolve()))
-        del config["defaults"]
-        config = _load_config(task_name, config)
-        return config
+        return read_yaml_config(str(yaml_path.resolve()))

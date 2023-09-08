@@ -1,12 +1,13 @@
+import pathlib
 from dataclasses import dataclass, MISSING
-from typing import Any
+from typing import Optional
 
 from torchrl.collectors import SyncDataCollector
 
 from benchmarl.algorithms.common import AlgorithmConfig
 from benchmarl.environments import Task
 from benchmarl.models.common import ModelConfig
-from benchmarl.utils import DEVICE_TYPING
+from benchmarl.utils import read_yaml_config
 
 
 @dataclass
@@ -64,6 +65,19 @@ class ExperimentConfig:
     @property
     def exploration_annealing_num_frames(self) -> int:
         return self.total_frames // 2
+
+    @staticmethod
+    def get_from_yaml(path: Optional[str] = None):
+        if path is None:
+            yaml_path = (
+                pathlib.Path(__file__).parent
+                / "conf"
+                / "experiment"
+                / "base_experiment.yaml"
+            )
+            return ExperimentConfig(**read_yaml_config(str(yaml_path.resolve())))
+        else:
+            return ExperimentConfig(**read_yaml_config(path))
 
 
 class Experiment:

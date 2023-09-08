@@ -1,6 +1,5 @@
-import pathlib
 from dataclasses import dataclass, MISSING
-from typing import Dict, Type
+from typing import Dict, Optional, Type
 
 import torch
 from black import Tuple
@@ -22,7 +21,7 @@ from torchrl.objectives.utils import TargetNetUpdater
 
 from benchmarl.algorithms.common import Algorithm, AlgorithmConfig
 from benchmarl.models.common import ModelConfig
-from benchmarl.utils import DEVICE_TYPING
+from benchmarl.utils import DEVICE_TYPING, read_yaml_config
 
 
 class Mappo(Algorithm):
@@ -165,8 +164,8 @@ class Mappo(Algorithm):
                 out_keys=[(group, "action")],
                 distribution_class=TanhNormal,
                 distribution_kwargs={
-                    "min": self.action_spec[(group, "action")].space.minimum,
-                    "max": self.action_spec[(group, "action")].space.maximum,
+                    "min": self.action_spec[(group, "action")].space.low,
+                    "max": self.action_spec[(group, "action")].space.high,
                 },
                 return_log_prob=True,
                 log_prob_key=(group, "log_prob"),
@@ -327,10 +326,15 @@ class MappoConfig(AlgorithmConfig):
     lmbda: float = MISSING
 
     @staticmethod
-    def get_from_yaml():
-        return MappoConfig(
-            **MappoConfig._load_from_yaml(name=MappoConfig.associated_class().__name__)
-        )
+    def get_from_yaml(path: Optional[str] = None):
+        if path is None:
+            return MappoConfig(
+                **MappoConfig._load_from_yaml(
+                    name=MappoConfig.associated_class().__name__,
+                )
+            )
+        else:
+            return MappoConfig(**read_yaml_config(path))
 
     @staticmethod
     def associated_class() -> Type[Algorithm]:

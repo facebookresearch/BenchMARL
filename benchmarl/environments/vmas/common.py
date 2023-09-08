@@ -1,18 +1,16 @@
-from typing import Any, Dict, List, Optional
+from pathlib import Path
+from typing import Dict, List, Optional
 
 from torchrl.data import CompositeSpec
 from torchrl.envs import EnvBase
 from torchrl.envs.libs.vmas import VmasEnv
+from utils import read_yaml_config
 
 from benchmarl.environments.common import Task
 
 
-def get_from_yaml(task_name: str) -> Dict[str, Any]:
-    return Task.get_from_yaml("vmas", task_name)
-
-
 class VmasTask(Task):
-    BALANCE = get_from_yaml("balance")
+    BALANCE = None
 
     def get_env(
         self,
@@ -57,6 +55,15 @@ class VmasTask(Task):
     def action_spec(self, env: EnvBase) -> CompositeSpec:
         return env.unbatched_action_spec
 
+    def get_from_yaml(self, path: Optional[str] = None):
+        if path is None:
+            task_name = self.name.lower()
+            return self.update_config(
+                Task._load_from_yaml(str(Path("vmas") / Path(task_name)))
+            )
+        else:
+            return self.update_config(**read_yaml_config(path))
+
 
 if __name__ == "__main__":
-    print(VmasTask.BALANCE.get_env(num_envs=2, continuous_actions=True, seed=0))
+    print(VmasTask.BALANCE.get_from_yaml())

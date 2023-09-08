@@ -10,7 +10,7 @@ from benchmarl.models.mlp import MlpConfig
 @pytest.mark.parametrize("algo_config", all_algorithm_configs)
 @pytest.mark.parametrize("continuous", [True, False])
 def test_all_algos_balance(algo_config, continuous):
-    task = VmasTask.BALANCE
+    task = VmasTask.BALANCE.get_from_yaml()
     model_config = SequenceModelConfig(
         model_configs=[
             MlpConfig(num_cells=[8]),
@@ -18,11 +18,12 @@ def test_all_algos_balance(algo_config, continuous):
         ],
         intermediate_sizes=[5],
     )
-    experiment_config = ExperimentConfig(
-        n_iters=2, prefer_continuous_actions=continuous
-    )
+    experiment_config: ExperimentConfig = ExperimentConfig.get_from_yaml()
+    experiment_config.n_iters = 2
+    experiment_config.prefer_continuous_actions = continuous
+
     experiment = Experiment(
-        algorithm_config=algo_config(),
+        algorithm_config=algo_config.get_from_yaml(),
         model_config=model_config,
         seed=0,
         config=experiment_config,

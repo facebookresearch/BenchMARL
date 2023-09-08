@@ -165,8 +165,8 @@ class Ippo(Algorithm):
                 out_keys=[(group, "action")],
                 distribution_class=TanhNormal,
                 distribution_kwargs={
-                    "min": self.action_spec[(group, "action")].space.minimum,
-                    "max": self.action_spec[(group, "action")].space.maximum,
+                    "min": self.action_spec[(group, "action")].space.low,
+                    "max": self.action_spec[(group, "action")].space.high,
                 },
                 return_log_prob=True,
                 log_prob_key=(group, "log_prob"),
