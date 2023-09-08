@@ -1,5 +1,5 @@
-from dataclasses import dataclass
-from typing import Dict, Type
+from dataclasses import dataclass, MISSING
+from typing import Dict, Optional, Type
 
 import torch
 from black import Tuple
@@ -19,7 +19,7 @@ from torchrl.objectives.utils import SoftUpdate, TargetNetUpdater
 
 from benchmarl.algorithms.common import Algorithm, AlgorithmConfig
 from benchmarl.models.common import ModelConfig
-from benchmarl.utils import DEVICE_TYPING
+from benchmarl.utils import DEVICE_TYPING, read_yaml_config
 
 
 class Iql(Algorithm):
@@ -184,6 +184,22 @@ class Iql(Algorithm):
 
         return batch
 
+    #####################
+    # Custom new methods
+    #####################
+
+
+@dataclass
+class IqlConfig(AlgorithmConfig):
+
+    delay_value: bool = MISSING
+    loss_function: str = MISSING
+    share_params: bool = MISSING
+
+    @staticmethod
+    def associated_class() -> Type[Algorithm]:
+        return Iql
+
     @staticmethod
     def supports_continuous_actions() -> bool:
         return False
@@ -196,19 +212,13 @@ class Iql(Algorithm):
     def on_policy() -> bool:
         return False
 
-    #####################
-    # Custom new methods
-    #####################
-
-
-@dataclass
-class IqlConfig(AlgorithmConfig):
-    # You can add any kwargs from benchmarl.algorithms.Iql
-
-    delay_value: bool = True
-    loss_function: str = "l2"
-    share_params: bool = True
-
     @staticmethod
-    def associated_class() -> Type[Algorithm]:
-        return Iql
+    def get_from_yaml(path: Optional[str] = None):
+        if path is None:
+            return IqlConfig(
+                **AlgorithmConfig._load_from_yaml(
+                    name=IqlConfig.associated_class().__name__,
+                )
+            )
+        else:
+            return IqlConfig(**read_yaml_config(path))

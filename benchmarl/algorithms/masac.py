@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, MISSING
 from typing import Dict, Optional, Type, Union
 
 import torch
@@ -27,7 +27,7 @@ from torchrl.objectives.utils import TargetNetUpdater
 
 from benchmarl.algorithms.common import Algorithm, AlgorithmConfig
 from benchmarl.models.common import ModelConfig
-from benchmarl.utils import DEVICE_TYPING
+from benchmarl.utils import DEVICE_TYPING, read_yaml_config
 
 
 class Masac(Algorithm):
@@ -210,8 +210,8 @@ class Masac(Algorithm):
                 out_keys=[(group, "action")],
                 distribution_class=TanhNormal,
                 distribution_kwargs={
-                    "min": self.action_spec[(group, "action")].space.minimum,
-                    "max": self.action_spec[(group, "action")].space.maximum,
+                    "min": self.action_spec[(group, "action")].space.low,
+                    "max": self.action_spec[(group, "action")].space.high,
                 },
                 return_log_prob=True,
                 log_prob_key=(group, "log_prob"),
@@ -268,18 +268,6 @@ class Masac(Algorithm):
             )
 
         return batch
-
-    @staticmethod
-    def supports_continuous_actions() -> bool:
-        return True
-
-    @staticmethod
-    def supports_discrete_actions() -> bool:
-        return True
-
-    @staticmethod
-    def on_policy() -> bool:
-        return False
 
     #####################
     # Custom new methods
@@ -466,21 +454,43 @@ class Masac(Algorithm):
 
 @dataclass
 class MasacConfig(AlgorithmConfig):
-    # You can add any kwargs from benchmarl.algorithms.Masac
 
-    share_param_actor: bool = True
-    share_param_critic: bool = True
+    share_param_actor: bool = MISSING
+    share_param_critic: bool = MISSING
 
-    num_qvalue_nets: int = 2
-    loss_function: str = "l2"
-    delay_qvalue: bool = True
-    target_entropy: Union[float, str] = "auto"
+    num_qvalue_nets: int = MISSING
+    loss_function: str = MISSING
+    delay_qvalue: bool = MISSING
+    target_entropy: Union[float, str] = MISSING
 
-    alpha_init: float = 1.0
-    min_alpha: Optional[float] = None
-    max_alpha: Optional[float] = None
-    fixed_alpha: bool = False
+    alpha_init: float = MISSING
+    min_alpha: Optional[float] = MISSING
+    max_alpha: Optional[float] = MISSING
+    fixed_alpha: bool = MISSING
 
     @staticmethod
     def associated_class() -> Type[Algorithm]:
         return Masac
+
+    @staticmethod
+    def supports_continuous_actions() -> bool:
+        return True
+
+    @staticmethod
+    def supports_discrete_actions() -> bool:
+        return True
+
+    @staticmethod
+    def on_policy() -> bool:
+        return False
+
+    @staticmethod
+    def get_from_yaml(path: Optional[str] = None):
+        if path is None:
+            return MasacConfig(
+                **AlgorithmConfig._load_from_yaml(
+                    name=MasacConfig.associated_class().__name__,
+                )
+            )
+        else:
+            return MasacConfig(**read_yaml_config(path))

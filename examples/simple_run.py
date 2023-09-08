@@ -1,5 +1,4 @@
-from benchmarl.algorithms import IppoConfig, MaddpgConfig
-from benchmarl.algorithms.mappo import MappoConfig
+from benchmarl.algorithms import MaddpgConfig, MappoConfig, MasacConfig, QmixConfig
 from benchmarl.benchmark import Benchmark
 from benchmarl.environments import VmasTask
 from benchmarl.experiment import ExperimentConfig
@@ -8,14 +7,17 @@ from benchmarl.models.mlp import MlpConfig
 
 if __name__ == "__main__":
 
-    tasks = [VmasTask.BALANCE]
+    experiment_config = ExperimentConfig.get_from_yaml()
+    tasks = [VmasTask.BALANCE.get_from_yaml()]
     algorithm_configs = [
-        MaddpgConfig(),
-        MappoConfig(),
-        IppoConfig(),
+        MappoConfig.get_from_yaml(),
+        MaddpgConfig.get_from_yaml(),
+        QmixConfig.get_from_yaml(),
+        MasacConfig.get_from_yaml(),
     ]
     seeds = {0}
 
+    # Model still need to be refactored for hydra loading
     model_config = SequenceModelConfig(
         model_configs=[
             MlpConfig(num_cells=[64, 64]),
@@ -23,7 +25,6 @@ if __name__ == "__main__":
         ],
         intermediate_sizes=[128],
     )
-    experiment_config = ExperimentConfig(n_iters=2, prefer_continuous_actions=False)
 
     benchmark = Benchmark(
         algorithm_configs=algorithm_configs,

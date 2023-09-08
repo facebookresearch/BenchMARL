@@ -1,14 +1,17 @@
 import importlib
 import os
 import os.path as osp
+import pathlib
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from torchrl.data import CompositeSpec
 from torchrl.envs import EnvBase
 
+from benchmarl.utils import read_yaml_config
 
-def load_config(name: str):
+
+def _load_config(name: str, config: Dict[str, Any]):
     if not name.endswith(".py"):
         name += ".py"
 
@@ -26,8 +29,7 @@ def load_config(name: str):
     spec = importlib.util.spec_from_file_location("", pathname)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    config = module.TaskConfig().__dict__
-    return config
+    return module.TaskConfig(**config).__dict__
 
 
 class Task(Enum):
@@ -37,8 +39,15 @@ class Task(Enum):
         obj._value_ = value
         return obj
 
-    def __init__(self, config: Dict):
+    def __init__(self, config: Dict[str, Any]):
         self.config = config
+
+    def update_config(self, config: Dict[str, Any]):
+        if self.config is None:
+            self.config = config
+        else:
+            self.config.update(config)
+        return self
 
     def get_env(
         self,
@@ -72,9 +81,19 @@ class Task(Enum):
     def action_mask_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
         raise NotImplementedError
 
+    def get_from_yaml(self, path: Optional[str] = None):
+        raise NotImplementedError
+
     def __repr__(self):
         cls_name = self.__class__.__name__
         return f"{cls_name}.{self.name}: (config={self.config})"
 
     def __str__(self):
         return self.__repr__()
+
+    @staticmethod
+    def _load_from_yaml(name: str) -> Dict[str, Any]:
+        yaml_path = (
+            pathlib.Path(__file__).parent.parent / "conf" / "task" / f"{name}.yaml"
+        )
+        return read_yaml_config(str(yaml_path.resolve()))

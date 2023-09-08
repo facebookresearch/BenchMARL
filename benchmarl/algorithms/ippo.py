@@ -1,5 +1,5 @@
-from dataclasses import dataclass
-from typing import Dict, Type
+from dataclasses import dataclass, MISSING
+from typing import Dict, Optional, Type
 
 import torch
 from black import Tuple
@@ -22,7 +22,7 @@ from torchrl.objectives.utils import TargetNetUpdater
 
 from benchmarl.algorithms.common import Algorithm, AlgorithmConfig
 from benchmarl.models.common import ModelConfig
-from benchmarl.utils import DEVICE_TYPING
+from benchmarl.utils import DEVICE_TYPING, read_yaml_config
 
 
 class Ippo(Algorithm):
@@ -165,8 +165,8 @@ class Ippo(Algorithm):
                 out_keys=[(group, "action")],
                 distribution_class=TanhNormal,
                 distribution_kwargs={
-                    "min": self.action_spec[(group, "action")].space.minimum,
-                    "max": self.action_spec[(group, "action")].space.maximum,
+                    "min": self.action_spec[(group, "action")].space.low,
+                    "max": self.action_spec[(group, "action")].space.high,
                 },
                 return_log_prob=True,
                 log_prob_key=(group, "log_prob"),
@@ -243,18 +243,6 @@ class Ippo(Algorithm):
         del loss_vals["loss_entropy"]
         return loss_vals
 
-    @staticmethod
-    def supports_continuous_actions() -> bool:
-        return True
-
-    @staticmethod
-    def supports_discrete_actions() -> bool:
-        return True
-
-    @staticmethod
-    def on_policy() -> bool:
-        return True
-
     #####################
     # Custom new methods
     #####################
@@ -298,17 +286,38 @@ class Ippo(Algorithm):
 
 @dataclass
 class IppoConfig(AlgorithmConfig):
-    # You can add any kwargs from benchmarl.algorithms.Ippo
 
-    share_param_actor: bool = True
-    share_param_critic: bool = True
-
-    clip_epsilon: float = 0.2
-    entropy_coef: bool = 0.0
-    critic_coef: float = 1.0
-    loss_critic_type: str = "l2"
-    lmbda: float = 0.9
+    share_param_actor: bool = MISSING
+    share_param_critic: bool = MISSING
+    clip_epsilon: float = MISSING
+    entropy_coef: float = MISSING
+    critic_coef: float = MISSING
+    loss_critic_type: str = MISSING
+    lmbda: float = MISSING
 
     @staticmethod
     def associated_class() -> Type[Algorithm]:
         return Ippo
+
+    @staticmethod
+    def supports_continuous_actions() -> bool:
+        return True
+
+    @staticmethod
+    def supports_discrete_actions() -> bool:
+        return True
+
+    @staticmethod
+    def on_policy() -> bool:
+        return True
+
+    @staticmethod
+    def get_from_yaml(path: Optional[str] = None):
+        if path is None:
+            return IppoConfig(
+                **AlgorithmConfig._load_from_yaml(
+                    name=IppoConfig.associated_class().__name__,
+                )
+            )
+        else:
+            return IppoConfig(**read_yaml_config(path))

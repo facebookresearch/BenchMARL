@@ -1,6 +1,6 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, MISSING
 
 
 @dataclass
 class TaskConfig:
-    max_steps: int = 100
+    max_steps: int = MISSING

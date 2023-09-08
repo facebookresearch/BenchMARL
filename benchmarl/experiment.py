@@ -1,35 +1,35 @@
-from dataclasses import dataclass
+import pathlib
+from dataclasses import dataclass, MISSING
+from typing import Optional
 
 from torchrl.collectors import SyncDataCollector
 
 from benchmarl.algorithms.common import AlgorithmConfig
 from benchmarl.environments import Task
 from benchmarl.models.common import ModelConfig
-from benchmarl.utils import DEVICE_TYPING
+from benchmarl.utils import read_yaml_config
 
 
 @dataclass
 class ExperimentConfig:
 
-    sampling_device: DEVICE_TYPING = "cpu"
-    train_device: DEVICE_TYPING = "cpu"
+    sampling_device: str = MISSING
+    train_device: str = MISSING
+    gamma: float = MISSING
+    polyak_tau: float = MISSING
+    lr: float = MISSING
+    n_optimizer_steps: int = MISSING
+    collected_frames_per_batch: int = MISSING
+    n_collection_envs: int = MISSING
+    n_iters: int = MISSING
+    prefer_continuous_actions: bool = MISSING
 
-    gamma: float = 0.9
-    polyak_tau: float = 0.005
+    on_policy_minibatch_size: int = MISSING
 
-    lr: float = 3e-5
-    n_optimizer_steps: int = 10
-    collected_frames_per_batch: int = 1000
-    n_collection_envs: int = 1
-    n_iters: int = 100
-    prefer_continuous_actions: bool = True
-
-    on_policy_minibatch_size: int = 100
-
-    off_policy_memory_size: int = 100_000
-    off_policy_train_batch_size: int = 10_000
-    off_policy_prioritised_alpha: float = 0.7
-    off_policy_prioritised_beta: float = 0.5
+    off_policy_memory_size: int = MISSING
+    off_policy_train_batch_size: int = MISSING
+    off_policy_prioritised_alpha: float = MISSING
+    off_policy_prioritised_beta: float = MISSING
 
     def train_batch_size(self, on_policy: bool) -> int:
         return (
@@ -64,6 +64,19 @@ class ExperimentConfig:
     def exploration_annealing_num_frames(self) -> int:
         return self.total_frames // 2
 
+    @staticmethod
+    def get_from_yaml(path: Optional[str] = None):
+        if path is None:
+            yaml_path = (
+                pathlib.Path(__file__).parent
+                / "conf"
+                / "experiment"
+                / "base_experiment.yaml"
+            )
+            return ExperimentConfig(**read_yaml_config(str(yaml_path.resolve())))
+        else:
+            return ExperimentConfig(**read_yaml_config(path))
+
 
 class Experiment:
     def __init__(
@@ -87,7 +100,7 @@ class Experiment:
 
     @property
     def on_policy(self) -> bool:
-        return self.algorithm_config.associated_class().on_policy()
+        return self.algorithm_config.on_policy()
 
     def _setup(self):
         self._set_action_type()
@@ -98,23 +111,23 @@ class Experiment:
     def _set_action_type(self):
         if (
             self.task.supports_continuous_actions()
-            and self.algorithm_config.associated_class().supports_continuous_actions()
+            and self.algorithm_config.supports_continuous_actions()
             and self.config.prefer_continuous_actions
         ):
             self.continuous_actions = True
         elif (
             self.task.supports_discrete_actions()
-            and self.algorithm_config.associated_class().supports_discrete_actions()
+            and self.algorithm_config.supports_discrete_actions()
         ):
             self.continuous_actions = False
         elif (
             self.task.supports_continuous_actions()
-            and self.algorithm_config.associated_class().supports_continuous_actions()
+            and self.algorithm_config.supports_continuous_actions()
         ):
             self.continuous_actions = True
         else:
             raise ValueError(
-                f"Algorithm {self.algorithm_config.associated_class()} is not compatible"
+                f"Algorithm {self.algorithm_config} is not compatible"
                 f" with the action space of task {self.task} "
             )
 
