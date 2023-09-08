@@ -1,6 +1,6 @@
 defaults:
-  - _self_
   - iql_config
+  - _self_
 
 
 delay_value: True

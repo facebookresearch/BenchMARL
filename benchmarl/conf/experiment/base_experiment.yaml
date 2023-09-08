@@ -1,6 +1,6 @@
 defaults:
-  - _self_
   - experiment_config
+  - _self_
 
 sampling_device: "cpu"
 train_device: "cpu"
