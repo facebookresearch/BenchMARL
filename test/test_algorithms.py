@@ -39,19 +39,12 @@ def test_all_algos_hydra(algo_config):
     with initialize(version_base=None, config_path="../benchmarl/conf"):
         cfg = compose(
             config_name="config",
-            overrides=[f"algorithm={algo_config}"],
+            overrides=[
+                f"algorithm={algo_config}",
+                "model=layers/mlp",
+            ],
             return_hydra_config=True,
         )
         task_name = cfg.hydra.runtime.choices.task
-        algo_name = cfg.hydra.runtime.choices.algorithm
-        model_config = SequenceModelConfig(
-            model_configs=[
-                MlpConfig(num_cells=[8]),
-                MlpConfig(num_cells=[4]),
-            ],
-            intermediate_sizes=[5],
-        )
-        experiment = load_experiment_from_hydra_config(
-            cfg, algo_name=algo_name, task_name=task_name, model_config=model_config
-        )
+        experiment = load_experiment_from_hydra_config(cfg, task_name=task_name)
         experiment.run()

@@ -1,6 +1,6 @@
 defaults:
-  - _self_
   - qmix_config
+  - _self_
 
 
 mixing_embed_dim: 32

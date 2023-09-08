@@ -1,0 +1,12 @@
+defaults:
+  # Here is a list of layers for this model
+  # You can use configs from "layer"
+  - layers@layers.l1: mlp
+  - layers@layers.l2: mlp
+  - _self_
+
+intermediate_sizes: [16]
+# You can override your layers like this
+layers:
+  l1:
+    num_cells: [4]

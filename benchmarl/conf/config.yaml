@@ -1,7 +1,8 @@
 defaults:
-  - _self_
   - experiment: base_experiment
   - algorithm: mappo
   - task: vmas/balance
+  - model: sequence
+  - _self_
 
 seed: 0
