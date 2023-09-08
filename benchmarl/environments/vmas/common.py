@@ -4,9 +4,9 @@ from typing import Dict, List, Optional
 from torchrl.data import CompositeSpec
 from torchrl.envs import EnvBase
 from torchrl.envs.libs.vmas import VmasEnv
-from utils import read_yaml_config
 
 from benchmarl.environments.common import Task
+from benchmarl.utils import read_yaml_config
 
 
 class VmasTask(Task):

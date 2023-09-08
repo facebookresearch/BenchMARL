@@ -7,7 +7,8 @@ from typing import Any, Dict, List, Optional
 
 from torchrl.data import CompositeSpec
 from torchrl.envs import EnvBase
-from utils import read_yaml_config
+
+from benchmarl.utils import read_yaml_config
 
 
 def _load_config(name: str, config: Dict[str, Any]):

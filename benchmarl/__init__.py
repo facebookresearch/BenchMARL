@@ -1,11 +1,10 @@
-from hydra.core.config_store import ConfigStore
-
-from benchmarl.algorithms import algorithm_config_registry
-from benchmarl.environments import _task_class_registry
-from benchmarl.experiment import ExperimentConfig
-
-
 def load_hydra_schemas():
+    from hydra.core.config_store import ConfigStore
+
+    from benchmarl.algorithms import algorithm_config_registry
+    from benchmarl.environments import _task_class_registry
+    from benchmarl.experiment import ExperimentConfig
+
     # Create instance to load hydra schemas
     cs = ConfigStore.instance()
     # Load experiment schema
