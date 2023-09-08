@@ -1,12 +1,13 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, MISSING
 from typing import Optional, Sequence, Type
 
 import torch
 from tensordict import TensorDictBase
 from torch import nn
 from torchrl.modules import MLP, MultiAgentMLP
+from utils import read_yaml_config
 
-from benchmarl.models.common import Model, ModelConfig
+from benchmarl.models.common import Model, ModelConfig, parse_model_config
 
 
 class Mlp(Model):
@@ -88,12 +89,10 @@ class Mlp(Model):
 
 @dataclass
 class MlpConfig(ModelConfig):
-    # You can add any kwargs from torchrl.modules.MLP
+    num_cells: Sequence[int] = MISSING
+    layer_class: Type[nn.Module] = MISSING
 
-    num_cells: Sequence[int] = (256, 256)
-    layer_class: Type[nn.Module] = nn.Linear
-
-    activation_class: Type[nn.Module] = nn.Tanh
+    activation_class: Type[nn.Module] = MISSING
     activation_kwargs: Optional[dict] = None
 
     norm_class: Type[nn.Module] = None
@@ -102,3 +101,14 @@ class MlpConfig(ModelConfig):
     @staticmethod
     def associated_class():
         return Mlp
+
+    @staticmethod
+    def get_from_yaml(path: Optional[str] = None):
+        if path is None:
+            return MlpConfig(
+                **ModelConfig._load_from_yaml(
+                    name=MlpConfig.associated_class().__name__,
+                )
+            )
+        else:
+            return MlpConfig(**parse_model_config(read_yaml_config(path)))

@@ -1,0 +1,12 @@
+
+
+name: mlp
+
+num_cells: [256, 256]
+layer_class: torch.nn.Linear
+
+activation_class: torch.nn.Tanh
+activation_kwargs: null
+
+norm_class: null
+norm_kwargs: null
