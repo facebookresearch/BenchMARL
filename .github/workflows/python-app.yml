@@ -39,7 +39,7 @@ jobs:
         python -m pip install git+https://github.com/pytorch-labs/tensordict.git
         git clone https://github.com/pytorch/rl.git
         cd rl
-        python setup.py develp
+        python setup.py develop
         cd ../BenchMARL
         
         pip install -e .
