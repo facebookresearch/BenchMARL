@@ -5,9 +5,9 @@ import torch
 from tensordict import TensorDictBase
 from torch import nn
 from torchrl.modules import MLP, MultiAgentMLP
-from utils import read_yaml_config
 
 from benchmarl.models.common import Model, ModelConfig, parse_model_config
+from benchmarl.utils import read_yaml_config
 
 
 class Mlp(Model):
