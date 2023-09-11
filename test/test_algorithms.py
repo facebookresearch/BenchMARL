@@ -41,7 +41,8 @@ def test_all_algos_hydra(algo_config):
             config_name="config",
             overrides=[
                 f"algorithm={algo_config}",
-                "model=layers/mlp",
+                "task=vmas/balance",
+                "model.num_cells=[3]",
             ],
             return_hydra_config=True,
         )
