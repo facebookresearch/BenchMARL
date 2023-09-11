@@ -1,8 +1,7 @@
 from dataclasses import dataclass, MISSING
-from typing import Dict, Optional, Type
+from typing import Dict, Optional, Tuple, Type
 
 import torch
-from black import Tuple
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModule, TensorDictSequential
 from torchrl.data import (

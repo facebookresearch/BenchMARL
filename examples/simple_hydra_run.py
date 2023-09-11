@@ -2,7 +2,6 @@ import hydra
 
 from benchmarl.environments import task_config_registry
 from benchmarl.experiment import Experiment
-
 from benchmarl.hydra_run import load_model_from_hydra_config
 from hydra.core.hydra_config import HydraConfig
 from omegaconf import DictConfig, OmegaConf
