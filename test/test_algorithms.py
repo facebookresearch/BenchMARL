@@ -1,4 +1,3 @@
-import hydra
 import pytest
 
 from benchmarl.algorithms import algorithm_config_registry
@@ -25,6 +24,7 @@ def test_all_algos_balance(algo_config, continuous):
     experiment_config: ExperimentConfig = ExperimentConfig.get_from_yaml()
     experiment_config.n_iters = 2
     experiment_config.prefer_continuous_actions = continuous
+    experiment_config.loggers = []
 
     experiment = Experiment(
         algorithm_config=algo_config.get_from_yaml(),
@@ -45,10 +45,10 @@ def test_all_algos_hydra(algo_config):
                 f"algorithm={algo_config}",
                 "task=vmas/balance",
                 "model.num_cells=[3]",
+                "experiment.loggers=[]",
             ],
             return_hydra_config=True,
         )
-        hydra.core.hydra_config.HydraConfig.get()
         task_name = cfg.hydra.runtime.choices.task
         experiment = load_experiment_from_hydra_config(cfg, task_name=task_name)
         experiment.run()

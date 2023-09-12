@@ -62,6 +62,8 @@ class MultiAgentLogger:
         batch: TensorDictBase,
         step: int,
     ):
+        if not len(self.loggers):
+            return
         to_log = {}
         for group in self.group_map.keys():
             reward = self._get_reward(group, batch)
@@ -87,6 +89,8 @@ class MultiAgentLogger:
         self.log(to_log, step=step)
 
     def log_training(self, group: str, training_td: TensorDictBase, step: int):
+        if not len(self.loggers):
+            return
         to_log = {
             f"train/{group}/{key}": value.mean().item()
             for key, value in training_td.items()
@@ -96,6 +100,8 @@ class MultiAgentLogger:
     def log_evaluation(
         self, rollouts=TensorDictBase, frames: Optional[List] = None, step: int = None
     ):
+        if not len(self.loggers):
+            return
         to_log = {}
         # Unbind vectorized dim
         rollouts = list(rollouts.unbind(dim=0))
