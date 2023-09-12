@@ -25,4 +25,4 @@ off_policy_prioritised_beta: 0.5
 evaluation_interval: 30
 evaluation_episodes: 200
 
-loggers: [wandb]
+loggers: [wandb,csv]

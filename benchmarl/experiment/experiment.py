@@ -4,10 +4,13 @@ from dataclasses import dataclass, MISSING
 from typing import List, Optional
 
 import torch
+
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictSequential
+from tensordict.utils import _unravel_key_to_tuple
 from torchrl.collectors import SyncDataCollector
-from torchrl.envs import SerialEnv
+from torchrl.envs import EnvBase, RewardSum, SerialEnv, TransformedEnv
+from torchrl.envs.transforms import Compose
 from torchrl.envs.utils import ExplorationType, set_exploration_type
 
 from benchmarl.algorithms.common import AlgorithmConfig
@@ -169,11 +172,28 @@ class Experiment:
         self.action_spec = self.task.action_spec(test_env)
         self.group_map = self.task.group_map(test_env)
 
+        reward_spec = test_env.output_spec["full_reward_spec"]
+        transforms = []
+        for reward_key in reward_spec.keys(True, True):
+            reward_key = _unravel_key_to_tuple(reward_key)
+            transforms.append(
+                RewardSum(
+                    in_keys=[reward_key],
+                    out_keys=[reward_key[:-1] + ("episode_reward",)],
+                )
+            )
+        transform = Compose(*transforms)
+
+        def env_func_transformed() -> EnvBase:
+            return TransformedEnv(env_func(), transform)
+
         if test_env.batch_size == ():
-            self.env_func = lambda: SerialEnv(self.config.evaluation_episodes, env_func)
+            self.env_func = lambda: SerialEnv(
+                self.config.evaluation_episodes, env_func_transformed
+            )
             self.test_env = SerialEnv(self.config.evaluation_episodes, lambda: test_env)
         else:
-            self.env_func = env_func
+            self.env_func = env_func_transformed
             self.test_env = test_env
 
         assert self.test_env.batch_size == (self.config.evaluation_episodes,)
