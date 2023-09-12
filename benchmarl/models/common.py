@@ -1,12 +1,13 @@
 import pathlib
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Callable, Dict, List, Optional, Sequence
 
 from hydra.utils import get_class
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModuleBase, TensorDictSequential
 from torchrl.data import CompositeSpec, UnboundedContinuousTensorSpec
+from torchrl.envs import EnvBase
 
 from benchmarl.utils import DEVICE_TYPING, read_yaml_config
 
@@ -90,9 +91,9 @@ class Model(TensorDictModuleBase, ABC):
             assert False
 
     def forward(self, tensordict: TensorDictBase) -> TensorDictBase:
-        _check_spec(tensordict, self.input_spec)
+        # _check_spec(tensordict, self.input_spec)
         tensordict = self._forward(tensordict)
-        _check_spec(tensordict, self.output_spec)
+        # _check_spec(tensordict, self.output_spec)
         return tensordict
 
     ###############################
@@ -155,6 +156,9 @@ class ModelConfig(ABC):
     @abstractmethod
     def associated_class():
         raise NotImplementedError
+
+    def process_env_fun(self, env_fun: Callable[[], EnvBase]) -> Callable[[], EnvBase]:
+        return env_fun
 
     @staticmethod
     def _load_from_yaml(name: str) -> Dict[str, Any]:

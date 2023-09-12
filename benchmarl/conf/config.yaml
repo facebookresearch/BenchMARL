@@ -1,7 +1,7 @@
 defaults:
   - experiment: base_experiment
-  - algorithm: ???
-  - task: ???
+  - algorithm: mappo
+  - task: task/vmas
   - model: layers/mlp
   - _self_
 

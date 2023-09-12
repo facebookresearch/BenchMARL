@@ -1,4 +1,6 @@
+import hydra
 import pytest
+
 from benchmarl.algorithms import algorithm_config_registry
 from benchmarl.environments import VmasTask
 from benchmarl.experiment import Experiment, ExperimentConfig
@@ -46,6 +48,7 @@ def test_all_algos_hydra(algo_config):
             ],
             return_hydra_config=True,
         )
+        hydra.core.hydra_config.HydraConfig.get()
         task_name = cfg.hydra.runtime.choices.task
         experiment = load_experiment_from_hydra_config(cfg, task_name=task_name)
         experiment.run()
