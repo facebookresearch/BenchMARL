@@ -90,6 +90,10 @@ class Task(Enum):
     def get_from_yaml(self, path: Optional[str] = None):
         raise NotImplementedError
 
+    @staticmethod
+    def env_name() -> str:
+        return "vmas"
+
     def __repr__(self):
         cls_name = self.__class__.__name__
         return f"{cls_name}.{self.name}: (config={self.config})"

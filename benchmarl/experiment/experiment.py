@@ -43,6 +43,7 @@ class ExperimentConfig:
     off_policy_prioritised_alpha: float = MISSING
     off_policy_prioritised_beta: float = MISSING
 
+    evaluation: bool = MISSING
     evaluation_interval: int = MISSING
     evaluation_episodes: int = MISSING
 
@@ -247,10 +248,12 @@ class Experiment:
     def _setup_logger(self):
         self.logger = MultiAgentLogger(
             self.config,
-            algorithm_name=self.algorithm_config.associated_class().__name__,
-            model_name=self.model_config.associated_class().__name__,
-            task_name=f"{self.task.__class__.__name__}_{self.task.name}",
+            algorithm_name=self.algorithm_config.associated_class().__name__.lower(),
+            model_name=self.model_config.associated_class().__name__.lower(),
+            environment_name=self.task.env_name().lower(),
+            task_name=self.task.name.lower(),
             group_map=self.group_map,
+            seed=self.seed,
         )
         self.logger.log_hparams(
             experiment_config=self.config.__dict__,
@@ -259,7 +262,6 @@ class Experiment:
             task_config=self.task.config,
             continuous_actions=self.continuous_actions,
             on_policy=self.on_policy,
-            seed=self.seed,
         )
 
     def run(self):

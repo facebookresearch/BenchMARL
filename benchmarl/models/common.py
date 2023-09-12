@@ -244,7 +244,7 @@ class SequenceModelConfig(ModelConfig):
 
     @staticmethod
     def associated_class():
-        raise NotImplementedError
+        return SequenceModel
 
     @staticmethod
     def get_from_yaml(path: Optional[str] = None):

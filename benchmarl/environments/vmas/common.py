@@ -61,11 +61,15 @@ class VmasTask(Task):
     def action_spec(self, env: EnvBase) -> CompositeSpec:
         return env.unbatched_action_spec
 
+    @staticmethod
+    def env_name() -> str:
+        return "vmas"
+
     def get_from_yaml(self, path: Optional[str] = None):
         if path is None:
             task_name = self.name.lower()
             return self.update_config(
-                Task._load_from_yaml(str(Path("vmas") / Path(task_name)))
+                Task._load_from_yaml(str(Path(self.env_name()) / Path(task_name)))
             )
         else:
             return self.update_config(**read_yaml_config(path))
