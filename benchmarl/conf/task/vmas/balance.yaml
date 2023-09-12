@@ -3,4 +3,4 @@ defaults:
   - vmas_balance_config
 
 
-max_steps: 3
+max_steps: 100

@@ -33,6 +33,9 @@ class VmasTask(Task):
     def supports_discrete_actions(self) -> bool:
         return True
 
+    def has_render(self) -> bool:
+        return True
+
     def max_steps(self) -> bool:
         return self.config["max_steps"]
 

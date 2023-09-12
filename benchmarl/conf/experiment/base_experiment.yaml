@@ -22,7 +22,8 @@ off_policy_train_batch_size: 10_000
 off_policy_prioritised_alpha:  0.7
 off_policy_prioritised_beta: 0.5
 
-evaluation_interval: 30
+evaluation_interval: 5
 evaluation_episodes: 200
 
 loggers: [wandb,csv]
+create_json: True

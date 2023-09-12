@@ -47,6 +47,7 @@ class ExperimentConfig:
     evaluation_episodes: int = MISSING
 
     loggers: List[str] = MISSING
+    create_json: bool = MISSING
 
     def train_batch_size(self, on_policy: bool) -> int:
         return (
@@ -110,8 +111,6 @@ class Experiment:
         self.model_config = model_config
         self.algorithm_config = algorithm_config
         self.seed = seed
-
-        self.n_iters_performed = 0
 
         self._setup()
 
@@ -269,6 +268,7 @@ class Experiment:
     def _collection_loop(self):
         self.total_time = 0
         self.total_frames = 0
+        self.n_iters_performed = 0
         sampling_start = time.time()
 
         # Training/collection iterations
@@ -279,7 +279,7 @@ class Experiment:
             collection_time = time.time() - sampling_start
             current_frames = batch.numel()
             self.total_frames += current_frames
-            self.logger.log_collection(batch, step=i)
+            self.logger.log_collection(batch, self.total_frames, step=i)
 
             # Loop over groups
             training_start = time.time()
@@ -313,13 +313,13 @@ class Experiment:
                 if hasattr(explore_layer, "step"):  # Step exploration annealing
                     explore_layer.step(current_frames)
 
+            # Update policy in collector
             self.collector.update_policy_weights_()
-            self.n_iters_performed += 1
 
+            # Timers
             training_time = time.time() - training_start
             iteration_time = collection_time + training_time
             self.total_time += iteration_time
-
             self.logger.log(
                 {
                     "timers/collection_time": collection_time,
@@ -334,13 +334,16 @@ class Experiment:
                 step=i,
             )
 
+            # Evaluation
             if (
                 self.config.evaluation_episodes > 0
                 and self.n_iters_performed % self.config.evaluation_interval == 0
             ):
                 self._evaluation_loop(iter=i)
 
+            self.n_iters_performed += 1
             self.logger.commit()
+            sampling_start = time.time()
 
         self.collector.shutdown()
 
