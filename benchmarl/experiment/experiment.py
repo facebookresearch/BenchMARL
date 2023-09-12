@@ -274,14 +274,16 @@ class Experiment:
         sampling_start = time.time()
 
         # Training/collection iterations
-        for i, batch in enumerate(self.collector):
-            print(f"Iteration {i}")
+        for batch in self.collector:
+            print(f"Iteration {self.n_iters_performed}")
 
             # Logging collection
             collection_time = time.time() - sampling_start
             current_frames = batch.numel()
             self.total_frames += current_frames
-            self.logger.log_collection(batch, self.total_frames, step=i)
+            self.logger.log_collection(
+                batch, self.total_frames, step=self.n_iters_performed
+            )
 
             # Loop over groups
             training_start = time.time()
@@ -305,7 +307,9 @@ class Experiment:
                     ):
                         training_tds.append(self._optimizer_loop(group))
 
-                self.logger.log_training(group, torch.stack(training_tds), step=i)
+                self.logger.log_training(
+                    group, torch.stack(training_tds), step=self.n_iters_performed
+                )
 
                 # Exploration update
                 if isinstance(self.group_policies[group], TensorDictSequential):
@@ -330,10 +334,9 @@ class Experiment:
                     "timers/total_time": self.total_time,
                     "counters/current_frames": current_frames,
                     "counters/total_frames": self.total_frames,
-                    "counters/current_iter": i,
                     "counters/total_iter": self.n_iters_performed,
                 },
-                step=i,
+                step=self.n_iters_performed,
             )
 
             # Evaluation
@@ -341,7 +344,7 @@ class Experiment:
                 self.config.evaluation_episodes > 0
                 and self.n_iters_performed % self.config.evaluation_interval == 0
             ):
-                self._evaluation_loop(iter=i)
+                self._evaluation_loop(iter=self.n_iters_performed)
 
             self.n_iters_performed += 1
             self.logger.commit()
