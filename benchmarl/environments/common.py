@@ -3,7 +3,7 @@ import os
 import os.path as osp
 import pathlib
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from torchrl.data import CompositeSpec
 from torchrl.envs import EnvBase
@@ -49,18 +49,24 @@ class Task(Enum):
             self.config.update(config)
         return self
 
-    def get_env(
+    def get_env_fun(
         self,
         num_envs: int,
         continuous_actions: bool,
         seed: Optional[int],
-    ) -> EnvBase:
+    ) -> Callable[[], EnvBase]:
         raise NotImplementedError
 
     def supports_continuous_actions(self) -> bool:
         raise NotImplementedError
 
     def supports_discrete_actions(self) -> bool:
+        raise NotImplementedError
+
+    def max_steps(self) -> int:
+        raise NotImplementedError
+
+    def has_render(self) -> bool:
         raise NotImplementedError
 
     def group_map(self, env: EnvBase) -> Dict[str, List[str]]:
@@ -83,6 +89,10 @@ class Task(Enum):
 
     def get_from_yaml(self, path: Optional[str] = None):
         raise NotImplementedError
+
+    @staticmethod
+    def env_name() -> str:
+        return "vmas"
 
     def __repr__(self):
         cls_name = self.__class__.__name__

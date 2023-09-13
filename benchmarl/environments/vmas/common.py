@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Callable, Dict, List, Optional
 
 from torchrl.data import CompositeSpec
 from torchrl.envs import EnvBase
@@ -12,13 +12,13 @@ from benchmarl.utils import read_yaml_config
 class VmasTask(Task):
     BALANCE = None
 
-    def get_env(
+    def get_env_fun(
         self,
         num_envs: int,
         continuous_actions: bool,
         seed: Optional[int],
-    ) -> EnvBase:
-        return VmasEnv(
+    ) -> Callable[[], EnvBase]:
+        return lambda: VmasEnv(
             scenario=self.name.lower(),
             num_envs=num_envs,
             continuous_actions=continuous_actions,
@@ -32,6 +32,12 @@ class VmasTask(Task):
 
     def supports_discrete_actions(self) -> bool:
         return True
+
+    def has_render(self) -> bool:
+        return True
+
+    def max_steps(self) -> bool:
+        return self.config["max_steps"]
 
     def group_map(self, env: EnvBase) -> Dict[str, List[str]]:
         return {"agents": [agent.name for agent in env.agents]}
@@ -55,11 +61,15 @@ class VmasTask(Task):
     def action_spec(self, env: EnvBase) -> CompositeSpec:
         return env.unbatched_action_spec
 
+    @staticmethod
+    def env_name() -> str:
+        return "vmas"
+
     def get_from_yaml(self, path: Optional[str] = None):
         if path is None:
             task_name = self.name.lower()
             return self.update_config(
-                Task._load_from_yaml(str(Path("vmas") / Path(task_name)))
+                Task._load_from_yaml(str(Path(self.env_name()) / Path(task_name)))
             )
         else:
             return self.update_config(**read_yaml_config(path))

@@ -73,3 +73,16 @@ Configuring a layer
 ```bash
 python hydra_run.py "model.layers.l1.num_cells=[3]"
 ```
+
+## Logging
+
+BenchMARL is compatible with the [TorchRL loggers](https://github.com/pytorch/rl/tree/main/torchrl/record/loggers).
+A list of logger names can be provided in the [experiment config](benchmarl/conf/experiment/base_experiment.yaml).
+Example of available options are: `wandb`, `csv`, `mflow`, `tensorboard` or any other option available in TorchRL. You can specify the loggers
+in the yaml config files or in the script arguments like so:
+```bash
+python hydra_run.py "experiment.loggers=[wandb]"
+```
+
+Additionally, you can specify a `create_json` argument which instructs the trainer to output a `.json` file in the
+format specified by [marl-eval](https://github.com/instadeepai/marl-eval).

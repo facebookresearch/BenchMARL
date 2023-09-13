@@ -1,5 +1,5 @@
 from dataclasses import dataclass, MISSING
-from typing import Dict, Optional, Type, Tuple
+from typing import Dict, Optional, Tuple, Type
 
 import torch
 from tensordict import TensorDictBase

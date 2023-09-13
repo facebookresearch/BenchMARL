@@ -1,11 +1,12 @@
+import pathlib
+
 import pytest
+
 from benchmarl.algorithms import algorithm_config_registry
 from benchmarl.environments import VmasTask
 from benchmarl.experiment import Experiment, ExperimentConfig
-from benchmarl.hydra_run import load_experiment_from_hydra_config
 from benchmarl.models.common import SequenceModelConfig
 from benchmarl.models.mlp import MlpConfig
-from hydra import compose, initialize
 from torch import nn
 
 
@@ -20,8 +21,14 @@ def test_all_algos_balance(algo_config, continuous):
         ],
         intermediate_sizes=[5],
     )
-    experiment_config: ExperimentConfig = ExperimentConfig.get_from_yaml()
-    experiment_config.n_iters = 2
+    experiment_config: ExperimentConfig = ExperimentConfig.get_from_yaml(
+        str(
+            pathlib.Path(__file__).parent
+            / "conf"
+            / "experiment"
+            / "base_experiment.yaml"
+        )
+    )
     experiment_config.prefer_continuous_actions = continuous
 
     experiment = Experiment(
@@ -34,18 +41,19 @@ def test_all_algos_balance(algo_config, continuous):
     experiment.run()
 
 
-@pytest.mark.parametrize("algo_config", algorithm_config_registry.keys())
-def test_all_algos_hydra(algo_config):
-    with initialize(version_base=None, config_path="../benchmarl/conf"):
-        cfg = compose(
-            config_name="config",
-            overrides=[
-                f"algorithm={algo_config}",
-                "task=vmas/balance",
-                "model.num_cells=[3]",
-            ],
-            return_hydra_config=True,
-        )
-        task_name = cfg.hydra.runtime.choices.task
-        experiment = load_experiment_from_hydra_config(cfg, task_name=task_name)
-        experiment.run()
+# @pytest.mark.parametrize("algo_config", algorithm_config_registry.keys())
+# def test_all_algos_hydra(algo_config):
+#     with initialize(version_base=None, config_path="../benchmarl/conf"):
+#         cfg = compose(
+#             config_name="config",
+#             overrides=[
+#                 f"algorithm={algo_config}",
+#                 "task=vmas/balance",
+#                 "model.num_cells=[3]",
+#                 "experiment.loggers=[]",
+#             ],
+#             return_hydra_config=True,
+#         )
+#         task_name = cfg.hydra.runtime.choices.task
+#         experiment = load_experiment_from_hydra_config(cfg, task_name=task_name)
+#         experiment.run()

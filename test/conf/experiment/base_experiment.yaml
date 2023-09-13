@@ -1,0 +1,30 @@
+defaults:
+  - experiment_config
+  - _self_
+
+sampling_device: "cpu"
+train_device: "cpu"
+gamma: 0.99
+polyak_tau: 0.005
+lr: 0.00005
+n_optimizer_steps: 10
+collected_frames_per_batch: 100
+n_envs_per_worker: 2
+n_iters: 3
+prefer_continuous_actions: True
+clip_grad_norm: True
+clip_grad_val: 40
+
+on_policy_minibatch_size: 100
+
+off_policy_memory_size: 200
+off_policy_train_batch_size: 100
+off_policy_prioritised_alpha:  0.7
+off_policy_prioritised_beta: 0.5
+
+evaluation: False
+evaluation_interval: 20
+evaluation_episodes: 200
+
+loggers: []
+create_json: False
