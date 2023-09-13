@@ -288,13 +288,7 @@ class Experiment:
             # Loop over groups
             training_start = time.time()
             for group in self.group_map.keys():
-                group_batch = batch.exclude(
-                    *[
-                        group_name
-                        for group_name in self.group_map.keys()
-                        if group_name != group
-                    ]
-                )
+                group_batch = batch.exclude(*self._get_excluded_keys(group))
                 group_batch = self.algorithm.process_batch(group, group_batch)
                 group_batch = group_batch.reshape(-1)
                 self.replay_buffers[group].extend(group_batch)
@@ -341,7 +335,7 @@ class Experiment:
 
             # Evaluation
             if (
-                self.config.evaluation_episodes > 0
+                self.config.evaluation
                 and self.n_iters_performed % self.config.evaluation_interval == 0
             ):
                 self._evaluation_loop(iter=self.n_iters_performed)
@@ -351,6 +345,14 @@ class Experiment:
             sampling_start = time.time()
 
         self.collector.shutdown()
+
+    def _get_excluded_keys(self, group: str):
+        excluded_keys = []
+        for other_group in self.group_map.keys():
+            if other_group != group:
+                excluded_keys += [other_group, ("next", other_group)]
+        excluded_keys += [(group, "info"), ("next", group, "info")]
+        return excluded_keys
 
     def _optimizer_loop(self, group: str) -> TensorDictBase:
         subdata = self.replay_buffers[group].sample()
