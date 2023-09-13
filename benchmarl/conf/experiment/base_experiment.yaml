@@ -7,7 +7,7 @@ train_device: "cuda"
 gamma: 0.99
 polyak_tau: 0.005
 lr: 0.00005
-n_optimizer_steps: 10
+n_optimizer_steps: 45
 collected_frames_per_batch: 60_000
 n_envs_per_worker: 600
 n_iters: 500
