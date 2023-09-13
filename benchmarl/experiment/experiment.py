@@ -4,9 +4,8 @@ import importlib
 import os
 import pathlib
 import time
-from collections import OrderedDict
 from dataclasses import dataclass, MISSING
-from typing import Dict, List, Optional, Union
+from typing import List, Optional
 
 import torch
 
@@ -415,7 +414,7 @@ class Experiment:
                 optimizer.step()
                 optimizer.zero_grad()
             elif loss_name.startswith("loss"):
-                assert False
+                raise AssertionError
         if self.target_updaters[group] is not None:
             self.target_updaters[group].step()
         return training_td
