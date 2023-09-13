@@ -11,7 +11,9 @@ from benchmarl.models.common import ModelConfig, parse_model_config, SequenceMod
 def load_experiment_from_hydra_config(cfg: DictConfig, task_name: str) -> Experiment:
     algorithm_config = OmegaConf.to_object(cfg.algorithm)
     experiment_config = OmegaConf.to_object(cfg.experiment)
-    task_config = task_config_registry[task_name].update_config(cfg.task)
+    task_config = task_config_registry[task_name].update_config(
+        OmegaConf.to_container(cfg.task, resolve=True)
+    )
     model_config = load_model_from_hydra_config(cfg.model)
 
     return Experiment(
@@ -34,7 +36,9 @@ def load_model_from_hydra_config(cfg: DictConfig) -> ModelConfig:
         )
     else:
         model_class = model_config_registry[cfg.name]
-        return model_class(**parse_model_config(OmegaConf.to_container(cfg)))
+        return model_class(
+            **parse_model_config(OmegaConf.to_container(cfg, resolve=True))
+        )
 
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
