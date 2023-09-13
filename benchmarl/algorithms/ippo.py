@@ -96,7 +96,14 @@ class Ippo(Algorithm):
         self, group: str, loss: ClipPPOLoss, lr: float
     ) -> Dict[str, torch.optim.Optimizer]:
 
-        return {"loss": torch.optim.Adam(loss.parameters(), lr=lr)}
+        return {
+            "loss_objective": torch.optim.Adam(
+                list(loss.actor_params.flatten_keys().values()), lr=lr
+            ),
+            "loss_critic": torch.optim.Adam(
+                list(loss.critic_params.flatten_keys().values()), lr=lr
+            ),
+        }
 
     def _get_policy_for_loss(
         self, group: str, model_config: ModelConfig, continuous: bool
@@ -230,14 +237,9 @@ class Ippo(Algorithm):
         self, group: str, loss_vals: TensorDictBase
     ) -> TensorDictBase:
         loss_vals.set(
-            "loss",
-            loss_vals["loss_objective"]
-            + loss_vals["loss_entropy"]
-            + loss_vals["loss_critic"],
+            "loss_objective", loss_vals["loss_objective"] + loss_vals["loss_entropy"]
         )
         del loss_vals["loss_entropy"]
-        del loss_vals["loss_objective"]
-        del loss_vals["loss_critic"]
         return loss_vals
 
     #####################
