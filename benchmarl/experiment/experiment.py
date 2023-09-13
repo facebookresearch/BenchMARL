@@ -355,8 +355,8 @@ class Experiment:
     def _optimizer_loop(self, group: str) -> TensorDictBase:
         subdata = self.replay_buffers[group].sample()
         loss_vals = self.losses[group](subdata)
-        loss_vals = self.algorithm.process_loss_vals(group, loss_vals)
         training_td = loss_vals.detach()
+        loss_vals = self.algorithm.process_loss_vals(group, loss_vals)
 
         for loss_name, loss_value in loss_vals.items():
             if loss_name in self.optimizers[group].keys():
