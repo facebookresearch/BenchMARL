@@ -1,7 +1,12 @@
+from __future__ import annotations
+
+import importlib
+import os
 import pathlib
 import time
+from collections import OrderedDict
 from dataclasses import dataclass, MISSING
-from typing import List, Optional
+from typing import Dict, List, Optional, Union
 
 import torch
 
@@ -12,12 +17,18 @@ from torchrl.collectors import SyncDataCollector
 from torchrl.envs import EnvBase, RewardSum, SerialEnv, TransformedEnv
 from torchrl.envs.transforms import Compose
 from torchrl.envs.utils import ExplorationType, set_exploration_type
+from torchrl.record.loggers import generate_exp_name
 
 from benchmarl.algorithms.common import AlgorithmConfig
 from benchmarl.environments import Task
 from benchmarl.experiment.logger import MultiAgentLogger
 from benchmarl.models.common import ModelConfig
 from benchmarl.utils import read_yaml_config
+
+_has_hydra = importlib.util.find_spec("hydra") is not None
+
+if _has_hydra:
+    from hydra.core.hydra_config import HydraConfig
 
 
 @dataclass
@@ -49,6 +60,8 @@ class ExperimentConfig:
 
     loggers: List[str] = MISSING
     create_json: bool = MISSING
+
+    restore_folder: Optional[str] = MISSING
 
     def train_batch_size(self, on_policy: bool) -> int:
         return (
@@ -114,6 +127,9 @@ class Experiment:
         self.seed = seed
 
         self._setup()
+
+        # if self.config.restore_folder is not None:
+        #     self.load_trainer(self.config.restore_folder)
 
     @property
     def on_policy(self) -> bool:
@@ -246,12 +262,36 @@ class Experiment:
         )
 
     def _setup_logger(self):
+        algorithm_name = self.algorithm_config.associated_class().__name__.lower()
+        model_name = self.model_config.associated_class().__name__.lower()
+        environment_name = self.task.env_name().lower()
+        task_name = self.task.name.lower()
+
+        if self.config.restore_folder is None:
+            exp_name = generate_exp_name(
+                f"{algorithm_name}_{task_name}_{model_name}", ""
+            )
+            if _has_hydra and HydraConfig.initialized():
+                folder_name = pathlib.Path(HydraConfig.get().runtime.output_dir)
+            else:
+                folder_name = pathlib.Path(os.getcwd())
+
+            folder_name = folder_name / exp_name
+            folder_name.mkdir(parents=False, exist_ok=False)
+            self.folder_name = str(folder_name)
+
+        else:
+            self.folder_name = self.config.restore_folder
+            exp_name = pathlib.Path(self.folder_name).name
+
         self.logger = MultiAgentLogger(
-            self.config,
-            algorithm_name=self.algorithm_config.associated_class().__name__.lower(),
-            model_name=self.model_config.associated_class().__name__.lower(),
-            environment_name=self.task.env_name().lower(),
-            task_name=self.task.name.lower(),
+            experiment_name=exp_name,
+            folder_name=self.folder_name,
+            experiment_config=self.config,
+            algorithm_name=algorithm_name,
+            model_name=model_name,
+            environment_name=environment_name,
+            task_name=task_name,
             group_map=self.group_map,
             seed=self.seed,
         )
@@ -418,3 +458,46 @@ class Experiment:
         evaluation_time = time.time() - evaluation_start
         self.logger.log({"timers/evaluation_time": evaluation_time}, step=iter)
         self.logger.log_evaluation(rollouts, frames, step=iter)
+
+    # Saving trainer state
+    # def state_dict(self) -> Dict:
+    #     state = OrderedDict(
+    #         collected_frames=self.collected_frames,
+    #         _last_log=self._last_log,
+    #         _last_save=self._last_save,
+    #         _optim_count=self._optim_count,
+    #     )
+    #     state_dict = OrderedDict(
+    #         collector=self.collector.state_dict(),
+    #         loss_module=self.loss_module.state_dict(),
+    #         state=state,
+    #     )
+    #     return state_dict
+    #
+    # def load_state_dict(self, state_dict: Dict) -> None:
+    #     model_state_dict = state_dict["loss_module"]
+    #     collector_state_dict = state_dict["collector"]
+    #
+    #     self.loss_module.load_state_dict(model_state_dict)
+    #     self.collector.load_state_dict(collector_state_dict)
+    #     for key, item in self._modules.items():
+    #         item.load_state_dict(state_dict[key])
+    #
+    #     self.collected_frames = state_dict["state"]["collected_frames"]
+    #     self._last_log = state_dict["state"]["_last_log"]
+    #     self._last_save = state_dict["state"]["_last_save"]
+    #     self._optim_count = state_dict["state"]["_optim_count"]
+    #
+    # def save_trainer(self, force_save: bool = False) -> None:
+    #     _save = force_save
+    #     if self.save_trainer_file is not None:
+    #         if (self.collected_frames - self._last_save) > self.save_trainer_interval:
+    #             self._last_save = self.collected_frames
+    #             _save = True
+    #     if _save and self.folder_name:
+    #         torch.save(self.state_dict(), self.folder_name)
+    #
+    # def load_trainer(self, folder: Union[str, pathlib.Path]) -> Experiment:
+    #     loaded_dict: OrderedDict = torch.load(file)
+    #     self.load_state_dict(loaded_dict)
+    #     return self
