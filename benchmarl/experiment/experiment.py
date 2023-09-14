@@ -12,6 +12,7 @@ from torchrl.collectors import SyncDataCollector
 from torchrl.envs import EnvBase, RewardSum, SerialEnv, TransformedEnv
 from torchrl.envs.transforms import Compose
 from torchrl.envs.utils import ExplorationType, set_exploration_type
+from tqdm import tqdm
 
 from benchmarl.algorithms.common import AlgorithmConfig
 from benchmarl.environments import Task
@@ -114,6 +115,11 @@ class Experiment:
         self.seed = seed
 
         self._setup()
+
+        self.total_time = 0
+        self.total_frames = 0
+        self.n_iters_performed = 0
+        self.mean_return = 0
 
     @property
     def on_policy(self) -> bool:
@@ -268,9 +274,11 @@ class Experiment:
         self._collection_loop()
 
     def _collection_loop(self):
-        self.total_time = 0
-        self.total_frames = 0
-        self.n_iters_performed = 0
+
+        pbar = tqdm(
+            initial=self.n_iters_performed,
+            total=self.config.n_iters,
+        )
         sampling_start = time.time()
 
         # Training/collection iterations
@@ -281,9 +289,11 @@ class Experiment:
             collection_time = time.time() - sampling_start
             current_frames = batch.numel()
             self.total_frames += current_frames
-            self.logger.log_collection(
+            self.mean_return = self.logger.log_collection(
                 batch, self.total_frames, step=self.n_iters_performed
             )
+            pbar.set_description(f"mean return = {self.mean_return}", refresh=False)
+            pbar.update()
 
             # Loop over groups
             training_start = time.time()
@@ -344,7 +354,12 @@ class Experiment:
             self.logger.commit()
             sampling_start = time.time()
 
+        self.close()
+
+    def close(self):
         self.collector.shutdown()
+        self.test_env.close()
+        self.logger.finish()
 
     def _get_excluded_keys(self, group: str):
         excluded_keys = []
@@ -375,7 +390,7 @@ class Experiment:
                 optimizer.step()
                 optimizer.zero_grad()
             elif loss_name.startswith("loss"):
-                assert False
+                raise AssertionError
         if self.target_updaters[group] is not None:
             self.target_updaters[group].step()
         return training_td
