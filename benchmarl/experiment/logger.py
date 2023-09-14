@@ -77,17 +77,15 @@ class MultiAgentLogger:
         batch: TensorDictBase,
         total_frames: int,
         step: int,
-    ):
+    ) -> float:
         if not len(self.loggers) and self.json_writer is None:
             return
         to_log = {}
-        group_returns = {}
+        json_metrics = {}
         for group in self.group_map.keys():
             episode_reward = self._get_episode_reward(group, batch)
             done = self._get_done(group, batch)
-            group_returns[group + "_return"] = episode_reward.mean(-2)[
-                done.any(-2)
-            ].tolist()
+            json_metrics[group + "_return"] = episode_reward.mean(-2)[done.any(-2)]
             reward = self._get_reward(group, batch)
             episode_reward = episode_reward[done]
             to_log.update(
@@ -107,11 +105,16 @@ class MultiAgentLogger:
                         for key, value in batch.get((group, "info")).items()
                     }
                 )
+        mean_group_return = torch.stack(
+            [value for key, value in json_metrics.items()], dim=0
+        ).mean(0)
+        json_metrics["return"] = mean_group_return
         if self.json_writer is not None:
             self.json_writer.write(
-                metrics=group_returns, total_frames=total_frames, step=step
+                metrics=json_metrics, total_frames=total_frames, step=step
             )
         self.log(to_log, step=step)
+        return mean_group_return.mean().item()
 
     def log_training(self, group: str, training_td: TensorDictBase, step: int):
         if not len(self.loggers):
@@ -250,6 +253,7 @@ class JsonWriter:
         }
 
     def write(self, total_frames: int, metrics: Dict[str, Any], step: int):
+        metrics = {k: val.tolist() for k, val in metrics.items()}
         metrics.update({"step_count": total_frames})
         step_str = f"step_{step}"
         if step_str in self.run_data:

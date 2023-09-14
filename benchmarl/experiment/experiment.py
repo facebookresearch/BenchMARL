@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import importlib
 import os
-import pathlib
 import time
+from collections import OrderedDict
 from dataclasses import dataclass, MISSING
-from typing import List, Optional
+from pathlib import Path
+from typing import Dict, List, Optional
 
 import torch
 
@@ -59,7 +60,8 @@ class ExperimentConfig:
     loggers: List[str] = MISSING
     create_json: bool = MISSING
 
-    restore_folder: Optional[str] = MISSING
+    restore_file: Optional[str] = MISSING
+    checkpoint_interval: float = MISSING
 
     def train_batch_size(self, on_policy: bool) -> int:
         return (
@@ -98,7 +100,7 @@ class ExperimentConfig:
     def get_from_yaml(path: Optional[str] = None):
         if path is None:
             yaml_path = (
-                pathlib.Path(__file__).parent.parent
+                Path(__file__).parent.parent
                 / "conf"
                 / "experiment"
                 / "base_experiment.yaml"
@@ -126,8 +128,13 @@ class Experiment:
 
         self._setup()
 
-        # if self.config.restore_folder is not None:
-        #     self.load_trainer(self.config.restore_folder)
+        self.total_time = 0
+        self.total_frames = 0
+        self.n_iters_performed = 0
+        self.mean_return = 0
+
+        if self.config.restore_file is not None:
+            self.load_trainer()
 
     @property
     def on_policy(self) -> bool:
@@ -138,6 +145,7 @@ class Experiment:
         self._setup_task()
         self._setup_algorithm()
         self._setup_collector()
+        self._setup_name()
         self._setup_logger()
 
     def _set_action_type(self):
@@ -259,37 +267,37 @@ class Experiment:
             total_frames=self.config.total_frames,
         )
 
-    def _setup_logger(self):
-        algorithm_name = self.algorithm_config.associated_class().__name__.lower()
-        model_name = self.model_config.associated_class().__name__.lower()
-        environment_name = self.task.env_name().lower()
-        task_name = self.task.name.lower()
+    def _setup_name(self):
+        self.algorithm_name = self.algorithm_config.associated_class().__name__.lower()
+        self.model_name = self.model_config.associated_class().__name__.lower()
+        self.environment_name = self.task.env_name().lower()
+        self.task_name = self.task.name.lower()
 
-        if self.config.restore_folder is None:
-            exp_name = generate_exp_name(
-                f"{algorithm_name}_{task_name}_{model_name}", ""
-            )
+        if self.config.restore_file is None:
             if _has_hydra and HydraConfig.initialized():
-                folder_name = pathlib.Path(HydraConfig.get().runtime.output_dir)
+                folder_name = Path(HydraConfig.get().runtime.output_dir)
             else:
-                folder_name = pathlib.Path(os.getcwd())
-
-            folder_name = folder_name / exp_name
-            folder_name.mkdir(parents=False, exist_ok=False)
-            self.folder_name = str(folder_name)
+                folder_name = Path(os.getcwd())
+            self.name = generate_exp_name(
+                f"{self.algorithm_name}_{self.task_name}_{self.model_name}", ""
+            )
+            self.folder_name = folder_name / self.name
+            self.folder_name.mkdir(parents=False, exist_ok=False)
 
         else:
-            self.folder_name = self.config.restore_folder
-            exp_name = pathlib.Path(self.folder_name).name
+            self.folder_name = Path(self.config.restore_file).parent.parent.resolve()
+            self.name = self.folder_name.name
+
+    def _setup_logger(self):
 
         self.logger = MultiAgentLogger(
-            experiment_name=exp_name,
-            folder_name=self.folder_name,
+            experiment_name=self.name,
+            folder_name=str(self.folder_name),
             experiment_config=self.config,
-            algorithm_name=algorithm_name,
-            model_name=model_name,
-            environment_name=environment_name,
-            task_name=task_name,
+            algorithm_name=self.algorithm_name,
+            model_name=self.model_name,
+            environment_name=self.environment_name,
+            task_name=self.task_name,
             group_map=self.group_map,
             seed=self.seed,
         )
@@ -306,9 +314,7 @@ class Experiment:
         self._collection_loop()
 
     def _collection_loop(self):
-        self.total_time = 0
-        self.total_frames = 0
-        self.n_iters_performed = 0
+
         sampling_start = time.time()
 
         # Training/collection iterations
@@ -319,9 +325,14 @@ class Experiment:
             collection_time = time.time() - sampling_start
             current_frames = batch.numel()
             self.total_frames += current_frames
-            self.logger.log_collection(
+            mean_return = self.logger.log_collection(
                 batch, self.total_frames, step=self.n_iters_performed
             )
+            if (
+                self.config.checkpoint_interval > 0
+                and self.n_iters_performed % self.config.checkpoint_interval == 0
+            ):
+                self.save_trainer()
 
             # Loop over groups
             training_start = time.time()
@@ -463,44 +474,42 @@ class Experiment:
         self.logger.log_evaluation(rollouts, frames, step=iter)
 
     # Saving trainer state
-    # def state_dict(self) -> Dict:
-    #     state = OrderedDict(
-    #         collected_frames=self.collected_frames,
-    #         _last_log=self._last_log,
-    #         _last_save=self._last_save,
-    #         _optim_count=self._optim_count,
-    #     )
-    #     state_dict = OrderedDict(
-    #         collector=self.collector.state_dict(),
-    #         loss_module=self.loss_module.state_dict(),
-    #         state=state,
-    #     )
-    #     return state_dict
-    #
-    # def load_state_dict(self, state_dict: Dict) -> None:
-    #     model_state_dict = state_dict["loss_module"]
-    #     collector_state_dict = state_dict["collector"]
-    #
-    #     self.loss_module.load_state_dict(model_state_dict)
-    #     self.collector.load_state_dict(collector_state_dict)
-    #     for key, item in self._modules.items():
-    #         item.load_state_dict(state_dict[key])
-    #
-    #     self.collected_frames = state_dict["state"]["collected_frames"]
-    #     self._last_log = state_dict["state"]["_last_log"]
-    #     self._last_save = state_dict["state"]["_last_save"]
-    #     self._optim_count = state_dict["state"]["_optim_count"]
-    #
-    # def save_trainer(self, force_save: bool = False) -> None:
-    #     _save = force_save
-    #     if self.save_trainer_file is not None:
-    #         if (self.collected_frames - self._last_save) > self.save_trainer_interval:
-    #             self._last_save = self.collected_frames
-    #             _save = True
-    #     if _save and self.folder_name:
-    #         torch.save(self.state_dict(), self.folder_name)
-    #
-    # def load_trainer(self, folder: Union[str, pathlib.Path]) -> Experiment:
-    #     loaded_dict: OrderedDict = torch.load(file)
-    #     self.load_state_dict(loaded_dict)
-    #     return self
+    def state_dict(self) -> OrderedDict:
+
+        state = OrderedDict(
+            total_time=self.total_time,
+            total_frames=self.total_frames,
+            n_iters_performed=self.n_iters_performed,
+            mean_return=self.mean_return,
+        )
+        state_dict = OrderedDict(
+            state=state,
+            collector=self.collector.state_dict(),
+            **{f"loss_{k}": item.state_dict() for k, item in self.losses.items()},
+            **{
+                f"buffer_{k}": item.state_dict()
+                for k, item in self.replay_buffers.items()
+            },
+        )
+        return state_dict
+
+    def load_state_dict(self, state_dict: Dict) -> None:
+        for group in self.group_map.keys():
+            self.losses[group].load_state_dict(state_dict[f"loss_{group}"])
+            self.replay_buffers[group].load_state_dict(state_dict[f"buffer_{group}"])
+        self.collector.load_state_dict(state_dict["collector"])
+        self.total_time = state_dict["state"]["total_time"]
+        self.total_frames = state_dict["state"]["total_frames"]
+        self.n_iters_performed = state_dict["state"]["n_iters_performed"]
+        self.mean_return = state_dict["state"]["mean_return"]
+
+    def save_trainer(self) -> None:
+        checkpoint_folder = self.folder_name / "checkpoints"
+        checkpoint_folder.mkdir(parents=False, exist_ok=True)
+        checkpoint_file = checkpoint_folder / f"checkpoint_{self.n_iters_performed}"
+        torch.save(self.state_dict(), checkpoint_file)
+
+    def load_trainer(self) -> Experiment:
+        loaded_dict: OrderedDict = torch.load(self.config.restore_file)
+        self.load_state_dict(loaded_dict)
+        return self
