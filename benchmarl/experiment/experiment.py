@@ -319,7 +319,6 @@ class Experiment:
         pbar = tqdm(
             initial=self.n_iters_performed,
             total=self.config.n_iters,
-            # desc=f"mean return = {self.mean_return}",
         )
         sampling_start = time.time()
 
