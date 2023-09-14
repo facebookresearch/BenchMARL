@@ -45,8 +45,8 @@ def load_model_from_hydra_config(cfg: DictConfig) -> ModelConfig:
 def hydra_experiment(cfg: DictConfig) -> None:
     hydra_choices = HydraConfig.get().runtime.choices
     task_name = hydra_choices.task
-    print(f"Algorithm: {hydra_choices.algorithm}, Task: {task_name}")
-    print("Loaded config:\n")
+    print(f"\nAlgorithm: {hydra_choices.algorithm}, Task: {task_name}")
+    print("\nLoaded config:\n")
     print(OmegaConf.to_yaml(cfg))
 
     experiment = load_experiment_from_hydra_config(
