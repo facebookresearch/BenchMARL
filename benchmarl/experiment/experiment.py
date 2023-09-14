@@ -383,7 +383,12 @@ class Experiment:
             self.logger.commit()
             sampling_start = time.time()
 
+        self.close()
+
+    def close(self):
         self.collector.shutdown()
+        self.test_env.close()
+        self.logger.finish()
 
     def _get_excluded_keys(self, group: str):
         excluded_keys = []

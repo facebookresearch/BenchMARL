@@ -188,6 +188,13 @@ class MultiAgentLogger:
                 for key, value in dict_to_log.items():
                     logger.log_scalar(key.replace("/", "_"), value, step=step)
 
+    def finish(self):
+        for logger in self.loggers:
+            if isinstance(logger, WandbLogger):
+                import wandb
+
+                wandb.finish()
+
     def _get_reward(
         self, group: str, td: TensorDictBase, remove_agent_dim: bool = False
     ):
