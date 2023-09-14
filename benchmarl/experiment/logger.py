@@ -167,14 +167,7 @@ class MultiAgentLogger:
             ).unsqueeze(0)
             for logger in self.loggers:
                 if isinstance(logger, WandbLogger):
-                    import wandb
-
-                    logger.experiment.log(
-                        {
-                            "eval/video": wandb.Video(vid, fps=20, format="mp4"),
-                        },
-                        commit=False,
-                    )
+                    logger.log_video("eval/video", vid, fps=20, commit=False)
                 else:
                     logger.log_video("eval_video", vid, step=step)
 

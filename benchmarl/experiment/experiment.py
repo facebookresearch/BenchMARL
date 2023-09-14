@@ -18,6 +18,7 @@ from torchrl.envs import EnvBase, RewardSum, SerialEnv, TransformedEnv
 from torchrl.envs.transforms import Compose
 from torchrl.envs.utils import ExplorationType, set_exploration_type
 from torchrl.record.loggers import generate_exp_name
+from tqdm import tqdm
 
 from benchmarl.algorithms.common import AlgorithmConfig
 from benchmarl.environments import Task
@@ -315,19 +316,26 @@ class Experiment:
 
     def _collection_loop(self):
 
+        pbar = tqdm(
+            initial=self.n_iters_performed,
+            total=self.config.n_iters,
+            # desc=f"mean return = {self.mean_return}",
+        )
         sampling_start = time.time()
 
         # Training/collection iterations
         for batch in self.collector:
-            print(f"Iteration {self.n_iters_performed}")
 
             # Logging collection
             collection_time = time.time() - sampling_start
             current_frames = batch.numel()
             self.total_frames += current_frames
-            mean_return = self.logger.log_collection(
+            self.mean_return = self.logger.log_collection(
                 batch, self.total_frames, step=self.n_iters_performed
             )
+            pbar.set_description(f"mean return = {self.mean_return}", refresh=False)
+            pbar.update()
+
             if (
                 self.config.checkpoint_interval > 0
                 and self.n_iters_performed % self.config.checkpoint_interval == 0
