@@ -513,7 +513,7 @@ class Experiment:
     def save_trainer(self) -> None:
         checkpoint_folder = self.folder_name / "checkpoints"
         checkpoint_folder.mkdir(parents=False, exist_ok=True)
-        checkpoint_file = checkpoint_folder / f"checkpoint_{self.n_iters_performed}"
+        checkpoint_file = checkpoint_folder / f"checkpoint_{self.n_iters_performed}.pt"
         torch.save(self.state_dict(), checkpoint_file)
 
     def load_trainer(self) -> Experiment:
