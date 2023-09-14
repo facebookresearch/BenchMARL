@@ -2,8 +2,8 @@ defaults:
   - experiment_config
   - _self_
 
-sampling_device: "cpu"
-train_device: "cpu"
+sampling_device: "cuda"
+train_device: "cuda"
 gamma: 0.99
 polyak_tau: 0.005
 lr: 0.00005
