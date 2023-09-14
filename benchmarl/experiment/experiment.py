@@ -390,6 +390,7 @@ class Experiment:
             ):
                 self._evaluation_loop(iter=self.n_iters_performed)
 
+            # End of step
             self.logger.commit()
             if (
                 self.config.checkpoint_interval > 0
