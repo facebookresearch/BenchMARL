@@ -335,12 +335,6 @@ class Experiment:
             pbar.set_description(f"mean return = {self.mean_return}", refresh=False)
             pbar.update()
 
-            if (
-                self.config.checkpoint_interval > 0
-                and self.n_iters_performed % self.config.checkpoint_interval == 0
-            ):
-                self.save_trainer()
-
             # Loop over groups
             training_start = time.time()
             for group in self.group_map.keys():
@@ -384,7 +378,7 @@ class Experiment:
                     "timers/total_time": self.total_time,
                     "counters/current_frames": current_frames,
                     "counters/total_frames": self.total_frames,
-                    "counters/total_iter": self.n_iters_performed,
+                    "counters/iter": self.n_iters_performed,
                 },
                 step=self.n_iters_performed,
             )
@@ -396,8 +390,13 @@ class Experiment:
             ):
                 self._evaluation_loop(iter=self.n_iters_performed)
 
-            self.n_iters_performed += 1
             self.logger.commit()
+            if (
+                self.config.checkpoint_interval > 0
+                and self.n_iters_performed % self.config.checkpoint_interval == 0
+            ):
+                self.save_trainer()
+            self.n_iters_performed += 1
             sampling_start = time.time()
 
         self.close()
