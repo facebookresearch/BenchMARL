@@ -25,7 +25,6 @@ from benchmarl.models.common import ModelConfig
 from benchmarl.utils import read_yaml_config
 
 _has_hydra = importlib.util.find_spec("hydra") is not None
-
 if _has_hydra:
     from hydra.core.hydra_config import HydraConfig
 
