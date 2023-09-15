@@ -5,10 +5,11 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 import torch
-
 from tensordict import TensorDictBase
 from torchrl.record.loggers import get_logger, Logger
 from torchrl.record.loggers.wandb import WandbLogger
+
+from benchmarl.environments import Task
 
 
 class MultiAgentLogger:
@@ -75,11 +76,11 @@ class MultiAgentLogger:
     def log_collection(
         self,
         batch: TensorDictBase,
+        task: Task,
         total_frames: int,
         step: int,
     ) -> float:
-        if not len(self.loggers) and self.json_writer is None:
-            return
+
         to_log = {}
         json_metrics = {}
         for group in self.group_map.keys():
@@ -104,16 +105,17 @@ class MultiAgentLogger:
                         f"collection/{group}/info/{key}": value.to(torch.float)
                         .mean()
                         .item()
-                        for key, value in batch.get((group, "info")).items()
+                        for key, value in batch.get((group, "next", "info")).items()
                     }
                 )
         if "info" in batch.keys():
             to_log.update(
                 {
                     f"collection/info/{key}": value.to(torch.float).mean().item()
-                    for key, value in batch.get("info").items()
+                    for key, value in batch.get(("next", "info")).items()
                 }
             )
+        to_log.update(task.log_info(batch))
         mean_group_return = torch.stack(
             [value for key, value in json_metrics.items()], dim=0
         ).mean(0)

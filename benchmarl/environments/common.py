@@ -5,6 +5,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
+from tensordict import TensorDictBase
 from torchrl.data import CompositeSpec
 from torchrl.envs import EnvBase
 
@@ -90,6 +91,10 @@ class Task(Enum):
     @staticmethod
     def env_name() -> str:
         return "vmas"
+
+    @staticmethod
+    def log_info(batch: TensorDictBase) -> Dict:
+        return {}
 
     def __repr__(self):
         cls_name = self.__class__.__name__

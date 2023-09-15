@@ -1,5 +1,6 @@
 from typing import Callable, Dict, List, Optional
 
+from tensordict import TensorDictBase
 from torchrl.data import CompositeSpec
 from torchrl.envs import EnvBase
 from torchrl.envs.libs.smacv2 import SMACv2Env
@@ -62,6 +63,16 @@ class Smacv2Task(Task):
 
     def action_spec(self, env: EnvBase) -> CompositeSpec:
         return env.input_spec["full_action_spec"]
+
+    @staticmethod
+    def log_info(batch: TensorDictBase) -> Dict:
+        done = batch.get(("next", "done"))
+        return {
+            "win_rate": batch.get(("next", "info", "battle_won"))[done].mean().item(),
+            "episode_limit_rate": batch.get(("next", "info", "episode_limit"))[done]
+            .mean()
+            .item(),
+        }
 
     @staticmethod
     def env_name() -> str:

@@ -333,7 +333,10 @@ class Experiment:
             current_frames = batch.numel()
             self.total_frames += current_frames
             self.mean_return = self.logger.log_collection(
-                batch, self.total_frames, step=self.n_iters_performed
+                batch,
+                total_frames=self.total_frames,
+                task=self.task,
+                step=self.n_iters_performed,
             )
             pbar.set_description(f"mean return = {self.mean_return}", refresh=False)
             pbar.update()
