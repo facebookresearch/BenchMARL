@@ -12,7 +12,7 @@ import torch
 
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictSequential
-from tensordict.utils import _unravel_key_to_tuple
+from tensordict.utils import _unravel_key_to_tuple, unravel_key
 from torchrl.collectors import SyncDataCollector
 from torchrl.envs import EnvBase, RewardSum, SerialEnv, TransformedEnv
 from torchrl.envs.transforms import Compose
@@ -194,6 +194,7 @@ class Experiment:
         self.action_mask_spec = self.task.action_mask_spec(test_env)
         self.action_spec = self.task.action_spec(test_env)
         self.group_map = self.task.group_map(test_env)
+        self.max_steps = self.task.max_steps(test_env)
 
         reward_spec = test_env.output_spec["full_reward_spec"]
         transforms = []
@@ -201,14 +202,14 @@ class Experiment:
             reward_key = _unravel_key_to_tuple(reward_key)
             transforms.append(
                 RewardSum(
-                    in_keys=[reward_key],
+                    in_keys=[unravel_key(reward_key)],
                     out_keys=[reward_key[:-1] + ("episode_reward",)],
                 )
             )
         transform = Compose(*transforms)
 
         def env_func_transformed() -> EnvBase:
-            return TransformedEnv(env_func(), transform)
+            return TransformedEnv(env_func(), transform.clone())
 
         if test_env.batch_size == ():
             self.env_func = lambda: SerialEnv(
@@ -391,6 +392,7 @@ class Experiment:
             if (
                 self.config.evaluation
                 and self.n_iters_performed % self.config.evaluation_interval == 0
+                and len(self.config.loggers)
             ):
                 self._evaluation_loop(iter=self.n_iters_performed)
 
@@ -416,7 +418,7 @@ class Experiment:
         for other_group in self.group_map.keys():
             if other_group != group:
                 excluded_keys += [other_group, ("next", other_group)]
-        excluded_keys += [(group, "info"), ("next", group, "info")]
+        excluded_keys += ["info", (group, "info"), ("next", group, "info")]
         return excluded_keys
 
     def _optimizer_loop(self, group: str) -> TensorDictBase:
@@ -473,7 +475,7 @@ class Experiment:
                 callback = None
 
             rollouts = self.test_env.rollout(
-                max_steps=self.task.max_steps(),
+                max_steps=self.max_steps,
                 policy=self.policy,
                 callback=callback,
                 auto_cast_to_device=True,

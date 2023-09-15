@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import Callable, Dict, List, Optional
 
 from torchrl.data import CompositeSpec
@@ -6,7 +5,6 @@ from torchrl.envs import EnvBase
 from torchrl.envs.libs.vmas import VmasEnv
 
 from benchmarl.environments.common import Task
-from benchmarl.utils import read_yaml_config
 
 
 class VmasTask(Task):
@@ -37,7 +35,7 @@ class VmasTask(Task):
     def has_render(self) -> bool:
         return True
 
-    def max_steps(self) -> bool:
+    def max_steps(self, env: EnvBase) -> bool:
         return self.config["max_steps"]
 
     def group_map(self, env: EnvBase) -> Dict[str, List[str]]:
@@ -65,15 +63,6 @@ class VmasTask(Task):
     @staticmethod
     def env_name() -> str:
         return "vmas"
-
-    def get_from_yaml(self, path: Optional[str] = None):
-        if path is None:
-            task_name = self.name.lower()
-            return self.update_config(
-                Task._load_from_yaml(str(Path(self.env_name()) / Path(task_name)))
-            )
-        else:
-            return self.update_config(**read_yaml_config(path))
 
 
 if __name__ == "__main__":

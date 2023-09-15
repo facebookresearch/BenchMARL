@@ -101,13 +101,29 @@ class MultiAgentLogger:
             if "info" in batch.get(group).keys():
                 to_log.update(
                     {
-                        f"collection/{group}/info/{key}": value.mean().item()
+                        f"collection/{group}/info/{key}": value.to(torch.float)
+                        .mean()
+                        .item()
                         for key, value in batch.get((group, "info")).items()
                     }
                 )
+        if "info" in batch.keys():
+            to_log.update(
+                {
+                    f"collection/info/{key}": value.to(torch.float).mean().item()
+                    for key, value in batch.get("info").items()
+                }
+            )
         mean_group_return = torch.stack(
             [value for key, value in json_metrics.items()], dim=0
         ).mean(0)
+        to_log.update(
+            {
+                "collection/reward/episode_reward_min": mean_group_return.min().item(),
+                "collection/reward/episode_reward_mean": mean_group_return.mean().item(),
+                "collection/reward/episode_reward_max": mean_group_return.max().item(),
+            }
+        )
         json_metrics["return"] = mean_group_return
         if self.json_writer is not None:
             self.json_writer.write(
@@ -196,8 +212,9 @@ class MultiAgentLogger:
     ):
         if ("next", group, "reward") not in td.keys(True, True):
             reward = (
-                td.get(("next", "reward")).expand(td.get(group).shape).unsqueeze(-1),
+                td.get(("next", "reward")).expand(td.get(group).shape).unsqueeze(-1)
             )
+
         else:
             reward = td.get(("next", group, "reward"))
         return reward.mean(-2) if remove_agent_dim else reward
@@ -216,8 +233,9 @@ class MultiAgentLogger:
             episode_reward = (
                 td.get(("next", "episode_reward"))
                 .expand(td.get(group).shape)
-                .unsqueeze(-1),
+                .unsqueeze(-1)
             )
+
         else:
             episode_reward = td.get(("next", group, "episode_reward"))
         return episode_reward.mean(-2) if remove_agent_dim else episode_reward
