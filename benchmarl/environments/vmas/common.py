@@ -11,6 +11,7 @@ from benchmarl.utils import read_yaml_config
 
 class VmasTask(Task):
     BALANCE = None
+    SAMPLING = None
 
     def get_env_fun(
         self,
