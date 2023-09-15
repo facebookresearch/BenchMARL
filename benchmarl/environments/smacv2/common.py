@@ -26,7 +26,7 @@ class Smacv2Task(Task):
         return True
 
     def has_render(self) -> bool:
-        return True
+        return False
 
     def max_steps(self, env: EnvBase) -> bool:
         return env.episode_limit
