@@ -1,6 +1,5 @@
-import importlib
 import json
-import os
+
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -8,18 +7,15 @@ import numpy as np
 import torch
 
 from tensordict import TensorDictBase
-from torchrl.record.loggers import generate_exp_name, get_logger, Logger
+from torchrl.record.loggers import get_logger, Logger
 from torchrl.record.loggers.wandb import WandbLogger
-
-_has_hydra = importlib.util.find_spec("hydra") is not None
-
-if _has_hydra:
-    from hydra.core.hydra_config import HydraConfig
 
 
 class MultiAgentLogger:
     def __init__(
         self,
+        experiment_name: str,
+        folder_name: str,
         experiment_config,
         algorithm_name: str,
         environment_name: str,
@@ -36,17 +32,10 @@ class MultiAgentLogger:
         self.group_map = group_map
         self.seed = seed
 
-        exp_name = generate_exp_name(f"{algorithm_name}_{task_name}_{model_name}", "")
-
-        if _has_hydra and HydraConfig.initialized():
-            cwd = HydraConfig.get().runtime.output_dir
-        else:
-            cwd = str(Path(os.getcwd()) / exp_name)
-
         if experiment_config.create_json:
             self.json_writer = JsonWriter(
-                folder=cwd,
-                name=exp_name + ".json",
+                folder=folder_name,
+                name=experiment_name + ".json",
                 algorithm_name=algorithm_name,
                 task_name=task_name,
                 environment_name=environment_name,
@@ -60,12 +49,12 @@ class MultiAgentLogger:
             self.loggers.append(
                 get_logger(
                     logger_type=logger_name,
-                    logger_name=cwd,
-                    experiment_name=exp_name,
+                    logger_name=folder_name,
+                    experiment_name=experiment_name,
                     wandb_kwargs={
                         "group": task_name,
                         "project": "benchmarl",
-                        "id": exp_name,
+                        "id": experiment_name,
                     },
                 )
             )

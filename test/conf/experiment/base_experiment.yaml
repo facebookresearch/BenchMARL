@@ -28,3 +28,6 @@ evaluation_episodes: 200
 
 loggers: []
 create_json: False
+
+restore_file:
+checkpoint_interval: 0
