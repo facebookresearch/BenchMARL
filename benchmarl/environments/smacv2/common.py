@@ -66,7 +66,7 @@ class Smacv2Task(Task):
 
     @staticmethod
     def log_info(batch: TensorDictBase) -> Dict:
-        done = batch.get(("next", "done"))
+        done = batch.get(("next", "done")).squeeze(-1)
         return {
             "win_rate": batch.get(("next", "info", "battle_won"))[done].mean().item(),
             "episode_limit_rate": batch.get(("next", "info", "episode_limit"))[done]
