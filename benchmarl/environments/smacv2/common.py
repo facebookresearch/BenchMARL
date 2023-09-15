@@ -26,7 +26,7 @@ class Smacv2Task(Task):
         return True
 
     def has_render(self) -> bool:
-        return False
+        return True
 
     def max_steps(self, env: EnvBase) -> bool:
         return env.episode_limit
@@ -70,4 +70,5 @@ class Smacv2Task(Task):
 
 if __name__ == "__main__":
     print(Smacv2Task.protoss_5_vs_5.get_from_yaml())
-    print(Smacv2Task.protoss_5_vs_5.get_env_fun(0, False, 0)())
+    env = Smacv2Task.protoss_5_vs_5.get_env_fun(0, False, 0)()
+    print(env.render(mode="rgb_array"))
