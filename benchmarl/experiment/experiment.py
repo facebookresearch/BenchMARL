@@ -215,12 +215,10 @@ class Experiment:
             self.env_func = lambda: SerialEnv(
                 self.config.evaluation_episodes, env_func_transformed
             )
-            self.test_env = SerialEnv(self.config.evaluation_episodes, lambda: test_env)
         else:
             self.env_func = env_func_transformed
-            self.test_env = test_env
 
-        assert self.test_env.batch_size == (self.config.evaluation_episodes,)
+        self.test_env = test_env
 
     def _setup_algorithm(self):
         self.algorithm = self.algorithm_config.get_algorithm(
@@ -474,14 +472,28 @@ class Experiment:
                 frames = None
                 callback = None
 
-            rollouts = self.test_env.rollout(
-                max_steps=self.max_steps,
-                policy=self.policy,
-                callback=callback,
-                auto_cast_to_device=True,
-                break_when_any_done=False,
-                # We are running vectorized evaluation we do not want it to stop when just one env is done
-            )
+            if self.test_env.batch_size == ():
+                rollouts = []
+                for _ in range(self.config.evaluation_episodes):
+                    rollouts.append(
+                        self.test_env.rollout(
+                            max_steps=self.max_steps,
+                            policy=self.policy,
+                            callback=callback,
+                            auto_cast_to_device=True,
+                            break_when_any_done=True,
+                        )
+                    )
+            else:
+                rollouts = self.test_env.rollout(
+                    max_steps=self.max_steps,
+                    policy=self.policy,
+                    callback=callback,
+                    auto_cast_to_device=True,
+                    break_when_any_done=False,
+                    # We are running vectorized evaluation we do not want it to stop when just one env is done
+                )
+                rollouts = rollouts.unbind(0)
         evaluation_time = time.time() - evaluation_start
         self.logger.log({"timers/evaluation_time": evaluation_time}, step=iter)
         self.logger.log_evaluation(rollouts, frames, step=iter)

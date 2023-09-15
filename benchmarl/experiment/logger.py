@@ -142,13 +142,14 @@ class MultiAgentLogger:
         self.log(to_log, step=step)
 
     def log_evaluation(
-        self, rollouts=TensorDictBase, frames: Optional[List] = None, step: int = None
+        self,
+        rollouts=List[TensorDictBase],
+        frames: Optional[List] = None,
+        step: int = None,
     ):
         if not len(self.loggers):
             return
         to_log = {}
-        # Unbind vectorized dim
-        rollouts = list(rollouts.unbind(dim=0))
         for group in self.group_map.keys():
             for k, r in enumerate(rollouts):
                 next_done = self._get_done(group, r)
