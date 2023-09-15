@@ -474,12 +474,12 @@ class Experiment:
 
             if self.test_env.batch_size == ():
                 rollouts = []
-                for _ in range(self.config.evaluation_episodes):
+                for eval_episode in range(self.config.evaluation_episodes):
                     rollouts.append(
                         self.test_env.rollout(
                             max_steps=self.max_steps,
                             policy=self.policy,
-                            callback=callback,
+                            callback=callback if eval_episode == 0 else None,
                             auto_cast_to_device=True,
                             break_when_any_done=True,
                         )
