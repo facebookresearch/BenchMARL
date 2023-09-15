@@ -30,4 +30,4 @@ loggers: [wandb]
 create_json: True
 
 restore_file: null
-checkpoint_interval: 100
+checkpoint_interval: 50
