@@ -1,5 +1,7 @@
 from typing import Callable, Dict, List, Optional
 
+import torch
+
 from tensordict import TensorDictBase
 from torchrl.data import CompositeSpec
 from torchrl.envs import EnvBase
@@ -68,8 +70,12 @@ class Smacv2Task(Task):
     def log_info(batch: TensorDictBase) -> Dict:
         done = batch.get(("next", "done")).squeeze(-1)
         return {
-            "win_rate": batch.get(("next", "info", "battle_won"))[done].mean().item(),
+            "win_rate": batch.get(("next", "info", "battle_won"))[done]
+            .to(torch.float)
+            .mean()
+            .item(),
             "episode_limit_rate": batch.get(("next", "info", "episode_limit"))[done]
+            .to(torch.float)
             .mean()
             .item(),
         }
