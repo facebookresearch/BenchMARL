@@ -70,11 +70,13 @@ class Smacv2Task(Task):
     def log_info(batch: TensorDictBase) -> Dict:
         done = batch.get(("next", "done")).squeeze(-1)
         return {
-            "win_rate": batch.get(("next", "info", "battle_won"))[done]
+            "collection/info/win_rate": batch.get(("next", "info", "battle_won"))[done]
             .to(torch.float)
             .mean()
             .item(),
-            "episode_limit_rate": batch.get(("next", "info", "episode_limit"))[done]
+            "collection/info/episode_limit_rate": batch.get(
+                ("next", "info", "episode_limit")
+            )[done]
             .to(torch.float)
             .mean()
             .item(),
