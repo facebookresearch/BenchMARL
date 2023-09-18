@@ -213,7 +213,7 @@ class Experiment:
 
         if test_env.batch_size == ():
             self.env_func = lambda: SerialEnv(
-                self.config.evaluation_episodes, env_func_transformed
+                self.config.n_envs_per_worker, env_func_transformed
             )
         else:
             self.env_func = env_func_transformed
@@ -496,7 +496,7 @@ class Experiment:
                     break_when_any_done=False,
                     # We are running vectorized evaluation we do not want it to stop when just one env is done
                 )
-                rollouts = rollouts.unbind(0)
+                rollouts = list(rollouts.unbind(0))
         evaluation_time = time.time() - evaluation_start
         self.logger.log({"timers/evaluation_time": evaluation_time}, step=iter)
         self.logger.log_evaluation(rollouts, frames, step=iter)

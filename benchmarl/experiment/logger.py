@@ -86,26 +86,31 @@ class MultiAgentLogger:
         for group in self.group_map.keys():
             episode_reward = self._get_episode_reward(group, batch)
             done = self._get_done(group, batch)
-            json_metrics[group + "_return"] = episode_reward.mean(-2)[done.any(-2)]
             reward = self._get_reward(group, batch)
-            episode_reward = episode_reward[done]
             to_log.update(
                 {
                     f"collection/{group}/reward/reward_min": reward.min().item(),
                     f"collection/{group}/reward/reward_mean": reward.mean().item(),
                     f"collection/{group}/reward/reward_max": reward.max().item(),
-                    f"collection/{group}/reward/episode_reward_min": episode_reward.min().item(),
-                    f"collection/{group}/reward/episode_reward_mean": episode_reward.mean().item(),
-                    f"collection/{group}/reward/episode_reward_max": episode_reward.max().item(),
                 }
             )
-            if "info" in batch.get(group).keys():
+            json_metrics[group + "_return"] = episode_reward.mean(-2)[done.any(-2)]
+            episode_reward = episode_reward[done]
+            if episode_reward.numel() > 0:
+                to_log.update(
+                    {
+                        f"collection/{group}/reward/episode_reward_min": episode_reward.min().item(),
+                        f"collection/{group}/reward/episode_reward_mean": episode_reward.mean().item(),
+                        f"collection/{group}/reward/episode_reward_max": episode_reward.max().item(),
+                    }
+                )
+            if "info" in batch.get(("next", group)).keys():
                 to_log.update(
                     {
                         f"collection/{group}/info/{key}": value.to(torch.float)
                         .mean()
                         .item()
-                        for key, value in batch.get((group, "next", "info")).items()
+                        for key, value in batch.get(("next", group, "info")).items()
                     }
                 )
         if "info" in batch.keys():
@@ -119,13 +124,14 @@ class MultiAgentLogger:
         mean_group_return = torch.stack(
             [value for key, value in json_metrics.items()], dim=0
         ).mean(0)
-        to_log.update(
-            {
-                "collection/reward/episode_reward_min": mean_group_return.min().item(),
-                "collection/reward/episode_reward_mean": mean_group_return.mean().item(),
-                "collection/reward/episode_reward_max": mean_group_return.max().item(),
-            }
-        )
+        if mean_group_return.numel() > 0:
+            to_log.update(
+                {
+                    "collection/reward/episode_reward_min": mean_group_return.min().item(),
+                    "collection/reward/episode_reward_mean": mean_group_return.mean().item(),
+                    "collection/reward/episode_reward_max": mean_group_return.max().item(),
+                }
+            )
         json_metrics["return"] = mean_group_return
         if self.json_writer is not None:
             self.json_writer.write(
