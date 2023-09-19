@@ -1,20 +1,18 @@
-import hydra
-from hydra.core.hydra_config import HydraConfig
+from experiment import ExperimentConfig
 from omegaconf import DictConfig, OmegaConf
 
-from benchmarl.environments import task_config_registry
+from benchmarl.algorithms.common import AlgorithmConfig
+from benchmarl.environments import Task, task_config_registry
 from benchmarl.experiment import Experiment
 from benchmarl.models import model_config_registry
 from benchmarl.models.common import ModelConfig, parse_model_config, SequenceModelConfig
 
 
-def load_experiment_from_hydra_config(cfg: DictConfig, task_name: str) -> Experiment:
-    algorithm_config = OmegaConf.to_object(cfg.algorithm)
-    experiment_config = OmegaConf.to_object(cfg.experiment)
-    task_config = task_config_registry[task_name].update_config(
-        OmegaConf.to_container(cfg.task, resolve=True)
-    )
-    model_config = load_model_from_hydra_config(cfg.model)
+def load_experiment_from_hydra(cfg: DictConfig, task_name: str) -> Experiment:
+    algorithm_config = load_algorithm_config_from_hydra(cfg.algorithm)
+    experiment_config = load_experiment_config_from_hydra(cfg.experiment)
+    task_config = load_task_config_from_hydra(cfg.task, task_name)
+    model_config = load_model_config_from_hydra(cfg.model)
 
     return Experiment(
         task=task_config,
@@ -25,10 +23,24 @@ def load_experiment_from_hydra_config(cfg: DictConfig, task_name: str) -> Experi
     )
 
 
-def load_model_from_hydra_config(cfg: DictConfig) -> ModelConfig:
+def load_task_config_from_hydra(cfg: DictConfig, task_name: str) -> Task:
+    return task_config_registry[task_name].update_config(
+        OmegaConf.to_container(cfg.task, resolve=True)
+    )
+
+
+def load_experiment_config_from_hydra(cfg: DictConfig) -> ExperimentConfig:
+    return OmegaConf.to_object(cfg)
+
+
+def load_algorithm_config_from_hydra(cfg: DictConfig) -> AlgorithmConfig:
+    return OmegaConf.to_object(cfg)
+
+
+def load_model_config_from_hydra(cfg: DictConfig) -> ModelConfig:
     if "layers" in cfg.keys():
         model_configs = [
-            load_model_from_hydra_config(cfg.layers[f"l{i}"])
+            load_model_config_from_hydra(cfg.layers[f"l{i}"])
             for i in range(1, len(cfg.layers) + 1)
         ]
         return SequenceModelConfig(
@@ -39,22 +51,3 @@ def load_model_from_hydra_config(cfg: DictConfig) -> ModelConfig:
         return model_class(
             **parse_model_config(OmegaConf.to_container(cfg, resolve=True))
         )
-
-
-@hydra.main(version_base=None, config_path="conf", config_name="config")
-def hydra_experiment(cfg: DictConfig) -> None:
-    hydra_choices = HydraConfig.get().runtime.choices
-    task_name = hydra_choices.task
-    print(f"\nAlgorithm: {hydra_choices.algorithm}, Task: {task_name}")
-    print("\nLoaded config:\n")
-    print(OmegaConf.to_yaml(cfg))
-
-    experiment = load_experiment_from_hydra_config(
-        cfg,
-        task_name=task_name,
-    )
-    experiment.run()
-
-
-if __name__ == "__main__":
-    hydra_experiment()
