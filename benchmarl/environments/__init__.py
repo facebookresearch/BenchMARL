@@ -1,4 +1,6 @@
 from .common import Task
+
+from .smacv2.common import Smacv2Task
 from .vmas.balance import TaskConfig as BalanceConfig
 
 # Environments
@@ -11,6 +13,7 @@ task_config_registry = {
     "vmas/balance": VmasTask.BALANCE,
     "vmas/sampling": VmasTask.SAMPLING,
     "vmas/navigation": VmasTask.NAVIGATION,
+    "smacv2/protoss_5_vs_5": Smacv2Task.protoss_5_vs_5,
 }
 
 
