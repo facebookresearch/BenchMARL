@@ -5,10 +5,11 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 import torch
-
 from tensordict import TensorDictBase
 from torchrl.record.loggers import get_logger, Logger
 from torchrl.record.loggers.wandb import WandbLogger
+
+from benchmarl.environments import Task
 
 
 class MultiAgentLogger:
@@ -75,39 +76,62 @@ class MultiAgentLogger:
     def log_collection(
         self,
         batch: TensorDictBase,
+        task: Task,
         total_frames: int,
         step: int,
     ) -> float:
-        if not len(self.loggers) and self.json_writer is None:
-            return
+
         to_log = {}
         json_metrics = {}
         for group in self.group_map.keys():
             episode_reward = self._get_episode_reward(group, batch)
             done = self._get_done(group, batch)
-            json_metrics[group + "_return"] = episode_reward.mean(-2)[done.any(-2)]
             reward = self._get_reward(group, batch)
-            episode_reward = episode_reward[done]
             to_log.update(
                 {
                     f"collection/{group}/reward/reward_min": reward.min().item(),
                     f"collection/{group}/reward/reward_mean": reward.mean().item(),
                     f"collection/{group}/reward/reward_max": reward.max().item(),
-                    f"collection/{group}/reward/episode_reward_min": episode_reward.min().item(),
-                    f"collection/{group}/reward/episode_reward_mean": episode_reward.mean().item(),
-                    f"collection/{group}/reward/episode_reward_max": episode_reward.max().item(),
                 }
             )
-            if "info" in batch.get(group).keys():
+            json_metrics[group + "_return"] = episode_reward.mean(-2)[done.any(-2)]
+            episode_reward = episode_reward[done]
+            if episode_reward.numel() > 0:
                 to_log.update(
                     {
-                        f"collection/{group}/info/{key}": value.mean().item()
-                        for key, value in batch.get((group, "info")).items()
+                        f"collection/{group}/reward/episode_reward_min": episode_reward.min().item(),
+                        f"collection/{group}/reward/episode_reward_mean": episode_reward.mean().item(),
+                        f"collection/{group}/reward/episode_reward_max": episode_reward.max().item(),
                     }
                 )
+            if "info" in batch.get(("next", group)).keys():
+                to_log.update(
+                    {
+                        f"collection/{group}/info/{key}": value.to(torch.float)
+                        .mean()
+                        .item()
+                        for key, value in batch.get(("next", group, "info")).items()
+                    }
+                )
+        if "info" in batch.keys():
+            to_log.update(
+                {
+                    f"collection/info/{key}": value.to(torch.float).mean().item()
+                    for key, value in batch.get(("next", "info")).items()
+                }
+            )
+        to_log.update(task.log_info(batch))
         mean_group_return = torch.stack(
             [value for key, value in json_metrics.items()], dim=0
         ).mean(0)
+        if mean_group_return.numel() > 0:
+            to_log.update(
+                {
+                    "collection/reward/episode_reward_min": mean_group_return.min().item(),
+                    "collection/reward/episode_reward_mean": mean_group_return.mean().item(),
+                    "collection/reward/episode_reward_max": mean_group_return.max().item(),
+                }
+            )
         json_metrics["return"] = mean_group_return
         if self.json_writer is not None:
             self.json_writer.write(
@@ -126,13 +150,14 @@ class MultiAgentLogger:
         self.log(to_log, step=step)
 
     def log_evaluation(
-        self, rollouts=TensorDictBase, frames: Optional[List] = None, step: int = None
+        self,
+        rollouts=List[TensorDictBase],
+        frames: Optional[List] = None,
+        step: int = None,
     ):
         if not len(self.loggers):
             return
         to_log = {}
-        # Unbind vectorized dim
-        rollouts = list(rollouts.unbind(dim=0))
         for group in self.group_map.keys():
             for k, r in enumerate(rollouts):
                 next_done = self._get_done(group, r)
@@ -196,8 +221,9 @@ class MultiAgentLogger:
     ):
         if ("next", group, "reward") not in td.keys(True, True):
             reward = (
-                td.get(("next", "reward")).expand(td.get(group).shape).unsqueeze(-1),
+                td.get(("next", "reward")).expand(td.get(group).shape).unsqueeze(-1)
             )
+
         else:
             reward = td.get(("next", group, "reward"))
         return reward.mean(-2) if remove_agent_dim else reward
@@ -216,8 +242,9 @@ class MultiAgentLogger:
             episode_reward = (
                 td.get(("next", "episode_reward"))
                 .expand(td.get(group).shape)
-                .unsqueeze(-1),
+                .unsqueeze(-1)
             )
+
         else:
             episode_reward = td.get(("next", group, "episode_reward"))
         return episode_reward.mean(-2) if remove_agent_dim else episode_reward

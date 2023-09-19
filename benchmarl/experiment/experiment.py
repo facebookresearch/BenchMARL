@@ -12,7 +12,7 @@ import torch
 
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictSequential
-from tensordict.utils import _unravel_key_to_tuple
+from tensordict.utils import _unravel_key_to_tuple, unravel_key
 from torchrl.collectors import SyncDataCollector
 from torchrl.envs import EnvBase, RewardSum, SerialEnv, TransformedEnv
 from torchrl.envs.transforms import Compose
@@ -194,6 +194,7 @@ class Experiment:
         self.action_mask_spec = self.task.action_mask_spec(test_env)
         self.action_spec = self.task.action_spec(test_env)
         self.group_map = self.task.group_map(test_env)
+        self.max_steps = self.task.max_steps(test_env)
 
         reward_spec = test_env.output_spec["full_reward_spec"]
         transforms = []
@@ -201,25 +202,23 @@ class Experiment:
             reward_key = _unravel_key_to_tuple(reward_key)
             transforms.append(
                 RewardSum(
-                    in_keys=[reward_key],
+                    in_keys=[unravel_key(reward_key)],
                     out_keys=[reward_key[:-1] + ("episode_reward",)],
                 )
             )
         transform = Compose(*transforms)
 
         def env_func_transformed() -> EnvBase:
-            return TransformedEnv(env_func(), transform)
+            return TransformedEnv(env_func(), transform.clone())
 
         if test_env.batch_size == ():
             self.env_func = lambda: SerialEnv(
-                self.config.evaluation_episodes, env_func_transformed
+                self.config.n_envs_per_worker, env_func_transformed
             )
-            self.test_env = SerialEnv(self.config.evaluation_episodes, lambda: test_env)
         else:
             self.env_func = env_func_transformed
-            self.test_env = test_env
 
-        assert self.test_env.batch_size == (self.config.evaluation_episodes,)
+        self.test_env = test_env
 
     def _setup_algorithm(self):
         self.algorithm = self.algorithm_config.get_algorithm(
@@ -334,7 +333,10 @@ class Experiment:
             current_frames = batch.numel()
             self.total_frames += current_frames
             self.mean_return = self.logger.log_collection(
-                batch, self.total_frames, step=self.n_iters_performed
+                batch,
+                total_frames=self.total_frames,
+                task=self.task,
+                step=self.n_iters_performed,
             )
             pbar.set_description(f"mean return = {self.mean_return}", refresh=False)
             pbar.update()
@@ -391,6 +393,7 @@ class Experiment:
             if (
                 self.config.evaluation
                 and self.n_iters_performed % self.config.evaluation_interval == 0
+                and len(self.config.loggers)
             ):
                 self._evaluation_loop(iter=self.n_iters_performed)
 
@@ -416,7 +419,7 @@ class Experiment:
         for other_group in self.group_map.keys():
             if other_group != group:
                 excluded_keys += [other_group, ("next", other_group)]
-        excluded_keys += [(group, "info"), ("next", group, "info")]
+        excluded_keys += ["info", (group, "info"), ("next", group, "info")]
         return excluded_keys
 
     def _optimizer_loop(self, group: str) -> TensorDictBase:
@@ -472,14 +475,28 @@ class Experiment:
                 frames = None
                 callback = None
 
-            rollouts = self.test_env.rollout(
-                max_steps=self.task.max_steps(),
-                policy=self.policy,
-                callback=callback,
-                auto_cast_to_device=True,
-                break_when_any_done=False,
-                # We are running vectorized evaluation we do not want it to stop when just one env is done
-            )
+            if self.test_env.batch_size == ():
+                rollouts = []
+                for eval_episode in range(self.config.evaluation_episodes):
+                    rollouts.append(
+                        self.test_env.rollout(
+                            max_steps=self.max_steps,
+                            policy=self.policy,
+                            callback=callback if eval_episode == 0 else None,
+                            auto_cast_to_device=True,
+                            break_when_any_done=True,
+                        )
+                    )
+            else:
+                rollouts = self.test_env.rollout(
+                    max_steps=self.max_steps,
+                    policy=self.policy,
+                    callback=callback,
+                    auto_cast_to_device=True,
+                    break_when_any_done=False,
+                    # We are running vectorized evaluation we do not want it to stop when just one env is done
+                )
+                rollouts = list(rollouts.unbind(0))
         evaluation_time = time.time() - evaluation_start
         self.logger.log({"timers/evaluation_time": evaluation_time}, step=iter)
         self.logger.log_evaluation(rollouts, frames, step=iter)

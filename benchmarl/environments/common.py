@@ -1,10 +1,11 @@
 import importlib
 import os
 import os.path as osp
-import pathlib
 from enum import Enum
+from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
+from tensordict import TensorDictBase
 from torchrl.data import CompositeSpec
 from torchrl.envs import EnvBase
 
@@ -63,7 +64,7 @@ class Task(Enum):
     def supports_discrete_actions(self) -> bool:
         raise NotImplementedError
 
-    def max_steps(self) -> int:
+    def max_steps(self, env: EnvBase) -> int:
         raise NotImplementedError
 
     def has_render(self) -> bool:
@@ -87,12 +88,13 @@ class Task(Enum):
     def action_mask_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
         raise NotImplementedError
 
-    def get_from_yaml(self, path: Optional[str] = None):
-        raise NotImplementedError
-
     @staticmethod
     def env_name() -> str:
         return "vmas"
+
+    @staticmethod
+    def log_info(batch: TensorDictBase) -> Dict:
+        return {}
 
     def __repr__(self):
         cls_name = self.__class__.__name__
@@ -103,7 +105,14 @@ class Task(Enum):
 
     @staticmethod
     def _load_from_yaml(name: str) -> Dict[str, Any]:
-        yaml_path = (
-            pathlib.Path(__file__).parent.parent / "conf" / "task" / f"{name}.yaml"
-        )
+        yaml_path = Path(__file__).parent.parent / "conf" / "task" / f"{name}.yaml"
         return read_yaml_config(str(yaml_path.resolve()))
+
+    def get_from_yaml(self, path: Optional[str] = None):
+        if path is None:
+            task_name = self.name.lower()
+            return self.update_config(
+                Task._load_from_yaml(str(Path(self.env_name()) / Path(task_name)))
+            )
+        else:
+            return self.update_config(**read_yaml_config(path))
