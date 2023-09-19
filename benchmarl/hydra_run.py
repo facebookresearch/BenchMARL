@@ -1,9 +1,8 @@
-from experiment import ExperimentConfig
 from omegaconf import DictConfig, OmegaConf
 
 from benchmarl.algorithms.common import AlgorithmConfig
 from benchmarl.environments import Task, task_config_registry
-from benchmarl.experiment import Experiment
+from benchmarl.experiment import Experiment, ExperimentConfig
 from benchmarl.models import model_config_registry
 from benchmarl.models.common import ModelConfig, parse_model_config, SequenceModelConfig
 
