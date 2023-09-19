@@ -25,7 +25,7 @@ def load_experiment_from_hydra(cfg: DictConfig, task_name: str) -> Experiment:
 
 def load_task_config_from_hydra(cfg: DictConfig, task_name: str) -> Task:
     return task_config_registry[task_name].update_config(
-        OmegaConf.to_container(cfg.task, resolve=True)
+        OmegaConf.to_container(cfg, resolve=True)
     )
 
 

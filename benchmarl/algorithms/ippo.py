@@ -159,7 +159,7 @@ class Ippo(Algorithm):
             )
             policy = ProbabilisticActor(
                 module=TensorDictSequential(actor_module, extractor_module),
-                spec=self.action_spec,
+                spec=self.action_spec[(group, "action")],
                 in_keys=[(group, "loc"), (group, "scale")],
                 out_keys=[(group, "action")],
                 distribution_class=TanhNormal,
