@@ -1,0 +1,8 @@
+defaults:
+  - _self_
+  - pettingzoo_multiwalker_config
+
+task: "multiwalker_v9"
+n_walkers: 3
+shared_reward: False
+max_cycles: 500

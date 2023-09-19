@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib
 import os
+import re
 import time
 from collections import OrderedDict
 from dataclasses import dataclass, MISSING
@@ -12,7 +13,6 @@ import torch
 
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictSequential
-from tensordict.utils import _unravel_key_to_tuple, unravel_key
 from torchrl.collectors import SyncDataCollector
 from torchrl.envs import EnvBase, RewardSum, SerialEnv, TransformedEnv
 from torchrl.envs.transforms import Compose
@@ -196,16 +196,13 @@ class Experiment:
         self.group_map = self.task.group_map(test_env)
         self.max_steps = self.task.max_steps(test_env)
 
-        reward_spec = test_env.output_spec["full_reward_spec"]
         transforms = []
-        for reward_key in reward_spec.keys(True, True):
-            reward_key = _unravel_key_to_tuple(reward_key)
-            transforms.append(
-                RewardSum(
-                    in_keys=[unravel_key(reward_key)],
-                    out_keys=[reward_key[:-1] + ("episode_reward",)],
-                )
+
+        transforms.append(
+            RewardSum(
+                in_keys=test_env.reward_keys,
             )
+        )
         transform = Compose(*transforms)
 
         def env_func_transformed() -> EnvBase:
@@ -469,7 +466,16 @@ class Experiment:
                 frames = []
 
                 def callback(env, td):
-                    frames.append(env.render(mode="rgb_array"))
+                    try:
+                        frames.append(env.render(mode="rgb_array"))
+                    except TypeError as err:
+                        if re.match(
+                            "render\(\) got an unexpected keyword argument",  # noqa W605
+                            str(err),
+                        ):
+                            frames.append(env.render())
+                        else:
+                            raise err
 
             else:
                 frames = None
