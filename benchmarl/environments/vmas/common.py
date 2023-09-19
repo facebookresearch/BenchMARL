@@ -10,6 +10,7 @@ from benchmarl.environments.common import Task
 class VmasTask(Task):
     BALANCE = None
     SAMPLING = None
+    NAVIGATION = None
 
     def get_env_fun(
         self,
