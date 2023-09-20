@@ -462,9 +462,10 @@ class Experiment:
 
         return float(gn)
 
+    @torch.no_grad()
     def _evaluation_loop(self, iter: int):
         evaluation_start = time.time()
-        with torch.no_grad() and set_exploration_type(ExplorationType.MODE):
+        with set_exploration_type(ExplorationType.MODE):
             if self.task.has_render():
                 frames = []
 
