@@ -13,6 +13,7 @@ import torch
 
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictSequential
+from tensordict.utils import _unravel_key_to_tuple
 from torchrl.collectors import SyncDataCollector
 from torchrl.envs import EnvBase, RewardSum, SerialEnv, TransformedEnv
 from torchrl.envs.transforms import Compose
@@ -196,13 +197,16 @@ class Experiment:
         self.group_map = self.task.group_map(test_env)
         self.max_steps = self.task.max_steps(test_env)
 
+        reward_spec = test_env.output_spec["full_reward_spec"]
         transforms = []
-
-        transforms.append(
-            RewardSum(
-                in_keys=test_env.reward_keys,
+        for reward_key in reward_spec.keys(True, True):
+            reward_key = _unravel_key_to_tuple(reward_key)
+            transforms.append(
+                RewardSum(
+                    in_keys=[reward_key],
+                    out_keys=[reward_key[:-1] + ("episode_reward",)],
+                )
             )
-        )
         transform = Compose(*transforms)
 
         def env_func_transformed() -> EnvBase:
