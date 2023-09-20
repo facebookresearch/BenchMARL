@@ -56,12 +56,12 @@ class Mlp(Model):
         super()._perform_checks()
 
         if self.input_has_agent_dim and self.input_leaf_spec.shape[-2] != self.n_agents:
-            assert False
+            raise AssertionError
         if (
             self.output_has_agent_dim
             and self.output_leaf_spec.shape[-2] != self.n_agents
         ):
-            assert False
+            raise AssertionError
 
     def _forward(self, tensordict: TensorDictBase) -> TensorDictBase:
         # Gather in_key

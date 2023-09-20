@@ -74,21 +74,21 @@ class Model(TensorDictModuleBase, ABC):
 
     def _perform_checks(self):
         if not self.input_has_agent_dim and not self.centralised:
-            assert False
+            raise AssertionError
 
         if len(self.in_keys) > 1:
-            assert False
+            raise AssertionError
         if len(self.out_keys) > 1:
-            assert False
+            raise AssertionError
 
         if self.agent_group in self.input_spec.keys() and self.input_spec[
             self.agent_group
         ].shape != (self.n_agents,):
-            assert False
+            raise AssertionError
         if self.agent_group in self.output_spec.keys() and self.output_spec[
             self.agent_group
         ].shape != (self.n_agents,):
-            assert False
+            raise AssertionError
 
     def forward(self, tensordict: TensorDictBase) -> TensorDictBase:
         # _check_spec(tensordict, self.input_spec)
