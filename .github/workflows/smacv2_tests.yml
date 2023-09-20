@@ -38,7 +38,4 @@ jobs:
 
     - name: Test with pytest
       run: |
-        root_dir="$(git rev-parse --show-toplevel)"
-        export SC2PATH="${root_dir}/StarCraftII"
-        echo 'SC2PATH is set to ' "$SC2PATH"
         pytest test/test_smacv2.py --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml --cov-report=html
