@@ -3,7 +3,8 @@ python -m pip install vmas
 sudo apt-get update
 sudo apt-get install --fix-missing libgl1-mesa-dev
 sudo apt-get install -y python-opengl
-sudo apt install -y freeglut-devel
+sudo apt install -y freeglut3-devel
+sudo apt-get install -y libglx-dev
 sudo apt-get install -y xvbf
 sudo apt-get install -y x11-utils
 export DISPLAY=':99.0'
