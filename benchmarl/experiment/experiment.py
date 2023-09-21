@@ -37,6 +37,7 @@ class ExperimentConfig:
     train_device: str = MISSING
     gamma: float = MISSING
     polyak_tau: float = MISSING
+    share_policy_params: bool = MISSING
     lr: float = MISSING
     n_optimizer_steps: int = MISSING
     collected_frames_per_batch: int = MISSING
@@ -465,7 +466,7 @@ class Experiment:
     def _evaluation_loop(self, iter: int):
         evaluation_start = time.time()
         with set_exploration_type(ExplorationType.MODE):
-            if self.task.has_render():
+            if self.task.has_render(self.test_env):
                 frames = []
 
                 def callback(env, td):
