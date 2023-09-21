@@ -2,7 +2,7 @@ import pytest
 
 from benchmarl.algorithms import algorithm_config_registry
 from benchmarl.algorithms.common import AlgorithmConfig
-from benchmarl.hydra_run import load_algorithm_config_from_hydra
+from benchmarl.hydra_config import load_algorithm_config_from_hydra
 from hydra import compose, initialize
 
 

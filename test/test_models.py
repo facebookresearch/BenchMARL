@@ -1,6 +1,6 @@
 import pytest
 
-from benchmarl.hydra_run import load_model_config_from_hydra
+from benchmarl.hydra_config import load_model_config_from_hydra
 from benchmarl.models import model_config_registry
 
 from benchmarl.models.common import SequenceModelConfig

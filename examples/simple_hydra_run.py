@@ -1,5 +1,5 @@
 import hydra
-from benchmarl.hydra_run import load_experiment_from_hydra
+from benchmarl.hydra_config import load_experiment_from_hydra
 from hydra.core.hydra_config import HydraConfig
 from omegaconf import DictConfig, OmegaConf
 

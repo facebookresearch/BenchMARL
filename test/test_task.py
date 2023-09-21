@@ -1,7 +1,7 @@
 import pytest
 
 from benchmarl.environments import Task, task_config_registry
-from benchmarl.hydra_run import load_task_config_from_hydra
+from benchmarl.hydra_config import load_task_config_from_hydra
 from hydra import compose, initialize
 
 
