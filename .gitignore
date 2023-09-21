@@ -2,7 +2,11 @@
 
 # Hydra
 outputs/
+examples/outputs/
+benchmarl/outputs/
 multirun/
+examples/multirun/
+benchmarl/multirun/
 
 
 # Byte-compiled / optimized / DLL files
