@@ -22,14 +22,11 @@ from benchmarl.utils import DEVICE_TYPING, read_yaml_config
 
 
 class Vdn(Algorithm):
-    def __init__(
-        self, delay_value: bool, loss_function: str, share_params: bool, **kwargs
-    ):
+    def __init__(self, delay_value: bool, loss_function: str, **kwargs):
         super().__init__(**kwargs)
 
         self.delay_value = delay_value
         self.loss_function = loss_function
-        self.share_params = share_params
 
     #############################
     # Overridden abstract methods
@@ -131,7 +128,7 @@ class Vdn(Algorithm):
             input_has_agent_dim=True,
             n_agents=n_agents,
             centralised=False,
-            share_params=self.share_params,
+            share_params=self.experiment_config.share_policy_params,
             device=self.device,
         )
         if self.action_mask_spec is not None:
@@ -215,7 +212,6 @@ class VdnConfig(AlgorithmConfig):
 
     delay_value: bool = MISSING
     loss_function: str = MISSING
-    share_params: bool = MISSING
 
     @staticmethod
     def associated_class() -> Type[Algorithm]:

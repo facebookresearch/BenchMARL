@@ -32,21 +32,19 @@ from benchmarl.utils import DEVICE_TYPING, read_yaml_config
 class Isac(Algorithm):
     def __init__(
         self,
-        share_param_actor: bool = True,
-        share_param_critic: bool = True,
-        num_qvalue_nets: int = 2,
-        loss_function: str = "l2",
-        delay_qvalue: bool = True,
-        target_entropy: Union[float, str] = "auto",
-        alpha_init: float = 1.0,
-        min_alpha: Optional[float] = None,
-        max_alpha: Optional[float] = None,
-        fixed_alpha: bool = False,
+        share_param_critic: bool,
+        num_qvalue_nets: int,
+        loss_function: str,
+        delay_qvalue: bool,
+        target_entropy: Union[float, str],
+        alpha_init: float,
+        min_alpha: Optional[float],
+        max_alpha: Optional[float],
+        fixed_alpha: bool,
         **kwargs
     ):
         super().__init__(**kwargs)
 
-        self.share_param_actor = share_param_actor
         self.share_param_critic = share_param_critic
         self.delay_qvalue = delay_qvalue
         self.num_qvalue_nets = num_qvalue_nets
@@ -192,7 +190,7 @@ class Isac(Algorithm):
             input_has_agent_dim=True,
             n_agents=n_agents,
             centralised=False,
-            share_params=self.share_param_actor,
+            share_params=self.experiment_config.share_policy_params,
             device=self.device,
         )
 
@@ -374,7 +372,6 @@ class Isac(Algorithm):
 @dataclass
 class IsacConfig(AlgorithmConfig):
 
-    share_param_actor: bool = MISSING
     share_param_critic: bool = MISSING
 
     num_qvalue_nets: int = MISSING

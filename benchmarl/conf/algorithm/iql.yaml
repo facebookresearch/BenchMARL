@@ -5,4 +5,3 @@ defaults:
 
 delay_value: True
 loss_function: "l2"
-share_params: True

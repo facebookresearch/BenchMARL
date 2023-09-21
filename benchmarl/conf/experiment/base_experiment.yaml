@@ -7,6 +7,7 @@ train_device: "cpu"
 
 gamma: 0.99
 polyak_tau: 0.005
+share_policy_params: True
 lr: 0.00005
 n_optimizer_steps: 45
 clip_grad_norm: True

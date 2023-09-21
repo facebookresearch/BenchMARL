@@ -1,7 +1,7 @@
 import hydra
 from benchmarl.experiment import Experiment
 
-from benchmarl.hydra_run import (
+from benchmarl.hydra_config import (
     load_algorithm_config_from_hydra,
     load_experiment_config_from_hydra,
     load_model_config_from_hydra,

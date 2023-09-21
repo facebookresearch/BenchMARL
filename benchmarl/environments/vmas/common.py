@@ -33,7 +33,7 @@ class VmasTask(Task):
     def supports_discrete_actions(self) -> bool:
         return True
 
-    def has_render(self) -> bool:
+    def has_render(self, env: EnvBase) -> bool:
         return True
 
     def max_steps(self, env: EnvBase) -> bool:
@@ -64,7 +64,3 @@ class VmasTask(Task):
     @staticmethod
     def env_name() -> str:
         return "vmas"
-
-
-if __name__ == "__main__":
-    print(VmasTask.BALANCE.get_from_yaml())

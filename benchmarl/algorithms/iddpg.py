@@ -29,16 +29,10 @@ from benchmarl.utils import DEVICE_TYPING, read_yaml_config
 
 class Iddpg(Algorithm):
     def __init__(
-        self,
-        share_param_actor: bool = True,
-        share_param_critic: bool = True,
-        loss_function: str = "l2",
-        delay_value: bool = True,
-        **kwargs
+        self, share_param_critic: bool, loss_function: str, delay_value: bool, **kwargs
     ):
         super().__init__(**kwargs)
 
-        self.share_param_actor = share_param_actor
         self.share_param_critic = share_param_critic
         self.delay_value = delay_value
         self.loss_function = loss_function
@@ -142,7 +136,7 @@ class Iddpg(Algorithm):
                 input_has_agent_dim=True,
                 n_agents=n_agents,
                 centralised=False,
-                share_params=self.share_param_actor,
+                share_params=self.experiment_config.share_policy_params,
                 device=self.device,
             )
 
@@ -258,7 +252,6 @@ class Iddpg(Algorithm):
 
 @dataclass
 class IddpgConfig(AlgorithmConfig):
-    share_param_actor: bool = MISSING
     share_param_critic: bool = MISSING
     loss_function: str = MISSING
     delay_value: bool = MISSING

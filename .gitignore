@@ -2,7 +2,12 @@
 
 # Hydra
 outputs/
+examples/outputs/
+benchmarl/outputs/
 multirun/
+examples/multirun/
+benchmarl/multirun/
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -43,6 +48,7 @@ pip-log.txt
 pip-delete-this-directory.txt
 
 # Unit test / coverage reports
+test/tmp/
 htmlcov/
 .tox/
 .nox/
