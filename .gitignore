@@ -1,12 +1,9 @@
 ### Python template
 
 # Hydra
-outputs/
-examples/outputs/
-benchmarl/outputs/
-multirun/
-examples/multirun/
-benchmarl/multirun/
+**/outputs/
+**/multirun/
+
 
 
 # Byte-compiled / optimized / DLL files
@@ -48,7 +45,7 @@ pip-log.txt
 pip-delete-this-directory.txt
 
 # Unit test / coverage reports
-test/tmp/
+test/tmp_*/
 htmlcov/
 .tox/
 .nox/
