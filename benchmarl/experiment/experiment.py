@@ -398,13 +398,13 @@ class Experiment:
                 self._evaluation_loop(iter=self.n_iters_performed)
 
             # End of step
+            self.n_iters_performed += 1
             self.logger.commit()
             if (
                 self.config.checkpoint_interval > 0
                 and self.n_iters_performed % self.config.checkpoint_interval == 0
             ):
                 self.save_trainer()
-            self.n_iters_performed += 1
             sampling_start = time.time()
 
         self.close()
