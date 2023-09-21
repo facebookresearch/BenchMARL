@@ -8,6 +8,6 @@ setup(
     author="Matteo Bettini",
     author_email="mb2389@cl.cam.ac.uk",
     packages=find_packages(),
-    install_requires=["torchrl", "tqdm", "hydra-core"],
+    install_requires=["torchrl", "tqdm"],
     include_package_data=True,
 )

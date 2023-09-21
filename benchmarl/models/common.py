@@ -1,15 +1,15 @@
 import pathlib
+
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass
 from typing import Any, Callable, Dict, List, Optional, Sequence
 
-from hydra.utils import get_class
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModuleBase, TensorDictSequential
 from torchrl.data import CompositeSpec, UnboundedContinuousTensorSpec
 from torchrl.envs import EnvBase
 
-from benchmarl.utils import DEVICE_TYPING, read_yaml_config
+from benchmarl.utils import class_from_name, DEVICE_TYPING, read_yaml_config
 
 
 def _check_spec(tensordict, spec):
@@ -22,7 +22,7 @@ def parse_model_config(cfg: Dict[str, Any]) -> Dict[str, Any]:
     kwargs = {}
     for key, value in cfg.items():
         if key.endswith("class") and value is not None:
-            value = get_class(cfg[key])
+            value = class_from_name(cfg[key])
         kwargs.update({key: value})
     return kwargs
 

@@ -1,8 +1,10 @@
 
 
 python -m pip install --upgrade pip
-python -m pip install flake8 pytest pytest-cov
+python -m pip install flake8 pytest pytest-cov hydra-core
+
 if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
 python -m pip install --pre torch --extra-index-url https://download.pytorch.org/whl/nightly/cpu --force-reinstall
 
 cd ..

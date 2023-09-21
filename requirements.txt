@@ -1,2 +1,1 @@
-hydra-core
 tqdm
