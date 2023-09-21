@@ -18,8 +18,5 @@ mkdir "${map_dir}/SMAC_Maps"
 mv *.SC2Map "${map_dir}/SMAC_Maps"
 printf "StarCraft II and SMAC are installed."
 
-export SC2PATH="${root_dir}/StarCraftII"
-echo 'SC2PATH is set to ' "$SC2PATH"
-
 pip install numpy==1.23.0
 pip install git+https://github.com/oxwhirl/smacv2.git
