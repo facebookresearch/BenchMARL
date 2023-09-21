@@ -207,7 +207,7 @@ class SequenceModelConfig(ModelConfig):
             raise ValueError(
                 f"SequenceModelConfig expects n_models > 0, got {n_models}"
             )
-        if len(self.intermediate_sizes) == n_models - 1:
+        if len(self.intermediate_sizes) != n_models - 1:
             raise ValueError(
                 f"SequenceModelConfig intermediate_sizes len should be {n_models - 1}, got {len(self.intermediate_sizes)}"
             )
