@@ -1,5 +1,6 @@
 import os
 import shutil
+import uuid
 from pathlib import Path
 
 import pytest
@@ -15,19 +16,19 @@ def pytest_sessionstart(session):
     Called after the Session object has been created and
     before performing collection and entering the run test loop.
     """
-    folder_name = Path(os.getcwd())
-    folder_name = folder_name / "tmp"
-    folder_name.mkdir(parents=False, exist_ok=True)
+    folder_name = Path(os.path.dirname(os.path.realpath(__file__)))
+    folder_name = folder_name / f"tmp_{str(uuid.uuid4())[:8]}"
+    folder_name.mkdir(parents=False, exist_ok=False)
     os.chdir(folder_name)
+    session._tmp_folder = folder_name
 
 
 def pytest_sessionfinish(session, exitstatus):
     """
     Called after whole test run finished, right before
     returning the exit status to the system.
-    """
-    folder_name = Path(os.getcwd()) / "tmp"
-    shutil.rmtree(folder_name)
+    #"""
+    shutil.rmtree(session._tmp_folder)
 
 
 @pytest.fixture

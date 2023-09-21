@@ -21,18 +21,24 @@ _has_vmas = importlib.util.find_spec("vmas") is not None
 @pytest.mark.skipif(not _has_vmas, reason="VMAS not found")
 class TestVmas:
     @pytest.mark.parametrize("algo_config", algorithm_config_registry.values())
-    @pytest.mark.parametrize("continuous", [True, False])
+    @pytest.mark.parametrize("prefer_continuous", [True, False])
     @pytest.mark.parametrize("task", list(VmasTask))
     def test_all_algos_all_tasks(
         self,
         algo_config: AlgorithmConfig,
         task: Task,
-        continuous,
+        prefer_continuous,
         experiment_config,
         mlp_sequence_config,
     ):
+        # To not run the same test twice
+        if (prefer_continuous and not algo_config.supports_continuous_actions()) or (
+            not prefer_continuous and not algo_config.supports_discrete_actions()
+        ):
+            return
+
         task = task.get_from_yaml()
-        experiment_config.prefer_continuous_actions = continuous
+        experiment_config.prefer_continuous_actions = prefer_continuous
         experiment = Experiment(
             algorithm_config=algo_config.get_from_yaml(),
             model_config=mlp_sequence_config,
