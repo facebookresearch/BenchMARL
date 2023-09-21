@@ -6,7 +6,6 @@ from benchmarl.algorithms import algorithm_config_registry, MappoConfig, QmixCon
 from benchmarl.algorithms.common import AlgorithmConfig
 from benchmarl.environments import Task, VmasTask
 from benchmarl.experiment import Experiment
-
 from utils_experiment import ExperimentUtils
 
 _has_vmas = importlib.util.find_spec("vmas") is not None

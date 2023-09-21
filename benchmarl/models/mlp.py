@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dataclasses import dataclass, MISSING
 from typing import Optional, Sequence, Type
 
@@ -103,7 +105,7 @@ class MlpConfig(ModelConfig):
         return Mlp
 
     @staticmethod
-    def get_from_yaml(path: Optional[str] = None):
+    def get_from_yaml(path: Optional[str] = None) -> MlpConfig:
         if path is None:
             return MlpConfig(
                 **ModelConfig._load_from_yaml(
