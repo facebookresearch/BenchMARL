@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import importlib
 import os
 import os.path as osp
@@ -43,7 +45,7 @@ class Task(Enum):
     def __init__(self, config: Dict[str, Any]):
         self.config = config
 
-    def update_config(self, config: Dict[str, Any]):
+    def update_config(self, config: Dict[str, Any]) -> Task:
         if self.config is None:
             self.config = config
         else:
@@ -67,7 +69,7 @@ class Task(Enum):
     def max_steps(self, env: EnvBase) -> int:
         raise NotImplementedError
 
-    def has_render(self) -> bool:
+    def has_render(self, env: EnvBase) -> bool:
         raise NotImplementedError
 
     def group_map(self, env: EnvBase) -> Dict[str, List[str]]:
@@ -90,7 +92,7 @@ class Task(Enum):
 
     @staticmethod
     def env_name() -> str:
-        return "vmas"
+        raise NotImplementedError
 
     @staticmethod
     def log_info(batch: TensorDictBase) -> Dict:
@@ -108,7 +110,7 @@ class Task(Enum):
         yaml_path = Path(__file__).parent.parent / "conf" / "task" / f"{name}.yaml"
         return read_yaml_config(str(yaml_path.resolve()))
 
-    def get_from_yaml(self, path: Optional[str] = None):
+    def get_from_yaml(self, path: Optional[str] = None) -> Task:
         if path is None:
             task_name = self.name.lower()
             return self.update_config(

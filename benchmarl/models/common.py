@@ -1,15 +1,15 @@
 import pathlib
+
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass
 from typing import Any, Callable, Dict, List, Optional, Sequence
 
-from hydra.utils import get_class
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModuleBase, TensorDictSequential
 from torchrl.data import CompositeSpec, UnboundedContinuousTensorSpec
 from torchrl.envs import EnvBase
 
-from benchmarl.utils import DEVICE_TYPING, read_yaml_config
+from benchmarl.utils import class_from_name, DEVICE_TYPING, read_yaml_config
 
 
 def _check_spec(tensordict, spec):
@@ -22,7 +22,7 @@ def parse_model_config(cfg: Dict[str, Any]) -> Dict[str, Any]:
     kwargs = {}
     for key, value in cfg.items():
         if key.endswith("class") and value is not None:
-            value = get_class(cfg[key])
+            value = class_from_name(cfg[key])
         kwargs.update({key: value})
     return kwargs
 
@@ -74,21 +74,27 @@ class Model(TensorDictModuleBase, ABC):
 
     def _perform_checks(self):
         if not self.input_has_agent_dim and not self.centralised:
-            assert False
+            raise ValueError(
+                "If input does not have an agent dimension the model should be marked as centralised"
+            )
 
         if len(self.in_keys) > 1:
-            assert False
+            raise ValueError("Currently models support just one input key")
         if len(self.out_keys) > 1:
-            assert False
+            raise ValueError("Currently models support just one output key")
 
         if self.agent_group in self.input_spec.keys() and self.input_spec[
             self.agent_group
         ].shape != (self.n_agents,):
-            assert False
+            raise ValueError(
+                "If the agent group is in the input specs, its shape should be the number of agents"
+            )
         if self.agent_group in self.output_spec.keys() and self.output_spec[
             self.agent_group
         ].shape != (self.n_agents,):
-            assert False
+            raise ValueError(
+                "If the agent group is in the output specs, its shape should be the number of agents"
+            )
 
     def forward(self, tensordict: TensorDictBase) -> TensorDictBase:
         # _check_spec(tensordict, self.input_spec)
@@ -197,8 +203,14 @@ class SequenceModelConfig(ModelConfig):
     ) -> Model:
 
         n_models = len(self.model_configs)
-        assert n_models > 0
-        assert len(self.intermediate_sizes) == n_models - 1
+        if not n_models > 0:
+            raise ValueError(
+                f"SequenceModelConfig expects n_models > 0, got {n_models}"
+            )
+        if len(self.intermediate_sizes) != n_models - 1:
+            raise ValueError(
+                f"SequenceModelConfig intermediate_sizes len should be {n_models - 1}, got {len(self.intermediate_sizes)}"
+            )
 
         out_has_agent_dim = output_has_agent_dim(share_params, centralised)
         next_centralised = not out_has_agent_dim
@@ -245,6 +257,11 @@ class SequenceModelConfig(ModelConfig):
     @staticmethod
     def associated_class():
         return SequenceModel
+
+    def process_env_fun(self, env_fun: Callable[[], EnvBase]) -> Callable[[], EnvBase]:
+        for model_config in self.model_configs:
+            env_fun = model_config.process_env_fun(env_fun)
+        return env_fun
 
     @staticmethod
     def get_from_yaml(path: Optional[str] = None):

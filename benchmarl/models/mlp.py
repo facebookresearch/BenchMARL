@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dataclasses import dataclass, MISSING
 from typing import Optional, Sequence, Type
 
@@ -56,12 +58,18 @@ class Mlp(Model):
         super()._perform_checks()
 
         if self.input_has_agent_dim and self.input_leaf_spec.shape[-2] != self.n_agents:
-            assert False
+            raise ValueError(
+                "If the MLP input has the agent dimension,"
+                " the second to last spec dimension should be the number of agents"
+            )
         if (
             self.output_has_agent_dim
             and self.output_leaf_spec.shape[-2] != self.n_agents
         ):
-            assert False
+            raise ValueError(
+                "If the MLP output has the agent dimension,"
+                " the second to last spec dimension should be the number of agents"
+            )
 
     def _forward(self, tensordict: TensorDictBase) -> TensorDictBase:
         # Gather in_key
@@ -71,6 +79,9 @@ class Mlp(Model):
         if self.input_has_agent_dim:
             res = self.mlp.forward(input)
             if not self.output_has_agent_dim:
+                # If we are here the module is centralised and parameter shared.
+                # Thus the multi-agent dimension has been expanded,
+                # We remove it without loss of data
                 res = res[..., 0, :]
 
         # Does not have multi-agent input dimension
@@ -103,7 +114,7 @@ class MlpConfig(ModelConfig):
         return Mlp
 
     @staticmethod
-    def get_from_yaml(path: Optional[str] = None):
+    def get_from_yaml(path: Optional[str] = None) -> MlpConfig:
         if path is None:
             return MlpConfig(
                 **ModelConfig._load_from_yaml(
