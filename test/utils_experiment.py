@@ -1,7 +1,7 @@
 from benchmarl.algorithms.common import AlgorithmConfig
 from benchmarl.environments import Task
 from benchmarl.experiment import Experiment, ExperimentConfig
-from models.common import ModelConfig
+from benchmarl.models.common import ModelConfig
 
 
 class ExperimentUtils:
