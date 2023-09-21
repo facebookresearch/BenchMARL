@@ -156,7 +156,7 @@ class Mappo(Algorithm):
             )
             policy = ProbabilisticActor(
                 module=TensorDictSequential(actor_module, extractor_module),
-                spec=self.action_spec,
+                spec=self.action_spec[group, "action"],
                 in_keys=[(group, "loc"), (group, "scale")],
                 out_keys=[(group, "action")],
                 distribution_class=TanhNormal,
@@ -172,7 +172,7 @@ class Mappo(Algorithm):
             if self.action_mask_spec is None:
                 policy = ProbabilisticActor(
                     module=actor_module,
-                    spec=self.action_spec,
+                    spec=self.action_spec[group, "action"],
                     in_keys=[(group, "logits")],
                     out_keys=[(group, "action")],
                     distribution_class=Categorical,
@@ -182,7 +182,7 @@ class Mappo(Algorithm):
             else:
                 policy = ProbabilisticActor(
                     module=actor_module,
-                    spec=self.action_spec,
+                    spec=self.action_spec[group, "action"],
                     in_keys={
                         "logits": (group, "logits"),
                         "mask": (group, "action_mask"),

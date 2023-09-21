@@ -142,7 +142,7 @@ class Iddpg(Algorithm):
 
             policy = ProbabilisticActor(
                 module=actor_module,
-                spec=self.action_spec,
+                spec=self.action_spec[group, "action"],
                 in_keys=[(group, "param")],
                 out_keys=[(group, "action")],
                 distribution_class=TanhDelta,

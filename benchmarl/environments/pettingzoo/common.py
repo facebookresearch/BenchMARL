@@ -43,7 +43,7 @@ class PettingZooTask(Task):
             return True
         return False
 
-    def has_render(self) -> bool:
+    def has_render(self, env: EnvBase) -> bool:
         return True
 
     def max_steps(self, env: EnvBase) -> bool:
@@ -66,8 +66,11 @@ class PettingZooTask(Task):
                     del group_obs_spec[key]
             if group_obs_spec.is_empty():
                 del observation_spec[group]
+        if "state" in observation_spec.keys():
+            del observation_spec["state"]
         if observation_spec.is_empty():
             return None
+
         return observation_spec
 
     def observation_spec(self, env: EnvBase) -> CompositeSpec:
@@ -95,8 +98,3 @@ class PettingZooTask(Task):
     @staticmethod
     def env_name() -> str:
         return "pettingzoo"
-
-
-if __name__ == "__main__":
-    print(PettingZooTask.MULTIWALKER.get_from_yaml())
-    print(PettingZooTask.MULTIWALKER.get_from_yaml().get_env_fun(1, True, seed=0)())

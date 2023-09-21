@@ -142,7 +142,7 @@ class Maddpg(Algorithm):
 
             policy = ProbabilisticActor(
                 module=actor_module,
-                spec=self.action_spec,
+                spec=self.action_spec[group, "action"],
                 in_keys=[(group, "param")],
                 out_keys=[(group, "action")],
                 distribution_class=TanhDelta,
@@ -220,7 +220,7 @@ class Maddpg(Algorithm):
             modules.append(
                 TensorDictModule(
                     lambda state, action: torch.cat(
-                        [state, action.view(action.shape[:-2], -1)], dim=-1
+                        [state, action.view(*action.shape[:-2], -1)], dim=-1
                     ),
                     in_keys=["state", (group, "action")],
                     out_keys=["state_action"],
