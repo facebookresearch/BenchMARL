@@ -26,7 +26,6 @@ from benchmarl.utils import DEVICE_TYPING, read_yaml_config
 class Mappo(Algorithm):
     def __init__(
         self,
-        share_param_actor: bool,
         share_param_critic: bool,
         clip_epsilon: float,
         entropy_coef: bool,
@@ -37,7 +36,6 @@ class Mappo(Algorithm):
     ):
         super().__init__(**kwargs)
 
-        self.share_param_actor = share_param_actor
         self.share_param_critic = share_param_critic
         self.clip_epsilon = clip_epsilon
         self.entropy_coef = entropy_coef
@@ -146,7 +144,7 @@ class Mappo(Algorithm):
             input_has_agent_dim=True,
             n_agents=n_agents,
             centralised=False,
-            share_params=self.share_param_actor,
+            share_params=self.experiment_config.share_policy_params,
             device=self.device,
         )
 
@@ -316,7 +314,6 @@ class Mappo(Algorithm):
 @dataclass
 class MappoConfig(AlgorithmConfig):
 
-    share_param_actor: bool = MISSING
     share_param_critic: bool = MISSING
     clip_epsilon: float = MISSING
     entropy_coef: float = MISSING
