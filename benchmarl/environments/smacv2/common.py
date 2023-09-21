@@ -18,7 +18,6 @@ class Smacv2Task(Task):
         continuous_actions: bool,
         seed: Optional[int],
     ) -> Callable[[], EnvBase]:
-
         return lambda: SMACv2Env(categorical_actions=True, seed=seed, **self.config)
 
     def supports_continuous_actions(self) -> bool:
@@ -27,7 +26,7 @@ class Smacv2Task(Task):
     def supports_discrete_actions(self) -> bool:
         return True
 
-    def has_render(self) -> bool:
+    def has_render(self, env: EnvBase) -> bool:
         return True
 
     def max_steps(self, env: EnvBase) -> bool:
@@ -84,9 +83,3 @@ class Smacv2Task(Task):
     @staticmethod
     def env_name() -> str:
         return "smacv2"
-
-
-if __name__ == "__main__":
-    print(Smacv2Task.protoss_5_vs_5.get_from_yaml())
-    env = Smacv2Task.protoss_5_vs_5.get_env_fun(0, False, 0)()
-    print(env.render(mode="rgb_array"))
