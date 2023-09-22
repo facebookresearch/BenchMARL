@@ -200,11 +200,12 @@ class Experiment:
         reward_spec = test_env.output_spec["full_reward_spec"]
         transforms = []
         for reward_key in reward_spec.keys(True, True):
-            reward_key = _unravel_key_to_tuple(reward_key)
             transforms.append(
                 RewardSum(
                     in_keys=[reward_key],
-                    out_keys=[reward_key[:-1] + ("episode_reward",)],
+                    out_keys=[
+                        _unravel_key_to_tuple(reward_key)[:-1] + ("episode_reward",)
+                    ],
                 )
             )
         transform = Compose(*transforms)
