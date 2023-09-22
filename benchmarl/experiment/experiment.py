@@ -247,7 +247,10 @@ class Experiment:
             for group in self.group_map.keys()
         }
         self.optimizers = {
-            group: self.algorithm.get_optimizers(group)
+            group: {
+                loss_name: torch.optim.Adam(params, lr=self.config.lr, eps=1e-4)
+                for loss_name, params in self.algorithm.get_parameters(group).items()
+            }
             for group in self.group_map.keys()
         }
 

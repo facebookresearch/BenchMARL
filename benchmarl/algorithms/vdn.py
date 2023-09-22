@@ -1,7 +1,6 @@
 from dataclasses import dataclass, MISSING
-from typing import Dict, Optional, Tuple, Type
+from typing import Dict, Iterable, Optional, Tuple, Type
 
-import torch
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModule, TensorDictSequential
 from torchrl.data import (
@@ -82,12 +81,10 @@ class Vdn(Algorithm):
             )
             return loss_module, target_net_updater
 
-    def _get_optimizers(
-        self, group: str, loss: ClipPPOLoss, lr: float
-    ) -> Dict[str, torch.optim.Optimizer]:
+    def _get_parameters(self, group: str, loss: ClipPPOLoss) -> Dict[str, Iterable]:
 
         return {
-            "loss": torch.optim.Adam(loss.parameters(), lr=lr),
+            "loss": loss.parameters(),
         }
 
     def _get_policy_for_loss(

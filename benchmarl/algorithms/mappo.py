@@ -1,5 +1,5 @@
 from dataclasses import dataclass, MISSING
-from typing import Dict, Optional, Tuple, Type
+from typing import Dict, Iterable, Optional, Tuple, Type
 
 import torch
 from tensordict import TensorDictBase
@@ -89,17 +89,11 @@ class Mappo(Algorithm):
         )
         return loss_module, None
 
-    def _get_optimizers(
-        self, group: str, loss: ClipPPOLoss, lr: float
-    ) -> Dict[str, torch.optim.Optimizer]:
+    def _get_parameters(self, group: str, loss: ClipPPOLoss) -> Dict[str, Iterable]:
 
         return {
-            "loss_objective": torch.optim.Adam(
-                list(loss.actor_params.flatten_keys().values()), lr=lr
-            ),
-            "loss_critic": torch.optim.Adam(
-                list(loss.critic_params.flatten_keys().values()), lr=lr
-            ),
+            "loss_objective": list(loss.actor_params.flatten_keys().values()),
+            "loss_critic": list(loss.critic_params.flatten_keys().values()),
         }
 
     def _get_policy_for_loss(

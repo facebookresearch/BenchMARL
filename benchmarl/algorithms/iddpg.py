@@ -1,5 +1,5 @@
 from dataclasses import dataclass, MISSING
-from typing import Dict, Optional, Tuple, Type
+from typing import Dict, Iterable, Optional, Tuple, Type
 
 import torch
 from tensordict import TensorDictBase
@@ -90,17 +90,10 @@ class Iddpg(Algorithm):
                 "Iddpg is not compatible with discrete actions yet"
             )
 
-    def _get_optimizers(
-        self, group: str, loss: ClipPPOLoss, lr: float
-    ) -> Dict[str, torch.optim.Optimizer]:
-
+    def _get_parameters(self, group: str, loss: ClipPPOLoss) -> Dict[str, Iterable]:
         return {
-            "loss_actor": torch.optim.Adam(
-                list(loss.actor_network_params.flatten_keys().values()), lr=lr
-            ),
-            "loss_value": torch.optim.Adam(
-                list(loss.value_network_params.flatten_keys().values()), lr=lr
-            ),
+            "loss_actor": list(loss.actor_network_params.flatten_keys().values()),
+            "loss_value": list(loss.value_network_params.flatten_keys().values()),
         }
 
     def _get_policy_for_loss(

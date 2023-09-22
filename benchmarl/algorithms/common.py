@@ -1,9 +1,8 @@
 import pathlib
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple, Type
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Type
 
-import torch.optim
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModule, TensorDictSequential
 from torchrl.data import (
@@ -158,10 +157,9 @@ class Algorithm(ABC):
             policies.append(self._policies_for_collection[group])
         return TensorDictSequential(*policies)
 
-    def get_optimizers(self, group: str) -> Dict[str, torch.optim.Optimizer]:
-        return self._get_optimizers(
+    def get_parameters(self, group: str) -> Dict[str, Iterable]:
+        return self._get_parameters(
             group=group,
-            lr=self.experiment_config.lr,
             loss=self.get_loss_and_updater(group)[0],
         )
 
@@ -176,9 +174,7 @@ class Algorithm(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def _get_optimizers(
-        self, group: str, loss: LossModule, lr: float
-    ) -> Dict[str, torch.optim.Optimizer]:
+    def _get_parameters(self, group: str, loss: LossModule) -> Dict[str, Iterable]:
         raise NotImplementedError
 
     @abstractmethod

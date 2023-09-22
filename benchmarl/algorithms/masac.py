@@ -1,5 +1,5 @@
 from dataclasses import dataclass, MISSING
-from typing import Dict, Optional, Tuple, Type, Union
+from typing import Dict, Iterable, Optional, Tuple, Type, Union
 
 import torch
 from tensordict import TensorDictBase
@@ -135,17 +135,11 @@ class Masac(Algorithm):
         )
         return loss_module, target_net_updater
 
-    def _get_optimizers(
-        self, group: str, loss: ClipPPOLoss, lr: float
-    ) -> Dict[str, torch.optim.Optimizer]:
+    def _get_parameters(self, group: str, loss: ClipPPOLoss) -> Dict[str, Iterable]:
         return {
-            "loss_actor": torch.optim.Adam(
-                list(loss.actor_network_params.flatten_keys().values()), lr=lr
-            ),
-            "loss_qvalue": torch.optim.Adam(
-                list(loss.qvalue_network_params.flatten_keys().values()), lr=lr
-            ),
-            "loss_alpha": torch.optim.Adam([loss.log_alpha], lr=lr),
+            "loss_actor": list(loss.actor_network_params.flatten_keys().values()),
+            "loss_qvalue": list(loss.qvalue_network_params.flatten_keys().values()),
+            "loss_alpha": [loss.log_alpha],
         }
 
     def _get_policy_for_loss(
