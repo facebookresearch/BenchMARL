@@ -264,7 +264,7 @@ class JsonWriter:
         seed: int,
     ):
         self.path = Path(folder) / Path(name)
-        self.run_data = {}
+        self.run_data = {"absolute_metrics": {}}
         self.data = {
             environment_name: {
                 task_name: {algorithm_name: {f"seed_{seed}": self.run_data}}
@@ -279,6 +279,14 @@ class JsonWriter:
             self.run_data[step_str].update(metrics)
         else:
             self.run_data[step_str] = metrics
+
+        # Store the maximum of each metric
+        for metric_name in metrics.keys():
+            max_metric = max(metrics[metric_name])
+            if metric_name in self.run_data["absolute_metrics"]:
+                prev_max_metric = self.run_data["absolute_metrics"][metric_name][0]
+                max_metric = max(max_metric, prev_max_metric)
+            self.run_data["absolute_metrics"][metric_name] = [max_metric]
 
         with open(self.path, "w+") as f:
             json.dump(self.data, f, indent=4)
