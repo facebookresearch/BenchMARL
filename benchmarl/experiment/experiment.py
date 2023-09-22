@@ -317,7 +317,11 @@ class Experiment:
         )
 
     def run(self):
-        self._collection_loop()
+        try:
+            self._collection_loop()
+        except Exception as err:
+            self.close()
+            raise err
 
     def _collection_loop(self):
 
