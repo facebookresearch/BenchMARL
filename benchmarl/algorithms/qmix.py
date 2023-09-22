@@ -66,7 +66,7 @@ class Qmix(Algorithm):
                 self.get_mixer(group),
                 delay_value=self.delay_value,
                 loss_function=self.loss_function,
-                action_space=self.action_spec,
+                action_space=self.action_spec[group, "action"],
             )
             loss_module.set_keys(
                 reward="reward",
@@ -147,7 +147,7 @@ class Qmix(Algorithm):
                 (group, "action_value"),
                 (group, "chosen_action_value"),
             ],
-            spec=self.action_spec,
+            spec=self.action_spec[group, "action"],
             action_space=None,
         )
 
@@ -180,7 +180,7 @@ class Qmix(Algorithm):
         if done_key not in keys:
             batch.set(
                 done_key,
-                batch.get(("next", group, "done")).mean(-2),
+                batch.get(("next", group, "done")).any(-2),
             )
 
         if reward_key not in keys:

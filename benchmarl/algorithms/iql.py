@@ -62,7 +62,7 @@ class Iql(Algorithm):
                 policy_for_loss,
                 delay_value=self.delay_value,
                 loss_function=self.loss_function,
-                action_space=self.action_spec,
+                action_space=self.action_spec[group, "action"],
             )
             loss_module.set_keys(
                 reward=(group, "reward"),
@@ -142,7 +142,7 @@ class Iql(Algorithm):
                 (group, "action_value"),
                 (group, "chosen_action_value"),
             ],
-            spec=self.action_spec,
+            spec=self.action_spec[group, "action"],
             action_space=None,
         )
 

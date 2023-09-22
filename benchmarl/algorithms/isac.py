@@ -91,7 +91,7 @@ class Isac(Algorithm):
                 alpha_init=self.alpha_init,
                 min_alpha=self.min_alpha,
                 max_alpha=self.max_alpha,
-                action_spec=self.action_spec,
+                action_spec=self.action_spec[group, "action"],
                 fixed_alpha=self.fixed_alpha,
                 target_entropy=self.target_entropy,
                 delay_qvalue=self.delay_qvalue,
@@ -113,7 +113,7 @@ class Isac(Algorithm):
                 alpha_init=self.alpha_init,
                 min_alpha=self.min_alpha,
                 max_alpha=self.max_alpha,
-                action_space=self.action_spec,
+                action_space=self.action_spec[group, "action"],
                 fixed_alpha=self.fixed_alpha,
                 target_entropy=self.target_entropy,
                 delay_qvalue=self.delay_qvalue,
@@ -202,7 +202,7 @@ class Isac(Algorithm):
             )
             policy = ProbabilisticActor(
                 module=TensorDictSequential(actor_module, extractor_module),
-                spec=self.action_spec,
+                spec=self.action_spec[group, "action"],
                 in_keys=[(group, "loc"), (group, "scale")],
                 out_keys=[(group, "action")],
                 distribution_class=TanhNormal,
@@ -218,7 +218,7 @@ class Isac(Algorithm):
             if self.action_mask_spec is None:
                 policy = ProbabilisticActor(
                     module=actor_module,
-                    spec=self.action_spec,
+                    spec=self.action_spec[group, "action"],
                     in_keys=[(group, "logits")],
                     out_keys=[(group, "action")],
                     distribution_class=Categorical,
@@ -228,7 +228,7 @@ class Isac(Algorithm):
             else:
                 policy = ProbabilisticActor(
                     module=actor_module,
-                    spec=self.action_spec,
+                    spec=self.action_spec[group, "action"],
                     in_keys={
                         "logits": (group, "logits"),
                         "mask": (group, "action_mask"),

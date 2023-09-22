@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib
 import os
+
 import time
 from collections import OrderedDict
 from dataclasses import dataclass, MISSING
@@ -11,7 +12,7 @@ from typing import Dict, List, Optional
 import torch
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictSequential
-from tensordict.utils import _unravel_key_to_tuple, unravel_key
+from tensordict.utils import _unravel_key_to_tuple
 from torchrl.collectors import SyncDataCollector
 from torchrl.envs import EnvBase, RewardSum, SerialEnv, TransformedEnv
 from torchrl.envs.transforms import Compose
@@ -202,7 +203,7 @@ class Experiment:
             reward_key = _unravel_key_to_tuple(reward_key)
             transforms.append(
                 RewardSum(
-                    in_keys=[unravel_key(reward_key)],
+                    in_keys=[reward_key],
                     out_keys=[reward_key[:-1] + ("episode_reward",)],
                 )
             )
@@ -470,7 +471,10 @@ class Experiment:
                 frames = []
 
                 def callback(env, td):
-                    frames.append(env.render(mode="rgb_array"))
+                    try:
+                        frames.append(env.render(mode="rgb_array"))
+                    except TypeError:
+                        frames.append(env.render())
 
             else:
                 frames = None

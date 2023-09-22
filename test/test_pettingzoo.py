@@ -11,18 +11,18 @@ from benchmarl.algorithms import (
     QmixConfig,
 )
 from benchmarl.algorithms.common import AlgorithmConfig
-from benchmarl.environments import Task, VmasTask
+from benchmarl.environments import PettingZooTask, Task
 from benchmarl.experiment import Experiment
 from utils_experiment import ExperimentUtils
 
-_has_vmas = importlib.util.find_spec("vmas") is not None
+_has_pettingzoo = importlib.util.find_spec("pettingzoo") is not None
 
 
-@pytest.mark.skipif(not _has_vmas, reason="VMAS not found")
-class TestVmas:
+@pytest.mark.skipif(not _has_pettingzoo, reason="PettingZoo not found")
+class TestPettingzoo:
     @pytest.mark.parametrize("algo_config", algorithm_config_registry.values())
     @pytest.mark.parametrize("prefer_continuous", [True, False])
-    @pytest.mark.parametrize("task", list(VmasTask))
+    @pytest.mark.parametrize("task", list(PettingZooTask))
     def test_all_algos_all_tasks(
         self,
         algo_config: AlgorithmConfig,
@@ -34,6 +34,16 @@ class TestVmas:
         # To not run the same test twice
         if (prefer_continuous and not algo_config.supports_continuous_actions()) or (
             not prefer_continuous and not algo_config.supports_discrete_actions()
+        ):
+            return
+
+        # To not run unsupported algo-task pairs
+        if (
+            not task.supports_continuous_actions()
+            and not algo_config.supports_discrete_actions()
+        ) or (
+            not task.supports_discrete_actions()
+            and not algo_config.supports_continuous_actions()
         ):
             return
 
@@ -49,7 +59,9 @@ class TestVmas:
         experiment.run()
 
     @pytest.mark.parametrize("algo_config", [MappoConfig, QmixConfig])
-    @pytest.mark.parametrize("task", [VmasTask.BALANCE, VmasTask.SAMPLING])
+    @pytest.mark.parametrize(
+        "task", [PettingZooTask.SIMPLE_TAG, PettingZooTask.SIMPLE_TAG]
+    )
     def test_reloading_trainer(
         self,
         algo_config: AlgorithmConfig,
@@ -67,7 +79,7 @@ class TestVmas:
     @pytest.mark.parametrize(
         "algo_config", [QmixConfig, IppoConfig, MaddpgConfig, MasacConfig]
     )
-    @pytest.mark.parametrize("task", [VmasTask.NAVIGATION])
+    @pytest.mark.parametrize("task", [PettingZooTask.SIMPLE_TAG])
     @pytest.mark.parametrize("share_params", [True, False])
     def test_share_policy_params(
         self,
