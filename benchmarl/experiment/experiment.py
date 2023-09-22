@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import importlib
 import os
-import re
+
 import time
 from collections import OrderedDict
 from dataclasses import dataclass, MISSING
@@ -473,14 +473,8 @@ class Experiment:
                 def callback(env, td):
                     try:
                         frames.append(env.render(mode="rgb_array"))
-                    except TypeError as err:
-                        if re.match(
-                            "render\(\) got an unexpected keyword argument",  # noqa W605
-                            str(err),
-                        ):
-                            frames.append(env.render())
-                        else:
-                            raise err
+                    except TypeError:
+                        frames.append(env.render())
 
             else:
                 frames = None
