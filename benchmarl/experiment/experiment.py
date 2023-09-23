@@ -96,7 +96,7 @@ class ExperimentConfig:
 
     @property
     def exploration_annealing_num_frames(self) -> int:
-        return self.total_frames // 2
+        return self.total_frames // 3
 
     @staticmethod
     def get_from_yaml(path: Optional[str] = None):
