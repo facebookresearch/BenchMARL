@@ -9,7 +9,7 @@ from torchrl.data import (
     TensorDictReplayBuffer,
     UnboundedContinuousTensorSpec,
 )
-from torchrl.data.replay_buffers.samplers import PrioritizedSampler
+from torchrl.data.replay_buffers.samplers import SamplerWithoutReplacement
 from torchrl.data.replay_buffers.storages import LazyTensorStorage
 from torchrl.modules import EGreedyModule, QValueModule
 from torchrl.objectives import ClipPPOLoss, DQNLoss, LossModule, ValueEstimators
@@ -39,15 +39,20 @@ class Iql(Algorithm):
         traj_len: int,
         storing_device: DEVICE_TYPING,
     ) -> ReplayBuffer:
+        # return TensorDictReplayBuffer(
+        #     storage=LazyTensorStorage(memory_size, device=storing_device),
+        #     sampler=PrioritizedSampler(
+        #         max_capacity=memory_size,
+        #         alpha=self.experiment_config.off_policy_prioritised_alpha,
+        #         beta=self.experiment_config.off_policy_prioritised_beta,
+        #     ),
+        #     batch_size=sampling_size,
+        #     priority_key=(group, "td_error"),
+        # )
         return TensorDictReplayBuffer(
             storage=LazyTensorStorage(memory_size, device=storing_device),
-            sampler=PrioritizedSampler(
-                max_capacity=memory_size,
-                alpha=self.experiment_config.off_policy_prioritised_alpha,
-                beta=self.experiment_config.off_policy_prioritised_beta,
-            ),
+            sampler=SamplerWithoutReplacement(),
             batch_size=sampling_size,
-            priority_key=(group, "td_error"),
         )
 
     def _get_loss(
@@ -158,6 +163,8 @@ class Iql(Algorithm):
             action_mask_key=action_mask_key,
             # eps_init = 1.0,
             # eps_end = 0.1,
+            eps_init=0.3,
+            eps_end=0,
         )
         return TensorDictSequential(*policy_for_loss, greedy)
 
@@ -207,7 +214,7 @@ class IqlConfig(AlgorithmConfig):
 
     @staticmethod
     def on_policy() -> bool:
-        return False
+        return True
 
     @staticmethod
     def get_from_yaml(path: Optional[str] = None):
