@@ -273,20 +273,22 @@ class JsonWriter:
 
     def write(self, total_frames: int, metrics: Dict[str, Any], step: int):
         metrics = {k: val.tolist() for k, val in metrics.items()}
-        metrics.update({"step_count": total_frames})
+        step_metrics = {"step_count": total_frames}
+        step_metrics.update(metrics)
         step_str = f"step_{step}"
         if step_str in self.run_data:
-            self.run_data[step_str].update(metrics)
+            self.run_data[step_str].update(step_metrics)
         else:
-            self.run_data[step_str] = metrics
+            self.run_data[step_str] = step_metrics
 
         # Store the maximum of each metric
         for metric_name in metrics.keys():
-            max_metric = max(metrics[metric_name])
-            if metric_name in self.run_data["absolute_metrics"]:
-                prev_max_metric = self.run_data["absolute_metrics"][metric_name][0]
-                max_metric = max(max_metric, prev_max_metric)
-            self.run_data["absolute_metrics"][metric_name] = [max_metric]
+            if len(metrics[metric_name]):
+                max_metric = max(metrics[metric_name])
+                if metric_name in self.run_data["absolute_metrics"]:
+                    prev_max_metric = self.run_data["absolute_metrics"][metric_name][0]
+                    max_metric = max(max_metric, prev_max_metric)
+                self.run_data["absolute_metrics"][metric_name] = [max_metric]
 
         with open(self.path, "w+") as f:
             json.dump(self.data, f, indent=4)
