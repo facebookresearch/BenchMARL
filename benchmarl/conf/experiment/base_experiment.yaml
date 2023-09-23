@@ -8,8 +8,8 @@ train_device: "cpu"
 gamma: 0.99
 polyak_tau: 0.005
 share_policy_params: True
-lr: 0.00005
-n_optimizer_steps: 45
+lr:  0.001
+n_optimizer_steps: 10
 clip_grad_norm: True
 clip_grad_val: 5
 prefer_continuous_actions: True
@@ -21,7 +21,7 @@ n_iters: 500
 on_policy_minibatch_size: 400
 
 off_policy_memory_size: 100_000
-off_policy_train_batch_size: 10_000
+off_policy_train_batch_size: 128
 off_policy_prioritised_alpha:  0.7
 off_policy_prioritised_beta: 0.5
 

@@ -9,7 +9,6 @@ from torchrl.data import (
     TensorDictReplayBuffer,
     UnboundedContinuousTensorSpec,
 )
-from torchrl.data.replay_buffers.samplers import SamplerWithoutReplacement
 from torchrl.data.replay_buffers.storages import LazyTensorStorage
 from torchrl.modules import EGreedyModule, QValueModule
 from torchrl.objectives import ClipPPOLoss, DQNLoss, LossModule, ValueEstimators
@@ -51,7 +50,6 @@ class Iql(Algorithm):
         # )
         return TensorDictReplayBuffer(
             storage=LazyTensorStorage(memory_size, device=storing_device),
-            sampler=SamplerWithoutReplacement(),
             batch_size=sampling_size,
         )
 
@@ -164,7 +162,7 @@ class Iql(Algorithm):
             # eps_init = 1.0,
             # eps_end = 0.1,
             eps_init=0.3,
-            eps_end=0,
+            eps_end=0.01,
         )
         return TensorDictSequential(*policy_for_loss, greedy)
 
