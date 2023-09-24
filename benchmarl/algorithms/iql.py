@@ -212,7 +212,7 @@ class IqlConfig(AlgorithmConfig):
 
     @staticmethod
     def on_policy() -> bool:
-        return True
+        return False
 
     @staticmethod
     def get_from_yaml(path: Optional[str] = None):
