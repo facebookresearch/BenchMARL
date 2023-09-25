@@ -11,7 +11,6 @@ from torchrl.data import (
     TensorDictReplayBuffer,
     UnboundedContinuousTensorSpec,
 )
-from torchrl.data.replay_buffers import PrioritizedSampler
 from torchrl.data.replay_buffers.storages import LazyTensorStorage
 from torchrl.modules import MaskedCategorical, ProbabilisticActor, TanhNormal
 from torchrl.objectives import (
@@ -67,13 +66,7 @@ class Isac(Algorithm):
     ) -> ReplayBuffer:
         return TensorDictReplayBuffer(
             storage=LazyTensorStorage(memory_size, device=storing_device),
-            sampler=PrioritizedSampler(
-                max_capacity=memory_size,
-                alpha=self.experiment_config.off_policy_prioritised_alpha,
-                beta=self.experiment_config.off_policy_prioritised_beta,
-            ),
             batch_size=sampling_size,
-            priority_key=(group, "td_error"),
         )
 
     def _get_loss(

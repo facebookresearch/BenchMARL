@@ -462,6 +462,7 @@ class Experiment:
                 optimizer.zero_grad()
             elif loss_name.startswith("loss"):
                 raise AssertionError
+        self.replay_buffers[group].update_tensordict_priority(subdata)
         if self.target_updaters[group] is not None:
             self.target_updaters[group].step()
         return training_td

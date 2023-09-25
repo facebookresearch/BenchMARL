@@ -9,7 +9,6 @@ from torchrl.data import (
     TensorDictReplayBuffer,
     UnboundedContinuousTensorSpec,
 )
-from torchrl.data.replay_buffers import PrioritizedSampler
 from torchrl.data.replay_buffers.storages import LazyTensorStorage
 from torchrl.modules import EGreedyModule, QValueModule
 from torchrl.objectives import ClipPPOLoss, DQNLoss, LossModule, ValueEstimators
@@ -40,18 +39,8 @@ class Iql(Algorithm):
     ) -> ReplayBuffer:
         return TensorDictReplayBuffer(
             storage=LazyTensorStorage(memory_size, device=storing_device),
-            sampler=PrioritizedSampler(
-                max_capacity=memory_size,
-                alpha=self.experiment_config.off_policy_prioritised_alpha,
-                beta=self.experiment_config.off_policy_prioritised_beta,
-            ),
             batch_size=sampling_size,
-            priority_key=(group, "td_error"),
         )
-        # return TensorDictReplayBuffer(
-        #     storage=LazyTensorStorage(memory_size, device=storing_device),
-        #     batch_size=sampling_size,
-        # )
 
     def _get_loss(
         self, group: str, policy_for_loss: TensorDictModule, continuous: bool
