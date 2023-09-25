@@ -153,12 +153,12 @@ class Qmix(Algorithm):
             action_mask_key = None
 
         greedy = EGreedyModule(
-            annealing_num_steps=self.experiment_config.exploration_annealing_num_frames,
+            annealing_num_steps=self.experiment_config.exploration_anneal_frames,
             action_key=(group, "action"),
             spec=self.action_spec[(group, "action")],
             action_mask_key=action_mask_key,
-            # eps_init = 1.0,
-            # eps_end = 0.1,
+            eps_init=self.experiment_config.exploration_eps_init,
+            eps_end=self.experiment_config.exploration_eps_end,
         )
         return TensorDictSequential(*policy_for_loss, greedy)
 

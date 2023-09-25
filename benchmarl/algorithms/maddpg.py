@@ -148,10 +148,10 @@ class Maddpg(Algorithm):
     ) -> TensorDictModule:
         return AdditiveGaussianWrapper(
             policy_for_loss,
-            annealing_num_steps=self.experiment_config.exploration_annealing_num_frames,
+            annealing_num_steps=self.experiment_config.exploration_anneal_frames,
             action_key=(group, "action"),
-            # sigma_init = 1.0,
-            # sigma_end = 0.1,
+            sigma_init=self.experiment_config.exploration_eps_init,
+            sigma_end=self.experiment_config.exploration_eps_end,
         )
 
     def process_batch(self, group: str, batch: TensorDictBase) -> TensorDictBase:

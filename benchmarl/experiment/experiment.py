@@ -49,10 +49,13 @@ class ExperimentConfig:
     polyak_tau: float = MISSING
     hard_target_update_frequency: int = MISSING
 
-    n_optimizer_steps: int = MISSING
+    exploration_eps_init: float = MISSING
+    exploration_eps_end: float = MISSING
+
+    collected_frames_per_batch: int = MISSING
     n_envs_per_worker: int = MISSING
     n_iters: int = MISSING
-    collected_frames_per_batch: int = MISSING
+    n_optimizer_steps: int = MISSING
 
     on_policy_minibatch_size: int = MISSING
 
@@ -101,7 +104,7 @@ class ExperimentConfig:
         return self.n_iters * self.collected_frames_per_batch
 
     @property
-    def exploration_annealing_num_frames(self) -> int:
+    def exploration_anneal_frames(self) -> int:
         return self.total_frames // 3
 
     @staticmethod

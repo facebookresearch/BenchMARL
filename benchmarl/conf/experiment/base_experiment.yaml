@@ -15,7 +15,10 @@ clip_grad_val: 5
 
 soft_target_update: True
 polyak_tau: 0.005
-hard_target_update_frequency: ${n_optimizer_steps}
+hard_target_update_frequency: 5
+
+exploration_eps_init: 0.3
+exploration_eps_end: 0.01
 
 collected_frames_per_batch: 6000
 n_envs_per_worker: 10
