@@ -13,14 +13,7 @@ from torchrl.data import (
 from torchrl.data.replay_buffers import PrioritizedSampler
 from torchrl.data.replay_buffers.storages import LazyTensorStorage
 from torchrl.modules import AdditiveGaussianWrapper, ProbabilisticActor, TanhDelta
-from torchrl.objectives import (
-    ClipPPOLoss,
-    DDPGLoss,
-    LossModule,
-    SoftUpdate,
-    ValueEstimators,
-)
-from torchrl.objectives.utils import TargetNetUpdater
+from torchrl.objectives import ClipPPOLoss, DDPGLoss, LossModule, ValueEstimators
 
 from benchmarl.algorithms.common import Algorithm, AlgorithmConfig
 from benchmarl.models.common import ModelConfig
@@ -62,7 +55,7 @@ class Maddpg(Algorithm):
 
     def _get_loss(
         self, group: str, policy_for_loss: TensorDictModule, continuous: bool
-    ) -> Tuple[LossModule, TargetNetUpdater]:
+    ) -> Tuple[LossModule, bool]:
         if continuous:
             # Loss
             loss_module = DDPGLoss(
@@ -81,10 +74,8 @@ class Maddpg(Algorithm):
             loss_module.make_value_estimator(
                 ValueEstimators.TD0, gamma=self.experiment_config.gamma
             )
-            target_net_updater = SoftUpdate(
-                loss_module, tau=self.experiment_config.polyak_tau
-            )
-            return loss_module, target_net_updater
+
+            return loss_module, True
         else:
             raise NotImplementedError(
                 "MADDPG is not compatible with discrete actions yet"

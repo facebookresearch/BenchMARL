@@ -16,7 +16,6 @@ from torchrl.data.replay_buffers.samplers import SamplerWithoutReplacement
 from torchrl.data.replay_buffers.storages import LazyTensorStorage
 from torchrl.modules import MaskedCategorical, ProbabilisticActor, TanhNormal
 from torchrl.objectives import ClipPPOLoss, LossModule, ValueEstimators
-from torchrl.objectives.utils import TargetNetUpdater
 
 from benchmarl.algorithms.common import Algorithm, AlgorithmConfig
 from benchmarl.models.common import ModelConfig
@@ -63,7 +62,7 @@ class Mappo(Algorithm):
 
     def _get_loss(
         self, group: str, policy_for_loss: TensorDictModule, continuous: bool
-    ) -> Tuple[LossModule, TargetNetUpdater]:
+    ) -> Tuple[LossModule, bool]:
 
         # Loss
         loss_module = ClipPPOLoss(
@@ -87,7 +86,7 @@ class Mappo(Algorithm):
         loss_module.make_value_estimator(
             ValueEstimators.GAE, gamma=self.experiment_config.gamma, lmbda=self.lmbda
         )
-        return loss_module, None
+        return loss_module, False
 
     def _get_parameters(self, group: str, loss: ClipPPOLoss) -> Dict[str, Iterable]:
 

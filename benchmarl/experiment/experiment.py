@@ -36,17 +36,23 @@ class ExperimentConfig:
 
     sampling_device: str = MISSING
     train_device: str = MISSING
-    gamma: float = MISSING
-    polyak_tau: float = MISSING
+
     share_policy_params: bool = MISSING
-    lr: float = MISSING
-    n_optimizer_steps: int = MISSING
-    collected_frames_per_batch: int = MISSING
-    n_envs_per_worker: int = MISSING
-    n_iters: int = MISSING
     prefer_continuous_actions: bool = MISSING
+
+    gamma: float = MISSING
+    lr: float = MISSING
     clip_grad_norm: bool = MISSING
     clip_grad_val: Optional[float] = MISSING
+
+    soft_target_update: bool = MISSING
+    polyak_tau: float = MISSING
+    hard_target_update_frequency: int = MISSING
+
+    n_optimizer_steps: int = MISSING
+    n_envs_per_worker: int = MISSING
+    n_iters: int = MISSING
+    collected_frames_per_batch: int = MISSING
 
     on_policy_minibatch_size: int = MISSING
 

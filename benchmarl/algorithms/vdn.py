@@ -13,7 +13,6 @@ from torchrl.data.replay_buffers.samplers import PrioritizedSampler
 from torchrl.data.replay_buffers.storages import LazyTensorStorage
 from torchrl.modules import EGreedyModule, QValueModule, VDNMixer
 from torchrl.objectives import ClipPPOLoss, LossModule, QMixerLoss, ValueEstimators
-from torchrl.objectives.utils import SoftUpdate, TargetNetUpdater
 
 from benchmarl.algorithms.common import Algorithm, AlgorithmConfig
 from benchmarl.models.common import ModelConfig
@@ -52,7 +51,7 @@ class Vdn(Algorithm):
 
     def _get_loss(
         self, group: str, policy_for_loss: TensorDictModule, continuous: bool
-    ) -> Tuple[LossModule, TargetNetUpdater]:
+    ) -> Tuple[LossModule, bool]:
         if continuous:
             raise NotImplementedError("Vdn is not compatible with continuous actions.")
         else:
@@ -76,10 +75,8 @@ class Vdn(Algorithm):
             loss_module.make_value_estimator(
                 ValueEstimators.TD0, gamma=self.experiment_config.gamma
             )
-            target_net_updater = SoftUpdate(
-                loss_module, tau=self.experiment_config.polyak_tau
-            )
-            return loss_module, target_net_updater
+
+            return loss_module, True
 
     def _get_parameters(self, group: str, loss: ClipPPOLoss) -> Dict[str, Iterable]:
 
