@@ -3,6 +3,7 @@ defaults:
   - algorithm: mappo
   - task: vmas/balance
   - model: layers/mlp
+  - model@critic_model: layers/mlp
   - _self_
 
 seed: 0
