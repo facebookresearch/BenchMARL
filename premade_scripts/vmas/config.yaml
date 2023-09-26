@@ -1,0 +1,21 @@
+defaults:
+  - experiment: base_experiment
+  - algorithm: mappo
+  - task: vmas/balance
+  - model: layers/mlp
+  - _self_
+
+seed: 0
+
+hydra:
+  searchpath:
+   # Tells hydra to add the default benchmarl configuration to its path
+    - pkg://benchmarl/conf
+
+experiment:
+    sampling_device: "cuda"
+    train_device: "cuda"
+    collected_frames_per_batch: 60_000
+    n_envs_per_worker: 600
+    on_policy_minibatch_size: 4096
+    evaluation_episodes: 200

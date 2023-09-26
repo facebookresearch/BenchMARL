@@ -1,11 +1,12 @@
 import hydra
+from benchmarl.experiment import Experiment
+
+from benchmarl.hydra_config import load_experiment_from_hydra
 from hydra.core.hydra_config import HydraConfig
 from omegaconf import DictConfig, OmegaConf
 
-from benchmarl.hydra_config import load_experiment_from_hydra
 
-
-@hydra.main(version_base=None, config_path="conf", config_name="config")
+@hydra.main(version_base=None, config_path=".", config_name="config")
 def hydra_experiment(cfg: DictConfig) -> None:
     hydra_choices = HydraConfig.get().runtime.choices
     task_name = hydra_choices.task
@@ -15,7 +16,7 @@ def hydra_experiment(cfg: DictConfig) -> None:
     print("\nLoaded config:\n")
     print(OmegaConf.to_yaml(cfg))
 
-    experiment = load_experiment_from_hydra(cfg, task_name=task_name)
+    experiment: Experiment = load_experiment_from_hydra(cfg, task_name=task_name)
     experiment.run()
 
 
