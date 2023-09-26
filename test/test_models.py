@@ -33,13 +33,14 @@ def test_loading_sequence_models(model_name, intermidiate_size=10):
                 "model=sequence",
                 f"model/layers@model.layers.l1={model_name}",
                 f"model/layers@model.layers.l2={model_name}",
-                f"model.intermediate_sizes={[intermidiate_size]}",
+                f"+model/layers@model.layers.l3={model_name}",
+                f"model.intermediate_sizes={[intermidiate_size,intermidiate_size]}",
             ],
         )
         hydra_model_config = load_model_config_from_hydra(cfg.model)
         layer_config = model_config_registry[model_name].get_from_yaml()
         yaml_config = SequenceModelConfig(
-            model_configs=[layer_config, layer_config],
-            intermediate_sizes=[intermidiate_size],
+            model_configs=[layer_config, layer_config, layer_config],
+            intermediate_sizes=[intermidiate_size, intermidiate_size],
         )
         assert hydra_model_config == yaml_config

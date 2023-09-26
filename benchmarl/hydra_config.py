@@ -12,11 +12,13 @@ def load_experiment_from_hydra(cfg: DictConfig, task_name: str) -> Experiment:
     experiment_config = load_experiment_config_from_hydra(cfg.experiment)
     task_config = load_task_config_from_hydra(cfg.task, task_name)
     model_config = load_model_config_from_hydra(cfg.model)
+    critic_model_config = load_model_config_from_hydra(cfg.critic_model)
 
     return Experiment(
         task=task_config,
         algorithm_config=algorithm_config,
         model_config=model_config,
+        critic_model_config=critic_model_config,
         seed=cfg.seed,
         config=experiment_config,
     )
