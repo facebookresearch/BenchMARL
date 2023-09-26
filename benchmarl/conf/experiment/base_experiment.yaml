@@ -29,8 +29,6 @@ on_policy_minibatch_size: 400
 
 off_policy_memory_size: 1_000_000
 off_policy_train_batch_size: 15_000
-off_policy_prioritised_alpha:  0.7
-off_policy_prioritised_beta: 0.5
 
 evaluation: True
 evaluation_interval: 20

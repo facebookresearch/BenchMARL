@@ -61,8 +61,6 @@ class ExperimentConfig:
 
     off_policy_memory_size: int = MISSING
     off_policy_train_batch_size: int = MISSING
-    off_policy_prioritised_alpha: float = MISSING
-    off_policy_prioritised_beta: float = MISSING
 
     evaluation: bool = MISSING
     evaluation_interval: int = MISSING
