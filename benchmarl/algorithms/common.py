@@ -23,6 +23,7 @@ class Algorithm(ABC):
         self,
         experiment_config: "DictConfig",  # noqa: F821
         model_config: ModelConfig,
+        critic_model_config: ModelConfig,
         observation_spec: CompositeSpec,
         action_spec: CompositeSpec,
         state_spec: Optional[CompositeSpec],
@@ -34,6 +35,7 @@ class Algorithm(ABC):
 
         self.experiment_config = experiment_config
         self.model_config = model_config
+        self.critic_model_config = critic_model_config
         self.on_policy = on_policy
         self.group_map = group_map
         self.observation_spec = observation_spec
@@ -225,6 +227,7 @@ class AlgorithmConfig:
         self,
         experiment_config,
         model_config: ModelConfig,
+        critic_model_config: ModelConfig,
         observation_spec: CompositeSpec,
         action_spec: CompositeSpec,
         state_spec: CompositeSpec,
@@ -235,6 +238,7 @@ class AlgorithmConfig:
             **self.__dict__,
             experiment_config=experiment_config,
             model_config=model_config,
+            critic_model_config=critic_model_config,
             observation_spec=observation_spec,
             action_spec=action_spec,
             state_spec=state_spec,

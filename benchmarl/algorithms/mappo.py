@@ -257,7 +257,7 @@ class Mappo(Algorithm):
             )
 
         if self.state_spec is not None:
-            value_module = self.model_config.get_model(
+            value_module = self.critic_model_config.get_model(
                 input_spec=self.state_spec,
                 output_spec=critic_output_spec,
                 n_agents=n_agents,
@@ -281,7 +281,7 @@ class Mappo(Algorithm):
                     )
                 }
             )
-            value_module = self.model_config.get_model(
+            value_module = self.critic_model_config.get_model(
                 input_spec=critic_input_spec,
                 output_spec=critic_output_spec,
                 n_agents=n_agents,
