@@ -1,4 +1,4 @@
-from typing import Iterator, Sequence, Set
+from typing import Iterator, Optional, Sequence, Set
 
 from benchmarl.algorithms.common import AlgorithmConfig
 from benchmarl.environments import Task
@@ -14,12 +14,16 @@ class Benchmark:
         tasks: Sequence[Task],
         seeds: Set[int],
         experiment_config: ExperimentConfig,
+        critic_model_config: Optional[ModelConfig] = None,
     ):
         self.algorithm_configs = algorithm_configs
         self.tasks = tasks
         self.seeds = seeds
 
         self.model_config = model_config
+        self.critic_model_config = (
+            critic_model_config if critic_model_config is not None else model_config
+        )
         self.experiment_config = experiment_config
 
         print(f"Created benchmark with {self.n_experiments} experiments.")
@@ -37,6 +41,7 @@ class Benchmark:
                         algorithm_config=algorithm_config,
                         seed=seed,
                         model_config=self.model_config,
+                        critic_model_config=self.critic_model_config,
                         config=self.experiment_config,
                     )
 

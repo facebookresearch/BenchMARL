@@ -127,11 +127,15 @@ class Experiment:
         model_config: ModelConfig,
         seed: int,
         config: ExperimentConfig,
+        critic_model_config: Optional[ModelConfig] = None,
     ):
         self.config = config
 
         self.task = task
         self.model_config = model_config
+        self.critic_model_config = (
+            critic_model_config if critic_model_config is not None else model_config
+        )
         self.algorithm_config = algorithm_config
         self.seed = seed
 
@@ -233,6 +237,7 @@ class Experiment:
         self.algorithm = self.algorithm_config.get_algorithm(
             experiment_config=self.config,
             model_config=self.model_config,
+            critic_model_config=self.critic_model_config,
             observation_spec=self.observation_spec,
             action_spec=self.action_spec,
             state_spec=self.state_spec,
