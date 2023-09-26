@@ -329,7 +329,12 @@ class Experiment:
     def run(self):
         try:
             self._collection_loop()
+        except KeyboardInterrupt as interrupt:
+            print("\n\nExperiment was closed gracefully\n\n")
+            self.close()
+            raise interrupt
         except Exception as err:
+            print("\n\nExperiment failed and is closing gracefully\n\n")
             self.close()
             raise err
 
