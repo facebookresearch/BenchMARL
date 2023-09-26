@@ -13,7 +13,7 @@ from benchmarl.algorithms import (
 from benchmarl.algorithms.common import AlgorithmConfig
 from benchmarl.environments import Task, VmasTask
 from benchmarl.experiment import Experiment
-from models import MlpConfig
+from benchmarl.models import MlpConfig
 from torch import nn
 from utils_experiment import ExperimentUtils
 
