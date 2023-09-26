@@ -3,6 +3,7 @@ defaults:
   - algorithm: ???
   - task: ???
   - model: layers/mlp
+  - model@critic_model: ${model}
   - _self_
 
 seed: 0

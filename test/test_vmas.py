@@ -13,6 +13,8 @@ from benchmarl.algorithms import (
 from benchmarl.algorithms.common import AlgorithmConfig
 from benchmarl.environments import Task, VmasTask
 from benchmarl.experiment import Experiment
+from models import MlpConfig
+from torch import nn
 from utils_experiment import ExperimentUtils
 
 _has_vmas = importlib.util.find_spec("vmas") is not None
@@ -78,10 +80,14 @@ class TestVmas:
         mlp_sequence_config,
     ):
         experiment_config.share_policy_params = share_params
+        critic_model_config = MlpConfig(
+            num_cells=[6], activation_class=nn.Tanh, layer_class=nn.Linear
+        )
         task = task.get_from_yaml()
         experiment = Experiment(
             algorithm_config=algo_config.get_from_yaml(),
             model_config=mlp_sequence_config,
+            critic_model_config=critic_model_config,
             seed=0,
             config=experiment_config,
             task=task,

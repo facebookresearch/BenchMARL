@@ -216,7 +216,7 @@ class Maddpg(Algorithm):
             )
 
             modules.append(
-                self.model_config.get_model(
+                self.critic_model_config.get_model(
                     input_spec=critic_input_spec,
                     output_spec=critic_output_spec,
                     n_agents=n_agents,
@@ -257,7 +257,7 @@ class Maddpg(Algorithm):
             )
 
             modules.append(
-                self.model_config.get_model(
+                self.critic_model_config.get_model(
                     input_spec=critic_input_spec,
                     output_spec=critic_output_spec,
                     n_agents=n_agents,
