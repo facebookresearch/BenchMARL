@@ -25,8 +25,8 @@ def hydra_experiment(cfg: DictConfig) -> None:
     # Hyperparameter changes for VMAS experiments
     experiment_config.sampling_device = "cuda"
     experiment_config.train_device = "cuda"
-    # experiment_config.collected_frames_per_batch = 60_000
-    # experiment_config.n_envs_per_worker = 600
+    experiment_config.collected_frames_per_batch = 60_000
+    experiment_config.n_envs_per_worker = 600
     experiment_config.on_policy_minibatch_size = 4096
     experiment_config.evaluation_episodes = 200
     experiment_config = load_experiment_config_from_hydra(cfg.experiment)
