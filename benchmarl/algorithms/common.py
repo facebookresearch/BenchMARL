@@ -12,7 +12,7 @@ from torchrl.data import (
     ReplayBuffer,
 )
 from torchrl.objectives import LossModule
-from torchrl.objectives.utils import TargetNetUpdater
+from torchrl.objectives.utils import HardUpdate, SoftUpdate, TargetNetUpdater
 
 from benchmarl.models.common import ModelConfig
 from benchmarl.utils import DEVICE_TYPING, read_yaml_config
@@ -97,15 +97,24 @@ class Algorithm(ABC):
             continuous = not isinstance(
                 action_space, (DiscreteTensorSpec, OneHotDiscreteTensorSpec)
             )
-            self._losses_and_updaters.update(
-                {
-                    group: self._get_loss(
-                        group=group,
-                        policy_for_loss=self.get_policy_for_loss(group),
-                        continuous=continuous,
-                    )
-                }
+            loss, use_target = self._get_loss(
+                group=group,
+                policy_for_loss=self.get_policy_for_loss(group),
+                continuous=continuous,
             )
+            if use_target:
+                if self.experiment_config.soft_target_update:
+                    target_net_updater = SoftUpdate(
+                        loss, tau=self.experiment_config.polyak_tau
+                    )
+                else:
+                    target_net_updater = HardUpdate(
+                        loss,
+                        value_network_update_interval=self.experiment_config.hard_target_update_frequency,
+                    )
+            else:
+                target_net_updater = None
+            self._losses_and_updaters.update({group: (loss, target_net_updater)})
         return self._losses_and_updaters[group]
 
     def get_replay_buffer(
@@ -170,7 +179,7 @@ class Algorithm(ABC):
     @abstractmethod
     def _get_loss(
         self, group: str, policy_for_loss: TensorDictModule, continuous: bool
-    ) -> Tuple[LossModule, TargetNetUpdater]:
+    ) -> Tuple[LossModule, bool]:
         raise NotImplementedError
 
     @abstractmethod

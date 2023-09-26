@@ -11,7 +11,6 @@ from torchrl.data import (
     TensorDictReplayBuffer,
     UnboundedContinuousTensorSpec,
 )
-from torchrl.data.replay_buffers import PrioritizedSampler
 from torchrl.data.replay_buffers.storages import LazyTensorStorage
 from torchrl.modules import MaskedCategorical, ProbabilisticActor, TanhNormal
 from torchrl.objectives import (
@@ -19,10 +18,8 @@ from torchrl.objectives import (
     DiscreteSACLoss,
     LossModule,
     SACLoss,
-    SoftUpdate,
     ValueEstimators,
 )
-from torchrl.objectives.utils import TargetNetUpdater
 
 from benchmarl.algorithms.common import Algorithm, AlgorithmConfig
 from benchmarl.models.common import ModelConfig
@@ -69,18 +66,12 @@ class Masac(Algorithm):
     ) -> ReplayBuffer:
         return TensorDictReplayBuffer(
             storage=LazyTensorStorage(memory_size, device=storing_device),
-            sampler=PrioritizedSampler(
-                max_capacity=memory_size,
-                alpha=self.experiment_config.off_policy_prioritised_alpha,
-                beta=self.experiment_config.off_policy_prioritised_beta,
-            ),
             batch_size=sampling_size,
-            priority_key=(group, "td_error"),
         )
 
     def _get_loss(
         self, group: str, policy_for_loss: TensorDictModule, continuous: bool
-    ) -> Tuple[LossModule, TargetNetUpdater]:
+    ) -> Tuple[LossModule, bool]:
         if continuous:
             # Loss
             loss_module = SACLoss(
@@ -130,10 +121,8 @@ class Masac(Algorithm):
         loss_module.make_value_estimator(
             ValueEstimators.TD0, gamma=self.experiment_config.gamma
         )
-        target_net_updater = SoftUpdate(
-            loss_module, tau=self.experiment_config.polyak_tau
-        )
-        return loss_module, target_net_updater
+
+        return loss_module, True
 
     def _get_parameters(self, group: str, loss: ClipPPOLoss) -> Dict[str, Iterable]:
         return {

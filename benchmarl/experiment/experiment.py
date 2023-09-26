@@ -36,24 +36,31 @@ class ExperimentConfig:
 
     sampling_device: str = MISSING
     train_device: str = MISSING
-    gamma: float = MISSING
-    polyak_tau: float = MISSING
+
     share_policy_params: bool = MISSING
+    prefer_continuous_actions: bool = MISSING
+
+    gamma: float = MISSING
     lr: float = MISSING
-    n_optimizer_steps: int = MISSING
+    clip_grad_norm: bool = MISSING
+    clip_grad_val: Optional[float] = MISSING
+
+    soft_target_update: bool = MISSING
+    polyak_tau: float = MISSING
+    hard_target_update_frequency: int = MISSING
+
+    exploration_eps_init: float = MISSING
+    exploration_eps_end: float = MISSING
+
     collected_frames_per_batch: int = MISSING
     n_envs_per_worker: int = MISSING
     n_iters: int = MISSING
-    prefer_continuous_actions: bool = MISSING
-    clip_grad_norm: bool = MISSING
-    clip_grad_val: Optional[float] = MISSING
+    n_optimizer_steps: int = MISSING
 
     on_policy_minibatch_size: int = MISSING
 
     off_policy_memory_size: int = MISSING
     off_policy_train_batch_size: int = MISSING
-    off_policy_prioritised_alpha: float = MISSING
-    off_policy_prioritised_beta: float = MISSING
 
     evaluation: bool = MISSING
     evaluation_interval: int = MISSING
@@ -95,8 +102,8 @@ class ExperimentConfig:
         return self.n_iters * self.collected_frames_per_batch
 
     @property
-    def exploration_annealing_num_frames(self) -> int:
-        return self.total_frames // 2
+    def exploration_anneal_frames(self) -> int:
+        return self.total_frames // 3
 
     @staticmethod
     def get_from_yaml(path: Optional[str] = None):
@@ -458,6 +465,7 @@ class Experiment:
                 optimizer.zero_grad()
             elif loss_name.startswith("loss"):
                 raise AssertionError
+        self.replay_buffers[group].update_tensordict_priority(subdata)
         if self.target_updaters[group] is not None:
             self.target_updaters[group].step()
         return training_td

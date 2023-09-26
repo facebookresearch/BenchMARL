@@ -5,25 +5,30 @@ defaults:
 sampling_device: "cpu"
 train_device: "cpu"
 
-gamma: 0.99
-polyak_tau: 0.005
 share_policy_params: True
-lr: 0.00005
-n_optimizer_steps: 45
+prefer_continuous_actions: True
+
+gamma: 0.99
+lr: 0.001
 clip_grad_norm: True
 clip_grad_val: 5
-prefer_continuous_actions: True
+
+soft_target_update: True
+polyak_tau: 0.005
+hard_target_update_frequency: 5
+
+exploration_eps_init: 0.8
+exploration_eps_end: 0.01
 
 collected_frames_per_batch: 6000
 n_envs_per_worker: 10
 n_iters: 500
+n_optimizer_steps: 5
 
 on_policy_minibatch_size: 400
 
-off_policy_memory_size: 100_000
-off_policy_train_batch_size: 10_000
-off_policy_prioritised_alpha:  0.7
-off_policy_prioritised_beta: 0.5
+off_policy_memory_size: 1_000_000
+off_policy_train_batch_size: 15_000
 
 evaluation: True
 evaluation_interval: 20

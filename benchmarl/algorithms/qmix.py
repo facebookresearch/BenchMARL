@@ -9,11 +9,9 @@ from torchrl.data import (
     TensorDictReplayBuffer,
     UnboundedContinuousTensorSpec,
 )
-from torchrl.data.replay_buffers.samplers import PrioritizedSampler
 from torchrl.data.replay_buffers.storages import LazyTensorStorage
 from torchrl.modules import EGreedyModule, QMixer, QValueModule
 from torchrl.objectives import ClipPPOLoss, LossModule, QMixerLoss, ValueEstimators
-from torchrl.objectives.utils import SoftUpdate, TargetNetUpdater
 
 from benchmarl.algorithms.common import Algorithm, AlgorithmConfig
 from benchmarl.models.common import ModelConfig
@@ -44,18 +42,12 @@ class Qmix(Algorithm):
     ) -> ReplayBuffer:
         return TensorDictReplayBuffer(
             storage=LazyTensorStorage(memory_size, device=storing_device),
-            sampler=PrioritizedSampler(
-                max_capacity=memory_size,
-                alpha=self.experiment_config.off_policy_prioritised_alpha,
-                beta=self.experiment_config.off_policy_prioritised_beta,
-            ),
             batch_size=sampling_size,
-            priority_key="td_error",
         )
 
     def _get_loss(
         self, group: str, policy_for_loss: TensorDictModule, continuous: bool
-    ) -> Tuple[LossModule, TargetNetUpdater]:
+    ) -> Tuple[LossModule, bool]:
         if continuous:
             raise NotImplementedError("QMIX is not compatible with continuous actions.")
         else:
@@ -79,10 +71,8 @@ class Qmix(Algorithm):
             loss_module.make_value_estimator(
                 ValueEstimators.TD0, gamma=self.experiment_config.gamma
             )
-            target_net_updater = SoftUpdate(
-                loss_module, tau=self.experiment_config.polyak_tau
-            )
-            return loss_module, target_net_updater
+
+            return loss_module, True
 
     def _get_parameters(self, group: str, loss: ClipPPOLoss) -> Dict[str, Iterable]:
         return {"loss": loss.parameters()}
@@ -156,12 +146,12 @@ class Qmix(Algorithm):
             action_mask_key = None
 
         greedy = EGreedyModule(
-            annealing_num_steps=self.experiment_config.exploration_annealing_num_frames,
+            annealing_num_steps=self.experiment_config.exploration_anneal_frames,
             action_key=(group, "action"),
             spec=self.action_spec[(group, "action")],
             action_mask_key=action_mask_key,
-            # eps_init = 1.0,
-            # eps_end = 0.1,
+            eps_init=self.experiment_config.exploration_eps_init,
+            eps_end=self.experiment_config.exploration_eps_end,
         )
         return TensorDictSequential(*policy_for_loss, greedy)
 
