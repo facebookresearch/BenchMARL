@@ -43,8 +43,29 @@ statistically strong evaluations.
 ### Notebooks
 
 ### Install
-```bash
 
+#### Install TorchRL
+
+Currently BenchMARL uses the latest version of TorchRL, 
+this will be installed automatically in future versions.
+
+```bash
+pip install git+https://github.com/pytorch-labs/tensordict
+git clone https://github.com/pytorch/rl.git
+cd rl
+python setup.py develop
+cd ..
+```
+
+#### Install BenchMARL
+You can just install it from github
+```bash
+pip install git+https://github.com/facebookresearch/BenchMARL
+```
+Or also clone it locally to access the configs and scripts
+```bash
+git clone https://github.com/facebookresearch/BenchMARL.git
+pip install -e BenchMARL
 ```
 
 ### Run
