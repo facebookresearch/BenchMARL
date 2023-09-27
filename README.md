@@ -15,19 +15,16 @@ and state-of-the-art implementations.
 BenchMARL data reporting is compatible with [marl-eval](https://github.com/instadeepai/marl-eval) for standardized and
 statistically strong evaluations.
 
-## Table of contents
-
 - [BenchMARL](#benchmarl)
-  * [Table of contents](#table-of-contents)
+  * [How to use](#how-to-use)
+    + [Notebooks](#notebooks)
+    + [Install](#install)
+    + [Run](#run)
   * [Concept](#concept)
     + [Experiment](#experiment)
     + [Algorithms](#algorithms)
     + [Environments](#environments)
     + [Models](#models)
-  * [How to use](#how-to-use)
-    + [Notebooks](#notebooks)
-    + [Install](#install)
-    + [Run](#run)
   * [Reporting and plotting](#reporting-and-plotting)
   * [Extending](#extending)
   * [Configuring](#configuring)
@@ -41,17 +38,23 @@ statistically strong evaluations.
     + [Callbacks](#callbacks)
 
 
-## Concept
+## How to use
 
+### Notebooks
+
+### Install
+```bash
+
+```
+
+### Run
+
+
+## Concept
 ### Experiment
 ### Algorithms
 ### Environments
 ### Models
-
-## How to use
-### Notebooks
-### Install
-### Run
 
 ## Reporting and plotting
 
