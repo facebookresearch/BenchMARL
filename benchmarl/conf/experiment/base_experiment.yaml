@@ -23,7 +23,7 @@ exploration_eps_end: 0.01
 collected_frames_per_batch: 6000
 n_envs_per_worker: 10
 n_iters: 500
-n_optimizer_steps: 5
+n_optimizer_steps: 40
 
 on_policy_minibatch_size: 400
 
