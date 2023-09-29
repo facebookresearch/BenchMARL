@@ -20,10 +20,12 @@ statistically strong evaluations.
     + [Notebooks](#notebooks)
     + [Install](#install)
     + [Run](#run)
+      - [Command line](#command-line)
+      - [Script](#script)
   * [Concept](#concept)
     + [Experiment](#experiment)
     + [Algorithms](#algorithms)
-    + [Environments](#environments)
+    + [Tasks](#tasks)
     + [Models](#models)
   * [Reporting and plotting](#reporting-and-plotting)
   * [Extending](#extending)
@@ -92,7 +94,6 @@ Experiments are launched with a [default configuration](benchmarl/conf) that
 can be overridden in many ways. 
 To learn how to customize and override configurations
 please refer to the [configuring section](#configuring).
-They can be run in two ways:
 
 #### Command line
 
@@ -125,7 +126,7 @@ You can also load and launch your experiments from within a script
 experiment.run()
 ```
 
-See an example [here](examples/run_experiment.py)
+See an example [here](examples/run_experiment.py).
 
 You can also run multiple experiments in a `Benchmark`
 
@@ -147,12 +148,31 @@ benchmark = Benchmark(
 )
 benchmark.run_sequential()
 ```
-See an example [here](examples/run_benchmark.py)
+See an example [here](examples/run_benchmark.py).
 
 ## Concept
+
+The goal of BenchMARL is to bring different MARL environments and algorithms
+under the same interfaces to enable fair and reproducible comaprison and benchmarking.
+BenchMARL is a full-pipline unified training library with the goal of enabling users to run
+any comparison they want across our algorithms and tasks in just one line of code.
+To achieve this, BenchMARL interconnects components from [TorchRL](https://github.com/pytorch/rl), 
+which provides an efficient and reliable backend.
+
+The library has a [default configuration](benchmarl/conf) for each of its components.
+While parts of this configuration are supposed to be changed (for example experiment configurations),
+other parts (such as tasks) should not be changed to allow for reproducibility.
+To aid in this, each version of BenchMARL is paired to a default configuration.
+
+Let's now introduce each component in the library.
+
+### Benchmark
+
 ### Experiment
 ### Algorithms
-### Environments
+
+single agent
+### Tasks
 ### Models
 
 ## Reporting and plotting
