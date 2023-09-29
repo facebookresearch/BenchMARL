@@ -88,9 +88,15 @@ Follow the instructions on the environment [repository](https://github.com/oxwhi
 
 ### Run
 
+Experiments are launched with a [default configuration](benchmarl/conf) that 
+can be overridden in many ways. 
+To learn how to customize and override configurations
+please refer to the [configuring section](#configuring).
+They can be run in two ways:
+
 #### Command line
 
-The main way to launch experiments using the [default configuration](benchmarl/conf) is:
+To launch an experiment from the command line you can do
 
 ```bash
 python benchmarl/run.py algorithm=mappo task=vmas/balance
@@ -98,12 +104,50 @@ python benchmarl/run.py algorithm=mappo task=vmas/balance
 
 Thanks to [hydra](https://hydra.cc/docs/intro/), you can run benchmarks as multi-runs like:
 ```bash
-python benchmarl/run.py -m algorithm=mappo,qmix,masac task=vmas/balance,smacv2/protoss_5_vs_5 seed=0,1
+python benchmarl/run.py -m algorithm=mappo,qmix,masac task=vmas/balance,vmas/sampling seed=0,1
 ```
+The default implementation for hydra multi-runs is sequential, but [parallel execution is
+also available](https://hydra.cc/docs/plugins/joblib_launcher/).
 
 #### Script
 
-You can also 
+You can also load and launch your experiments from within a script
+
+```python
+ experiment = Experiment(
+    task=VmasTask.BALANCE.get_from_yaml(),
+    algorithm_config=MappoConfig.get_from_yaml(),
+    model_config=MlpConfig.get_from_yaml(),
+    critic_model_config=MlpConfig.get_from_yaml(),
+    seed=0,
+    config=ExperimentConfig.get_from_yaml(),
+)
+experiment.run()
+```
+
+See an example [here](examples/run_experiment.py)
+
+You can also run multiple experiments in a `Benchmark`
+
+```python
+benchmark = Benchmark(
+    algorithm_configs=[
+        MappoConfig.get_from_yaml(),
+        QmixConfig.get_from_yaml(),
+        MasacConfig.get_from_yaml(),
+    ],
+    tasks=[
+        VmasTask.BALANCE.get_from_yaml(),
+        VmasTask.SAMPLING.get_from_yaml(),
+    ],
+    seeds={0, 1},
+    experiment_config=ExperimentConfig.get_from_yaml(),
+    model_config=MlpConfig.get_from_yaml(),
+    critic_model_config=MlpConfig.get_from_yaml(),
+)
+benchmark.run_sequential()
+```
+See an example [here](examples/run_benchmark.py)
 
 ## Concept
 ### Experiment
