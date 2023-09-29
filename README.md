@@ -67,6 +67,24 @@ Or also clone it locally to access the configs and scripts
 git clone https://github.com/facebookresearch/BenchMARL.git
 pip install -e BenchMARL
 ```
+#### Install environments
+
+All enviornment dependencies are optional in BenchMARL and can be installed separately.
+
+**VMAS**
+
+```bash
+pip install vmas
+```
+
+**PettingZoo**
+```bash
+pip install "pettingzoo[all]"
+```
+
+**SMACv2**
+
+Follow the instructions on the environment [repository](https://github.com/oxwhirl/smacv2).
 
 ### Run
 
