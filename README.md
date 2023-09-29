@@ -71,18 +71,18 @@ pip install -e BenchMARL
 
 All enviornment dependencies are optional in BenchMARL and can be installed separately.
 
-**VMAS**
+##### VMAS
 
 ```bash
 pip install vmas
 ```
 
-**PettingZoo**
+##### PettingZoo
 ```bash
 pip install "pettingzoo[all]"
 ```
 
-**SMACv2**
+##### SMACv2
 
 Follow the instructions on the environment [repository](https://github.com/oxwhirl/smacv2).
 
