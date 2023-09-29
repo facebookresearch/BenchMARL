@@ -88,6 +88,22 @@ Follow the instructions on the environment [repository](https://github.com/oxwhi
 
 ### Run
 
+#### Command line
+
+The main way to launch experiments using the [default configuration](benchmarl/conf) is:
+
+```bash
+python benchmarl/run.py algorithm=mappo task=vmas/balance
+```
+
+Thanks to [hydra](https://hydra.cc/docs/intro/), you can run benchmarks as multi-runs like:
+```bash
+python benchmarl/run.py -m algorithm=mappo,qmix,masac task=vmas/balance,smacv2/protoss_5_vs_5 seed=0,1
+```
+
+#### Script
+
+You can also 
 
 ## Concept
 ### Experiment
