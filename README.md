@@ -166,12 +166,28 @@ To aid in this, each version of BenchMARL is paired to a default configuration.
 
 Let's now introduce each component in the library.
 
+### Experiment
+Experiment configurations are in [`benchmarl/conf/config.yaml`](benchmarl/conf/config.yaml),
+with the experiment hyperparameters in configured in [`benchmarl/conf/experiment`](benchmarl/conf/experiment).
+
+An experiment is a training run in which an algorithm, a task, and a model are fixed.
+Experiments have to be configured by passing these values alongside a seed and their hyperparameters.
+The experiment [hyperparameters](benchmarl/conf/experiment/base_experiment.yaml) cover both 
+on-policy and off-policy algorithms, discrete and continuous actions, and probabilistic and deterministic policies
+(as they are agnostic of the algorithm or task used).
+An experiment can be launched from the command line or from a script. 
+See the [run](#run) section for more information.
+
 ### Benchmark
 
-### Experiment
+In the library we call `benchmark` a collection of experiments that can vary in tasks, algorithm, or model.
+A benchmark shares the same experiment configuration across all of its experiments.
+A benchmark can be launched from the command line or from a script. 
+See the [run](#run) section for more information.
+
 ### Algorithms
 
-single agent
+single agent losses
 ### Tasks
 ### Models
 
