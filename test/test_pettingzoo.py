@@ -5,10 +5,11 @@ import pytest
 from benchmarl.algorithms import (
     algorithm_config_registry,
     IppoConfig,
+    IsacConfig,
     MaddpgConfig,
-    MappoConfig,
     MasacConfig,
     QmixConfig,
+    VdnConfig,
 )
 from benchmarl.algorithms.common import AlgorithmConfig
 from benchmarl.environments import PettingZooTask, Task
@@ -58,19 +59,24 @@ class TestPettingzoo:
         )
         experiment.run()
 
-    @pytest.mark.parametrize("algo_config", [MappoConfig, QmixConfig])
-    @pytest.mark.parametrize(
-        "task", [PettingZooTask.SIMPLE_TAG, PettingZooTask.SIMPLE_TAG]
-    )
+    @pytest.mark.parametrize("algo_config", algorithm_config_registry.values())
+    @pytest.mark.parametrize("prefer_continuous", [True, False])
+    @pytest.mark.parametrize("task", [PettingZooTask.SIMPLE_TAG])
     def test_reloading_trainer(
         self,
         algo_config: AlgorithmConfig,
         task: Task,
         experiment_config,
         mlp_sequence_config,
+        prefer_continuous,
     ):
+        experiment_config.prefer_continuous_actions = prefer_continuous
+        algo_config = algo_config.get_from_yaml()
+        if isinstance(algo_config, (VdnConfig, IsacConfig, MasacConfig)):
+            # There are some bugs currently in TorchRL
+            return
         ExperimentUtils.check_experiment_loading(
-            algo_config=algo_config.get_from_yaml(),
+            algo_config=algo_config,
             model_config=mlp_sequence_config,
             experiment_config=experiment_config,
             task=task.get_from_yaml(),
