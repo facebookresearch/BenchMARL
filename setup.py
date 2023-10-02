@@ -8,9 +8,9 @@ setup(
     author="Matteo Bettini",
     author_email="mb2389@cl.cam.ac.uk",
     packages=find_packages(),
-    install_requires=["torchrl", "tqdm", "hydra-core"],
+    install_requires=["tqdm", "hydra-core"],
     extras_require={
-        "tasks": ["vmas>=1.2.10", "pettingzoo[all]>=1.24.1"],
+        "vmas": ["vmas>=1.2.10"],
+        "pettingzoo": ["pettingzoo[all]>=1.24.1"],
     },
-    include_package_data=True,
 )

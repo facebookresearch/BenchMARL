@@ -48,4 +48,9 @@ class Benchmark:
     def run_sequential(self):
         for i, experiment in enumerate(self.get_experiments()):
             print(f"\nRunning experiment {i+1}/{self.n_experiments}.\n")
-            experiment.run()
+            try:
+                experiment.run()
+            except KeyboardInterrupt as interrupt:
+                print("\n\nBenchmark was closed gracefully\n\n")
+                experiment.close()
+                raise interrupt
