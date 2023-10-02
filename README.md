@@ -20,10 +20,9 @@ statistically strong evaluations.
     + [Notebooks](#notebooks)
     + [Install](#install)
     + [Run](#run)
-      - [Command line](#command-line)
-      - [Script](#script)
   * [Concept](#concept)
     + [Experiment](#experiment)
+    + [Benchmark](#benchmark)
     + [Algorithms](#algorithms)
     + [Tasks](#tasks)
     + [Models](#models)
@@ -33,7 +32,6 @@ statistically strong evaluations.
     + [Algorithm](#algorithm)
     + [Task](#task)
     + [Model](#model)
-      - [Sequence model](#sequence-model)
   * [Features](#features)
     + [Logging](#logging)
     + [Checkpointing](#checkpointing)
@@ -186,14 +184,17 @@ A benchmark can be launched from the command line or from a script.
 See the [run](#run) section for more information.
 
 ### Algorithms
-
-single agent losses
+TBC
 ### Tasks
+TBC
 ### Models
+TBC
 
 ## Reporting and plotting
+TBC
 
 ## Extending
+TBC
 
 
 ## Configuring
@@ -284,4 +285,6 @@ Additionally, you can specify a `create_json` argument which instructs the train
 format specified by [marl-eval](https://github.com/instadeepai/marl-eval).
 
 ### Checkpointing 
+TBC
 ### Callbacks
+TBC
