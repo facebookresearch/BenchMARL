@@ -12,9 +12,8 @@ from typing import Dict, List, Optional
 import torch
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictSequential
-from tensordict.utils import _unravel_key_to_tuple
 from torchrl.collectors import SyncDataCollector
-from torchrl.envs import EnvBase, RewardSum, SerialEnv, TransformedEnv
+from torchrl.envs import RewardSum, SerialEnv, TransformedEnv
 from torchrl.envs.transforms import Compose
 from torchrl.envs.utils import ExplorationType, set_exploration_type
 from torchrl.record.loggers import generate_exp_name
@@ -208,28 +207,15 @@ class Experiment:
         self.group_map = self.task.group_map(test_env)
         self.max_steps = self.task.max_steps(test_env)
 
-        reward_spec = test_env.output_spec["full_reward_spec"]
-        transforms = []
-        for reward_key in reward_spec.keys(True, True):
-            transforms.append(
-                RewardSum(
-                    in_keys=[reward_key],
-                    out_keys=[
-                        _unravel_key_to_tuple(reward_key)[:-1] + ("episode_reward",)
-                    ],
-                )
-            )
+        transforms = [RewardSum()]
         transform = Compose(*transforms)
 
-        def env_func_transformed() -> EnvBase:
-            return TransformedEnv(env_func(), transform.clone())
-
         if test_env.batch_size == ():
-            self.env_func = lambda: SerialEnv(
-                self.config.n_envs_per_worker, env_func_transformed
+            self.env_func = lambda: TransformedEnv(
+                SerialEnv(self.config.n_envs_per_worker, env_func), transform.clone()
             )
         else:
-            self.env_func = env_func_transformed
+            self.env_func = lambda: TransformedEnv(env_func(), transform.clone())
 
         self.test_env = test_env
 
