@@ -9,7 +9,7 @@ share_policy_params: True
 prefer_continuous_actions: True
 
 gamma: 0.99
-lr: 0.001
+lr: 0.0005
 clip_grad_norm: True
 clip_grad_val: 5
 
@@ -23,7 +23,7 @@ exploration_eps_end: 0.01
 collected_frames_per_batch: 6000
 n_envs_per_worker: 10
 n_iters: 500
-n_optimizer_steps: 40
+n_optimizer_steps: 45
 
 on_policy_minibatch_size: 400
 
