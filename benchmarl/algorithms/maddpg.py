@@ -62,6 +62,7 @@ class Maddpg(Algorithm):
                 reward=(group, "reward"),
                 priority=(group, "td_error"),
                 done=(group, "done"),
+                terminated=(group, "terminated"),
             )
 
             loss_module.make_value_estimator(
@@ -152,12 +153,20 @@ class Maddpg(Algorithm):
         group_shape = batch.get(group).shape
 
         nested_done_key = ("next", group, "done")
+        nested_terminated_key = ("next", group, "terminated")
         nested_reward_key = ("next", group, "reward")
 
         if nested_done_key not in keys:
             batch.set(
                 nested_done_key,
                 batch.get(("next", "done")).unsqueeze(-1).expand((*group_shape, 1)),
+            )
+        if nested_terminated_key not in keys:
+            batch.set(
+                nested_terminated_key,
+                batch.get(("next", "terminated"))
+                .unsqueeze(-1)
+                .expand((*group_shape, 1)),
             )
 
         if nested_reward_key not in keys:

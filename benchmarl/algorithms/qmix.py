@@ -63,6 +63,7 @@ class Qmix(Algorithm):
                 reward="reward",
                 action=(group, "action"),
                 done="done",
+                terminated="terminated",
                 action_value=(group, "action_value"),
                 local_value=(group, "chosen_action_value"),
                 global_value="chosen_action_value",
@@ -159,12 +160,18 @@ class Qmix(Algorithm):
         keys = list(batch.keys(True, True))
 
         done_key = ("next", "done")
+        terminated_key = ("next", "terminated")
         reward_key = ("next", "reward")
 
         if done_key not in keys:
             batch.set(
                 done_key,
                 batch.get(("next", group, "done")).any(-2),
+            )
+        if terminated_key not in keys:
+            batch.set(
+                terminated_key,
+                batch.get(("next", group, "terminated")).any(-2),
             )
 
         if reward_key not in keys:
