@@ -1,8 +1,3 @@
-import os
-import shutil
-import uuid
-from pathlib import Path
-
 import pytest
 
 from benchmarl.experiment import ExperimentConfig
@@ -11,29 +6,12 @@ from benchmarl.models.common import ModelConfig, SequenceModelConfig
 from torch import nn
 
 
-def pytest_sessionstart(session):
-    """
-    Called after the Session object has been created and
-    before performing collection and entering the run test loop.
-    """
-    folder_name = Path(os.path.dirname(os.path.realpath(__file__)))
-    folder_name = folder_name / f"tmp_{str(uuid.uuid4())[:8]}"
-    folder_name.mkdir(parents=False, exist_ok=False)
-    os.chdir(folder_name)
-    session._tmp_folder = folder_name
-
-
-def pytest_sessionfinish(session, exitstatus):
-    """
-    Called after whole test run finished, right before
-    returning the exit status to the system.
-    #"""
-    shutil.rmtree(session._tmp_folder)
-
-
 @pytest.fixture
-def experiment_config() -> ExperimentConfig:
+def experiment_config(tmp_path) -> ExperimentConfig:
+    save_dir = tmp_path
+    save_dir.mkdir(exist_ok=True)
     experiment_config: ExperimentConfig = ExperimentConfig.get_from_yaml()
+    experiment_config.save_folder = str(save_dir)
     experiment_config.n_iters = 3
     experiment_config.n_optimizer_steps = 2
     experiment_config.n_envs_per_worker = 2
