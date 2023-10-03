@@ -16,7 +16,3 @@ seed: 0
 experiment:
     sampling_device: "cuda"
     train_device: "cuda"
-    collected_frames_per_batch: 60_000
-    n_envs_per_worker: 600
-    on_policy_minibatch_size: 4096
-    evaluation_episodes: 200
