@@ -2,40 +2,74 @@ defaults:
   - experiment_config
   - _self_
 
+# The device for collection (e.g. cuda)
 sampling_device: "cpu"
+# The device for training (e.g. cuda)
 train_device: "cpu"
 
+# Whether to share the parameters of the policy within agent groups
 share_policy_params: True
+# If an algorithm and an env support both continuous and discrete actions, what should be preferred
 prefer_continuous_actions: True
 
+# Discount factor
 gamma: 0.99
+# Learning rate
 lr: 0.00005
+# Clips grad norm if true and clips grad value if false
 clip_grad_norm: True
+# The value for the clipping, if null no clipping
 clip_grad_val: 5
 
+# Whether to use soft or hard target updates
 soft_target_update: True
+# # If soft_target_update is True, this is its polyak_tau
 polyak_tau: 0.005
+# If soft_target_update is False, this is the frequency of the hard trarget updates in terms of n_optimizer_steps
 hard_target_update_frequency: 5
 
+# When an exploration wrapper is used. This is its initial epsilon for annealing
 exploration_eps_init: 0.8
+# When an exploration wrapper is used. This is its final epsilon after annealing
 exploration_eps_end: 0.01
 
+# Number of frames collected and each experiment iteration
 collected_frames_per_batch: 6000
+# Number of environments used for collection
+# If the environment is vectorized, this will be the number of batched environments.
+# Otherwise this batching will be simulated and each env will be run sequentially.
 n_envs_per_worker: 10
+# The maximum number of experiment iterations before the experiment terminates
 n_iters: 500
+# Number of optimization iterations per each experiment iteration
+# In on-policy settings this is the number of times collected_frames_per_batch will be split into minibatches and trained over.
+# In off-policy settings this is the number of times off_policy_train_batch_size will be sampled from the buffer and trained over.
 n_optimizer_steps: 45
 
+# In on-policy algorithms the train_batch_size will be equal to the collected_frames_per_batch
+# and it will be split into minibatches with this number of frames for training
 on_policy_minibatch_size: 400
 
+# Maximum number of frames to keep in replay buffer memory for off-policy algorithms
 off_policy_memory_size: 1_000_000
+# Number of frames used for each n_optimizer_step when training off-policy algorithms
 off_policy_train_batch_size: 15_000
 
 evaluation: True
+# Frequency of evaluation in terms of experiment iterations
 evaluation_interval: 20
+# Number of episodes that evaluation is run on
 evaluation_episodes: 10
 
+# List of loggers to use, options are: wandb, csv, tensorboard, mflow
 loggers: [wandb]
+# Create a json folder as part of the output in the format of marl-eval
 create_json: True
 
+# Absolute path to the folder where the experiment will log.
+# If null, this will default to the hydra output dir (if using hydra) or to the current folder when the script is run (if not).
+save_folder: null
+# Absolute path to a checkpoint file where the experiment was saved. If null the experiment is started fresh.
 restore_file: null
+# Interval for experiment saving in terms of experiment iterations
 checkpoint_interval: 50

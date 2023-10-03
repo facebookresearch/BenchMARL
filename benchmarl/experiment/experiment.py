@@ -68,6 +68,7 @@ class ExperimentConfig:
     loggers: List[str] = MISSING
     create_json: bool = MISSING
 
+    save_folder: Optional[str] = MISSING
     restore_file: Optional[str] = MISSING
     checkpoint_interval: float = MISSING
 
@@ -277,10 +278,13 @@ class Experiment:
         self.task_name = self.task.name.lower()
 
         if self.config.restore_file is None:
-            if _has_hydra and HydraConfig.initialized():
-                folder_name = Path(HydraConfig.get().runtime.output_dir)
+            if self.config.save_folder is not None:
+                folder_name = Path(self.config.save_folder)
             else:
-                folder_name = Path(os.getcwd())
+                if _has_hydra and HydraConfig.initialized():
+                    folder_name = Path(HydraConfig.get().runtime.output_dir)
+                else:
+                    folder_name = Path(os.getcwd())
             self.name = generate_exp_name(
                 f"{self.algorithm_name}_{self.task_name}_{self.model_name}", ""
             )
