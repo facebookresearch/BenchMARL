@@ -169,7 +169,7 @@ To aid in this, each version of BenchMARL is paired to a default configuration.
 
 Let's now introduce each component in the library.
 
-**Experiment**. An experiment is a training run in which an algorithm, a task, and a model are fixed.
+**[Experiment](benchmarl/experiment)**. An experiment is a training run in which an algorithm, a task, and a model are fixed.
 Experiments are configured by passing these values alongside a seed and the experiment hyperparameters.
 The experiment [hyperparameters](benchmarl/conf/experiment/base_experiment.yaml) cover both 
 on-policy and off-policy algorithms, discrete and continuous actions, and probabilistic and deterministic policies
@@ -177,13 +177,13 @@ on-policy and off-policy algorithms, discrete and continuous actions, and probab
 An experiment can be launched from the command line or from a script. 
 See the [run](#run) section for more information.
 
-**Benchmark**. In the library we call `benchmark` a collection of experiments that can vary in tasks, algorithm, or model.
+**[Benchmark](benchmarl/benchmark.py)**. In the library we call `benchmark` a collection of experiments that can vary in tasks, algorithm, or model.
 A benchmark shares the same experiment configuration across all of its experiments.
 Benchmarks allow to compare different MARL components in a standardized way.
 A benchmark can be launched from the command line or from a script. 
 See the [run](#run) section for more information.
 
-**Algorithm**
+**[Algorithm](benchmarl/algorithms)**.
 
 ### Tasks
 TBC
