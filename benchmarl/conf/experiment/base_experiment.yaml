@@ -9,7 +9,7 @@ share_policy_params: True
 prefer_continuous_actions: True
 
 gamma: 0.99
-lr: 0.0005
+lr: 0.00005
 clip_grad_norm: True
 clip_grad_val: 5
 
