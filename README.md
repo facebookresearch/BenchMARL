@@ -183,26 +183,49 @@ Benchmarks allow to compare different MARL components in a standardized way.
 A benchmark can be launched from the command line or from a script. 
 See the [run](#run) section for more information.
 
-**Algorithm**. Algorithms are an ensemble of components (e.g., losss, replay buffer) which
-determine the training strategy. Here is a table with the currently supported algorithms in BenchMARL.
+**Algorithms**. Algorithms are an ensemble of components (e.g., losss, replay buffer) which
+determine the training strategy. Here is a table with the currently implemented algorithms in BenchMARL.
 
-| Name   | On/Off policy | Actor-critic | Full-observability in critic | Action compatibility          | Probabilistic actor |   
-|--------|---------------|--------------|------------------------------|-------------------------------|---------------------|
-| MAPPO  | On            | Yes          | Yes                          | Continuous + Discrete         | Yes                 |   
-| IPPO   | On            | Yes          | No                           | Continuous + Discrete         | Yes                 |  
-| MADDPG | Off           | Yes          | Yes                          | Continuous                    | No                  | 
-| IDDPG  | Off           | Yes          | No                           | Continuous                    |  No                 |   
-| MASAC  | Off           | Yes          | Yes                          | Continuous + Discrete         |  Yes                |   
-| ISAC   | Off           | Yes          | No                           | Continuous + Discrete         |  Yes                |   
-| QMIX   | Off           | No           | NA                           | Discrete                      |  No                 | 
-| VDN    | Off           | No           | NA                           | Discrete                      |  No                 |  
-| IQL    | Off           | No           | NA                           | Discrete                      |  No                 |  
+| Name                                   | On/Off policy | Actor-critic | Full-observability in critic | Action compatibility          | Probabilistic actor |   
+|----------------------------------------|---------------|--------------|------------------------------|-------------------------------|---------------------|
+| [MAPPO](https://arxiv.org/abs/2103.01955)                              | On            | Yes          | Yes                          | Continuous + Discrete         | Yes                 |   
+| [IPPO](https://arxiv.org/abs/2011.09533)                               | On            | Yes          | No                           | Continuous + Discrete         | Yes                 |  
+| [MADDPG](https://arxiv.org/abs/1706.02275)                             | Off           | Yes          | Yes                          | Continuous                    | No                  | 
+| [IDDPG](benchmarl/algorithms/iddpg.py) | Off           | Yes          | No                           | Continuous                    |  No                 |   
+| [MASAC](benchmarl/algorithms/masac.py) | Off           | Yes          | Yes                          | Continuous + Discrete         |  Yes                |   
+| [ISAC](benchmarl/algorithms/isac.py)   | Off           | Yes          | No                           | Continuous + Discrete         |  Yes                |   
+| [QMIX](https://arxiv.org/abs/1803.11485)                               | Off           | No           | NA                           | Discrete                      |  No                 | 
+| [VDN](https://arxiv.org/abs/1706.05296)                                | Off           | No           | NA                           | Discrete                      |  No                 |  
+| [IQL](https://www.semanticscholar.org/paper/Multi-Agent-Reinforcement-Learning%3A-Independent-Tan/59de874c1e547399b695337bcff23070664fa66e)                                | Off           | No           | NA                           | Discrete                      |  No                 |  
 
 
-### Tasks
-TBC
-### Models
-TBC
+**Tasks**. Tasks are scenarios from a specific environment which constitute the MARL
+challange to solve. They differe based on many aspects, here is a table with the current environments in BenchMARL
+
+| Enviromnent | Tasks                                 | Cooperation               | Global state | Reward function               | 
+|-------------|---------------------------------------|---------------------------|--------------|-------------------------------|
+| [VMAS](https://github.com/proroklab/VectorizedMultiAgentSimulator) | [TBC](benchmarl/conf/task/vmas)       | Cooperative + Competitive | No           | Shared + Independent + Global |  
+| [SMAC](https://github.com/oxwhirl/smac)   | [TBC](benchmarl/conf/task/smacv2)     | Cooperative               | Yes          | Global                        |  
+| [SMACv2](https://github.com/oxwhirl/smacv2) | [TBC](benchmarl/conf/task/smacv2)     | Cooperative               | Yes          | Global                        |  
+| [MPE](https://github.com/openai/multiagent-particle-envs)     | [TBC](benchmarl/conf/task/pettingzoo) | Cooperative + Competitive | Yes          | Shared + Independent          |   
+| [SISL](https://github.com/sisl/MADRL)    | [TBC](benchmarl/conf/task/pettingzoo)       | Cooperative               | No           | Shared                        |  
+
+**Models**. Models are neural networks used to process data. They can be used as actors (policies) or, 
+when possible, as critics. We provide a set of base models (layers) and a SequenceModel to concatenate
+different. All the models can be used with or without parameter sharing within an 
+agent group. Here is a table of the models implemented in BenchMARL
+
+| Name | Decentralized | Centralized with local inputs | Centralized with global input | 
+|------|:-------------:|:-----------------------------:|:-----------------------------:|
+| MLP  |       ✅       |               ✅               |               ✅               | 
+
+And the ones that are _work in progress_
+
+| Name | Decentralized | Centralized with local inputs | Centralized with global input | 
+|------|:-------------:|:-----------------------------:|:-----------------------------:|
+| GNN  |       ✅       |               ✅               |               ❌               | 
+| CNN  |       ✅       |               ✅               |               ✅               | 
+
 
 ## Reporting and plotting
 TBC
