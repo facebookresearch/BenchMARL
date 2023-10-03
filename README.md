@@ -6,6 +6,12 @@
 python benchmarl/run.py algorithm=mappo task=vmas/balance
 ```
 
+[![Examples](https://img.shields.io/badge/Examples-blue.svg)](examples) 
+<!--
+[![Static Badge](https://img.shields.io/badge/Benchmarks-Wandb-yellow)]()
+-->
+
+
 BenchMARL is a Multi-Agent Reinforcement Learning (MARL) training library created to enable reproducibility
 and benchmarking across different MARL algorithms and environments.
 Its mission is to present a standardized interface that allows easy integration of new algorithms and environments to 
@@ -46,16 +52,13 @@ statistically strong evaluations.
 
 #### Install TorchRL
 
-Currently BenchMARL uses the latest version of TorchRL, 
-this will be installed automatically in future versions.
+You can install TorchRL from PyPi.
 
 ```bash
-pip install git+https://github.com/pytorch-labs/tensordict
-git clone https://github.com/pytorch/rl.git
-cd rl
-python setup.py develop
-cd ..
+pip install torchrl
 ```
+For more details, or for installing nightly versions, see the
+[TorchRL installation guide](https://github.com/pytorch/rl#installation).
 
 #### Install BenchMARL
 You can just install it from github
@@ -86,6 +89,8 @@ pip install "pettingzoo[all]"
 
 Follow the instructions on the environment [repository](https://github.com/oxwhirl/smacv2).
 
+[Here](.github/unittest/install_smacv2.sh) is how we install it on linux.
+
 ### Run
 
 Experiments are launched with a [default configuration](benchmarl/conf) that 
@@ -100,11 +105,15 @@ To launch an experiment from the command line you can do
 ```bash
 python benchmarl/run.py algorithm=mappo task=vmas/balance
 ```
+[![Example](https://img.shields.io/badge/Example-blue.svg)](examples/running/run_experiment.bash)
+
 
 Thanks to [hydra](https://hydra.cc/docs/intro/), you can run benchmarks as multi-runs like:
 ```bash
 python benchmarl/run.py -m algorithm=mappo,qmix,masac task=vmas/balance,vmas/sampling seed=0,1
 ```
+[![Example](https://img.shields.io/badge/Example-blue.svg)](examples/running/run_benchmark.bash)
+
 The default implementation for hydra multi-runs is sequential, but [parallel execution is
 also available](https://hydra.cc/docs/plugins/joblib_launcher/).
 
@@ -123,10 +132,10 @@ You can also load and launch your experiments from within a script
 )
 experiment.run()
 ```
+[![Example](https://img.shields.io/badge/Example-blue.svg)](examples/running/run_experiment.py)
 
-See an example [here](examples/run_experiment.py).
 
-You can also run multiple experiments in a `Benchmark`
+You can also run multiple experiments in a `Benchmark`.
 
 ```python
 benchmark = Benchmark(
@@ -146,7 +155,8 @@ benchmark = Benchmark(
 )
 benchmark.run_sequential()
 ```
-See an example [here](examples/run_benchmark.py).
+[![Example](https://img.shields.io/badge/Example-blue.svg)](examples/running/run_benchmark.py)
+
 
 ## Concept
 
