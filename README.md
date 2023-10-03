@@ -186,17 +186,17 @@ See the [run](#run) section for more information.
 **Algorithm**. Algorithms are an ensemble of components (e.g., losss, replay buffer) which
 determine the training strategy. Here is a table with the currently supported algorithms in BenchMARL.
 
-| Name   | On/Off policy | Actor-critic | Full-observability in critic  | Action type support | Probabilistic actor |   |   |   |   |
-|--------|---------------|--------------|---|---------------------|---------------------|---|---|---|---|
-| MAPPO  | On            |  ✅         |   |                     |                     |   |   |   |   |
-| IPPO   | On            | ✅          |   |                     |                     |   |   |   |   |
-| MADDPG | Off           |  ✅            |   |                     |                     |   |   |   |   |
-| IDDPG  | Off           |  ✅            |   |                     |                     |   |   |   |   |
-| MASAC  | Off           |  ✅            |   |                     |                     |   |   |   |   |
-| ISAC   | Off           |   ✅           |   |                     |                     |   |   |   |   |
-| QMIX   | Off           |  ❌            |   |                     |                     |   |   |   |   |
-| VDN    | Off           |   ❌           |   |                     |                     |   |   |   |   |
-| IQL    | Off           |   ❌           |   |                     |                     |   |   |   |   |
+| Name   | On/Off policy | Actor-critic | Full-observability in critic | Action compatibility          | Probabilistic actor |   
+|--------|---------------|--------------|------------------------------|-------------------------------|---------------------|
+| MAPPO  | On            | Yes          | Yes                          | Continuous + Discrete         | Yes                 |   
+| IPPO   | On            | Yes          | No                           | Continuous + Discrete         | Yes                 |  
+| MADDPG | Off           | Yes          | Yes                          | Continuous                    | No                  | 
+| IDDPG  | Off           | Yes          | No                           | Continuous                    |  No                 |   
+| MASAC  | Off           | Yes          | Yes                          | Continuous + Discrete         |  Yes                |   
+| ISAC   | Off           | Yes          | No                           | Continuous + Discrete         |  Yes                |   
+| QMIX   | Off           | No           | NA                           | Discrete                      |  No                 | 
+| VDN    | Off           | No           | NA                           | Discrete                      |  No                 |  
+| IQL    | Off           | No           | NA                           | Discrete                      |  No                 |  
 
 
 ### Tasks
