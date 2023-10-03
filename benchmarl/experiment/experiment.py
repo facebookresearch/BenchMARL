@@ -62,6 +62,7 @@ class ExperimentConfig:
     off_policy_train_batch_size: int = MISSING
 
     evaluation: bool = MISSING
+    render: bool = MISSING
     evaluation_interval: int = MISSING
     evaluation_episodes: int = MISSING
 
@@ -483,7 +484,7 @@ class Experiment:
     def _evaluation_loop(self, iter: int):
         evaluation_start = time.time()
         with set_exploration_type(ExplorationType.MODE):
-            if self.task.has_render(self.test_env):
+            if self.task.has_render(self.test_env) and self.config.render:
                 frames = []
 
                 def callback(env, td):
