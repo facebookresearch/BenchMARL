@@ -27,11 +27,6 @@ statistically strong evaluations.
     + [Install](#install)
     + [Run](#run)
   * [Concept](#concept)
-    + [Experiment](#experiment)
-    + [Benchmark](#benchmark)
-    + [Algorithms](#algorithms)
-    + [Tasks](#tasks)
-    + [Models](#models)
   * [Reporting and plotting](#reporting-and-plotting)
   * [Extending](#extending)
   * [Configuring](#configuring)
@@ -105,14 +100,14 @@ To launch an experiment from the command line you can do
 ```bash
 python benchmarl/run.py algorithm=mappo task=vmas/balance
 ```
-[![Example](https://img.shields.io/badge/Example-blue.svg)](examples/running/run_experiment.bash)
+[![Example](https://img.shields.io/badge/Example-blue.svg)](examples/running/run_experiment.sh)
 
 
 Thanks to [hydra](https://hydra.cc/docs/intro/), you can run benchmarks as multi-runs like:
 ```bash
 python benchmarl/run.py -m algorithm=mappo,qmix,masac task=vmas/balance,vmas/sampling seed=0,1
 ```
-[![Example](https://img.shields.io/badge/Example-blue.svg)](examples/running/run_benchmark.bash)
+[![Example](https://img.shields.io/badge/Example-blue.svg)](examples/running/run_benchmark.sh)
 
 The default implementation for hydra multi-runs is sequential, but [parallel execution is
 also available](https://hydra.cc/docs/plugins/joblib_launcher/).
@@ -174,27 +169,22 @@ To aid in this, each version of BenchMARL is paired to a default configuration.
 
 Let's now introduce each component in the library.
 
-### Experiment
-Experiment configurations are in [`benchmarl/conf/config.yaml`](benchmarl/conf/config.yaml),
-with the experiment hyperparameters in configured in [`benchmarl/conf/experiment`](benchmarl/conf/experiment).
-
-An experiment is a training run in which an algorithm, a task, and a model are fixed.
-Experiments have to be configured by passing these values alongside a seed and their hyperparameters.
+**Experiment**. An experiment is a training run in which an algorithm, a task, and a model are fixed.
+Experiments are configured by passing these values alongside a seed and the experiment hyperparameters.
 The experiment [hyperparameters](benchmarl/conf/experiment/base_experiment.yaml) cover both 
 on-policy and off-policy algorithms, discrete and continuous actions, and probabilistic and deterministic policies
 (as they are agnostic of the algorithm or task used).
 An experiment can be launched from the command line or from a script. 
 See the [run](#run) section for more information.
 
-### Benchmark
-
-In the library we call `benchmark` a collection of experiments that can vary in tasks, algorithm, or model.
+**Benchmark**. In the library we call `benchmark` a collection of experiments that can vary in tasks, algorithm, or model.
 A benchmark shares the same experiment configuration across all of its experiments.
+Benchmarks allow to compare different MARL components in a standardized way.
 A benchmark can be launched from the command line or from a script. 
 See the [run](#run) section for more information.
 
-### Algorithms
-TBC
+**Algorithm**
+
 ### Tasks
 TBC
 ### Models
@@ -208,6 +198,9 @@ TBC
 
 
 ## Configuring
+Experiment configurations are in [`benchmarl/conf/config.yaml`](benchmarl/conf/config.yaml),
+with the experiment hyperparameters in [`benchmarl/conf/experiment`](benchmarl/conf/experiment).
+
 
 Running custom experiments is extremely simplified by the [Hydra](https://hydra.cc/) configurations.
 
