@@ -6,6 +6,12 @@
 python benchmarl/run.py algorithm=mappo task=vmas/balance
 ```
 
+[![Examples](https://img.shields.io/badge/Examples-blue.svg)](examples) 
+<!--
+[![Static Badge](https://img.shields.io/badge/Benchmarks-Wandb-yellow)]()
+-->
+
+
 BenchMARL is a Multi-Agent Reinforcement Learning (MARL) training library created to enable reproducibility
 and benchmarking across different MARL algorithms and environments.
 Its mission is to present a standardized interface that allows easy integration of new algorithms and environments to 
@@ -21,11 +27,6 @@ statistically strong evaluations.
     + [Install](#install)
     + [Run](#run)
   * [Concept](#concept)
-    + [Experiment](#experiment)
-    + [Benchmark](#benchmark)
-    + [Algorithms](#algorithms)
-    + [Tasks](#tasks)
-    + [Models](#models)
   * [Reporting and plotting](#reporting-and-plotting)
   * [Extending](#extending)
   * [Configuring](#configuring)
@@ -46,16 +47,13 @@ statistically strong evaluations.
 
 #### Install TorchRL
 
-Currently BenchMARL uses the latest version of TorchRL, 
-this will be installed automatically in future versions.
+You can install TorchRL from PyPi.
 
 ```bash
-pip install git+https://github.com/pytorch-labs/tensordict
-git clone https://github.com/pytorch/rl.git
-cd rl
-python setup.py develop
-cd ..
+pip install torchrl
 ```
+For more details, or for installing nightly versions, see the
+[TorchRL installation guide](https://github.com/pytorch/rl#installation).
 
 #### Install BenchMARL
 You can just install it from github
@@ -86,6 +84,8 @@ pip install "pettingzoo[all]"
 
 Follow the instructions on the environment [repository](https://github.com/oxwhirl/smacv2).
 
+[Here](.github/unittest/install_smacv2.sh) is how we install it on linux.
+
 ### Run
 
 Experiments are launched with a [default configuration](benchmarl/conf) that 
@@ -100,11 +100,15 @@ To launch an experiment from the command line you can do
 ```bash
 python benchmarl/run.py algorithm=mappo task=vmas/balance
 ```
+[![Example](https://img.shields.io/badge/Example-blue.svg)](examples/running/run_experiment.sh)
+
 
 Thanks to [hydra](https://hydra.cc/docs/intro/), you can run benchmarks as multi-runs like:
 ```bash
 python benchmarl/run.py -m algorithm=mappo,qmix,masac task=vmas/balance,vmas/sampling seed=0,1
 ```
+[![Example](https://img.shields.io/badge/Example-blue.svg)](examples/running/run_benchmark.sh)
+
 The default implementation for hydra multi-runs is sequential, but [parallel execution is
 also available](https://hydra.cc/docs/plugins/joblib_launcher/).
 
@@ -123,10 +127,10 @@ You can also load and launch your experiments from within a script
 )
 experiment.run()
 ```
+[![Example](https://img.shields.io/badge/Example-blue.svg)](examples/running/run_experiment.py)
 
-See an example [here](examples/run_experiment.py).
 
-You can also run multiple experiments in a `Benchmark`
+You can also run multiple experiments in a `Benchmark`.
 
 ```python
 benchmark = Benchmark(
@@ -146,7 +150,8 @@ benchmark = Benchmark(
 )
 benchmark.run_sequential()
 ```
-See an example [here](examples/run_benchmark.py).
+[![Example](https://img.shields.io/badge/Example-blue.svg)](examples/running/run_benchmark.py)
+
 
 ## Concept
 
@@ -164,31 +169,63 @@ To aid in this, each version of BenchMARL is paired to a default configuration.
 
 Let's now introduce each component in the library.
 
-### Experiment
-Experiment configurations are in [`benchmarl/conf/config.yaml`](benchmarl/conf/config.yaml),
-with the experiment hyperparameters in configured in [`benchmarl/conf/experiment`](benchmarl/conf/experiment).
-
-An experiment is a training run in which an algorithm, a task, and a model are fixed.
-Experiments have to be configured by passing these values alongside a seed and their hyperparameters.
+**Experiment**. An experiment is a training run in which an algorithm, a task, and a model are fixed.
+Experiments are configured by passing these values alongside a seed and the experiment hyperparameters.
 The experiment [hyperparameters](benchmarl/conf/experiment/base_experiment.yaml) cover both 
 on-policy and off-policy algorithms, discrete and continuous actions, and probabilistic and deterministic policies
 (as they are agnostic of the algorithm or task used).
 An experiment can be launched from the command line or from a script. 
 See the [run](#run) section for more information.
 
-### Benchmark
-
-In the library we call `benchmark` a collection of experiments that can vary in tasks, algorithm, or model.
+**Benchmark**. In the library we call `benchmark` a collection of experiments that can vary in tasks, algorithm, or model.
 A benchmark shares the same experiment configuration across all of its experiments.
+Benchmarks allow to compare different MARL components in a standardized way.
 A benchmark can be launched from the command line or from a script. 
 See the [run](#run) section for more information.
 
-### Algorithms
-TBC
-### Tasks
-TBC
-### Models
-TBC
+**Algorithms**. Algorithms are an ensemble of components (e.g., losss, replay buffer) which
+determine the training strategy. Here is a table with the currently implemented algorithms in BenchMARL.
+
+| Name                                   | On/Off policy | Actor-critic | Full-observability in critic | Action compatibility          | Probabilistic actor |   
+|----------------------------------------|---------------|--------------|------------------------------|-------------------------------|---------------------|
+| [MAPPO](https://arxiv.org/abs/2103.01955)                              | On            | Yes          | Yes                          | Continuous + Discrete         | Yes                 |   
+| [IPPO](https://arxiv.org/abs/2011.09533)                               | On            | Yes          | No                           | Continuous + Discrete         | Yes                 |  
+| [MADDPG](https://arxiv.org/abs/1706.02275)                             | Off           | Yes          | Yes                          | Continuous                    | No                  | 
+| [IDDPG](benchmarl/algorithms/iddpg.py) | Off           | Yes          | No                           | Continuous                    |  No                 |   
+| [MASAC](benchmarl/algorithms/masac.py) | Off           | Yes          | Yes                          | Continuous + Discrete         |  Yes                |   
+| [ISAC](benchmarl/algorithms/isac.py)   | Off           | Yes          | No                           | Continuous + Discrete         |  Yes                |   
+| [QMIX](https://arxiv.org/abs/1803.11485)                               | Off           | No           | NA                           | Discrete                      |  No                 | 
+| [VDN](https://arxiv.org/abs/1706.05296)                                | Off           | No           | NA                           | Discrete                      |  No                 |  
+| [IQL](https://www.semanticscholar.org/paper/Multi-Agent-Reinforcement-Learning%3A-Independent-Tan/59de874c1e547399b695337bcff23070664fa66e)                                | Off           | No           | NA                           | Discrete                      |  No                 |  
+
+
+**Tasks**. Tasks are scenarios from a specific environment which constitute the MARL
+challange to solve. They differe based on many aspects, here is a table with the current environments in BenchMARL
+
+| Enviromnent | Tasks                                 | Cooperation               | Global state | Reward function               | 
+|-------------|---------------------------------------|---------------------------|--------------|-------------------------------|
+| [VMAS](https://github.com/proroklab/VectorizedMultiAgentSimulator) | [TBC](benchmarl/conf/task/vmas)       | Cooperative + Competitive | No           | Shared + Independent + Global |  
+| [SMAC](https://github.com/oxwhirl/smac)   | [TBC](benchmarl/conf/task/smacv2)     | Cooperative               | Yes          | Global                        |  
+| [SMACv2](https://github.com/oxwhirl/smacv2) | [TBC](benchmarl/conf/task/smacv2)     | Cooperative               | Yes          | Global                        |  
+| [MPE](https://github.com/openai/multiagent-particle-envs)     | [TBC](benchmarl/conf/task/pettingzoo) | Cooperative + Competitive | Yes          | Shared + Independent          |   
+| [SISL](https://github.com/sisl/MADRL)    | [TBC](benchmarl/conf/task/pettingzoo)       | Cooperative               | No           | Shared                        |  
+
+**Models**. Models are neural networks used to process data. They can be used as actors (policies) or, 
+when possible, as critics. We provide a set of base models (layers) and a SequenceModel to concatenate
+different. All the models can be used with or without parameter sharing within an 
+agent group. Here is a table of the models implemented in BenchMARL
+
+| Name                           | Decentralized | Centralized with local inputs | Centralized with global input | 
+|--------------------------------|:-------------:|:-----------------------------:|:-----------------------------:|
+| [MLP](benchmarl/models/mlp.py) |       ✅       |               ✅               |               ✅               | 
+
+And the ones that are _work in progress_
+
+| Name                                                         | Decentralized | Centralized with local inputs | Centralized with global input | 
+|--------------------------------------------------------------|:-------------:|:-----------------------------:|:-----------------------------:|
+| [GNN](https://github.com/facebookresearch/BenchMARL/pull/18) |       ✅       |               ✅               |               ❌               | 
+| CNN                                                          |       ✅       |               ✅               |               ✅               | 
+
 
 ## Reporting and plotting
 TBC
@@ -198,6 +235,9 @@ TBC
 
 
 ## Configuring
+Experiment configurations are in [`benchmarl/conf/config.yaml`](benchmarl/conf/config.yaml),
+with the experiment hyperparameters in [`benchmarl/conf/experiment`](benchmarl/conf/experiment).
+
 
 Running custom experiments is extremely simplified by the [Hydra](https://hydra.cc/) configurations.
 
