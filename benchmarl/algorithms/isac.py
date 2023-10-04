@@ -82,7 +82,7 @@ class Isac(Algorithm):
                 alpha_init=self.alpha_init,
                 min_alpha=self.min_alpha,
                 max_alpha=self.max_alpha,
-                action_spec=self.action_spec[group, "action"],
+                action_spec=self.action_spec,
                 fixed_alpha=self.fixed_alpha,
                 target_entropy=self.target_entropy,
                 delay_qvalue=self.delay_qvalue,
