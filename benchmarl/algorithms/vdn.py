@@ -11,7 +11,7 @@ from torchrl.data import (
 )
 from torchrl.data.replay_buffers.storages import LazyTensorStorage
 from torchrl.modules import EGreedyModule, QValueModule, VDNMixer
-from torchrl.objectives import ClipPPOLoss, LossModule, QMixerLoss, ValueEstimators
+from torchrl.objectives import LossModule, QMixerLoss, ValueEstimators
 
 from benchmarl.algorithms.common import Algorithm, AlgorithmConfig
 from benchmarl.models.common import ModelConfig
@@ -72,7 +72,7 @@ class Vdn(Algorithm):
 
             return loss_module, True
 
-    def _get_parameters(self, group: str, loss: ClipPPOLoss) -> Dict[str, Iterable]:
+    def _get_parameters(self, group: str, loss: LossModule) -> Dict[str, Iterable]:
 
         return {
             "loss": loss.parameters(),

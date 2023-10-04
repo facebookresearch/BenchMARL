@@ -12,7 +12,7 @@ from torchrl.data import (
 )
 from torchrl.data.replay_buffers.storages import LazyTensorStorage
 from torchrl.modules import AdditiveGaussianWrapper, ProbabilisticActor, TanhDelta
-from torchrl.objectives import ClipPPOLoss, DDPGLoss, LossModule, ValueEstimators
+from torchrl.objectives import DDPGLoss, LossModule, ValueEstimators
 
 from benchmarl.algorithms.common import Algorithm, AlgorithmConfig
 from benchmarl.models.common import ModelConfig
@@ -75,7 +75,7 @@ class Maddpg(Algorithm):
                 "MADDPG is not compatible with discrete actions yet"
             )
 
-    def _get_parameters(self, group: str, loss: ClipPPOLoss) -> Dict[str, Iterable]:
+    def _get_parameters(self, group: str, loss: LossModule) -> Dict[str, Iterable]:
 
         return {
             "loss_actor": list(loss.actor_network_params.flatten_keys().values()),

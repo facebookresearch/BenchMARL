@@ -13,13 +13,7 @@ from torchrl.data import (
 )
 from torchrl.data.replay_buffers.storages import LazyTensorStorage
 from torchrl.modules import MaskedCategorical, ProbabilisticActor, TanhNormal
-from torchrl.objectives import (
-    ClipPPOLoss,
-    DiscreteSACLoss,
-    LossModule,
-    SACLoss,
-    ValueEstimators,
-)
+from torchrl.objectives import DiscreteSACLoss, LossModule, SACLoss, ValueEstimators
 
 from benchmarl.algorithms.common import Algorithm, AlgorithmConfig
 from benchmarl.models.common import ModelConfig
@@ -126,7 +120,7 @@ class Masac(Algorithm):
 
         return loss_module, True
 
-    def _get_parameters(self, group: str, loss: ClipPPOLoss) -> Dict[str, Iterable]:
+    def _get_parameters(self, group: str, loss: LossModule) -> Dict[str, Iterable]:
         return {
             "loss_actor": list(loss.actor_network_params.flatten_keys().values()),
             "loss_qvalue": list(loss.qvalue_network_params.flatten_keys().values()),
