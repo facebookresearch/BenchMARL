@@ -1,4 +1,4 @@
-![BenchMARL](https://drive.google.com/uc?export=view&id=15rSPUadQCXfsJq7G2UPor9f-VwzvQ8k7)
+![BenchMARL](https://github.com/matteobettini/vmas-media/blob/main/media/benchmarl.png?raw=true)
 
 # BenchMARL
 [![tests](https://github.com/facebookresearch/BenchMARL/actions/workflows/unit_tests.yml/badge.svg)](test)
