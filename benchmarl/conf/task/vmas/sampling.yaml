@@ -7,3 +7,4 @@ max_steps: 100
 n_agents: 3
 shared_rew: False
 n_gaussians: 3
+lidar_range: 0.2
