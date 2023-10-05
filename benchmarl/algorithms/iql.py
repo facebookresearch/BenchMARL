@@ -3,19 +3,13 @@ from typing import Dict, Iterable, Optional, Tuple, Type
 
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModule, TensorDictSequential
-from torchrl.data import (
-    CompositeSpec,
-    ReplayBuffer,
-    TensorDictReplayBuffer,
-    UnboundedContinuousTensorSpec,
-)
-from torchrl.data.replay_buffers.storages import LazyTensorStorage
+from torchrl.data import CompositeSpec, UnboundedContinuousTensorSpec
 from torchrl.modules import EGreedyModule, QValueModule
 from torchrl.objectives import DQNLoss, LossModule, ValueEstimators
 
 from benchmarl.algorithms.common import Algorithm, AlgorithmConfig
 from benchmarl.models.common import ModelConfig
-from benchmarl.utils import DEVICE_TYPING, read_yaml_config
+from benchmarl.utils import read_yaml_config
 
 
 class Iql(Algorithm):
@@ -28,19 +22,6 @@ class Iql(Algorithm):
     #############################
     # Overridden abstract methods
     #############################
-
-    def _get_replay_buffer(
-        self,
-        group: str,
-        memory_size: int,
-        sampling_size: int,
-        traj_len: int,
-        storing_device: DEVICE_TYPING,
-    ) -> ReplayBuffer:
-        return TensorDictReplayBuffer(
-            storage=LazyTensorStorage(memory_size, device=storing_device),
-            batch_size=sampling_size,
-        )
 
     def _get_loss(
         self, group: str, policy_for_loss: TensorDictModule, continuous: bool

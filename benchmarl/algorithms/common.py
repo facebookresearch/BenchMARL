@@ -8,9 +8,12 @@ from tensordict.nn import TensorDictModule, TensorDictSequential
 from torchrl.data import (
     CompositeSpec,
     DiscreteTensorSpec,
+    LazyTensorStorage,
     OneHotDiscreteTensorSpec,
     ReplayBuffer,
+    TensorDictReplayBuffer,
 )
+from torchrl.data.replay_buffers import RandomSampler, SamplerWithoutReplacement
 from torchrl.objectives import LossModule
 from torchrl.objectives.utils import HardUpdate, SoftUpdate, TargetNetUpdater
 
@@ -123,14 +126,15 @@ class Algorithm(ABC):
         self,
         group: str,
     ) -> ReplayBuffer:
-        return self._get_replay_buffer(
-            group=group,
-            memory_size=self.experiment_config.replay_buffer_memory_size(
-                self.on_policy
-            ),
-            sampling_size=self.experiment_config.train_minibatch_size(self.on_policy),
-            traj_len=self.experiment_config.traj_len,
-            storing_device=self.device,
+        memory_size = self.experiment_config.replay_buffer_memory_size(self.on_policy)
+        sampling_size = self.experiment_config.train_minibatch_size(self.on_policy)
+        storing_device = self.device
+        sampler = SamplerWithoutReplacement() if self.on_policy else RandomSampler()
+
+        return TensorDictReplayBuffer(
+            storage=LazyTensorStorage(memory_size, device=storing_device),
+            sampler=sampler,
+            batch_size=sampling_size,
         )
 
     def get_policy_for_loss(self, group: str) -> TensorDictModule:
@@ -198,17 +202,6 @@ class Algorithm(ABC):
     def _get_policy_for_collection(
         self, policy_for_loss: TensorDictModule, group: str, continuous: bool
     ) -> TensorDictModule:
-        raise NotImplementedError
-
-    @abstractmethod
-    def _get_replay_buffer(
-        self,
-        group: str,
-        memory_size: int,
-        sampling_size: int,
-        traj_len: int,
-        storing_device: DEVICE_TYPING,
-    ) -> ReplayBuffer:
         raise NotImplementedError
 
     @abstractmethod

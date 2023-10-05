@@ -6,21 +6,14 @@ from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModule, TensorDictSequential
 from tensordict.nn.distributions import NormalParamExtractor
 from torch.distributions import Categorical
-from torchrl.data import (
-    CompositeSpec,
-    ReplayBuffer,
-    TensorDictReplayBuffer,
-    UnboundedContinuousTensorSpec,
-)
-from torchrl.data.replay_buffers.samplers import SamplerWithoutReplacement
-from torchrl.data.replay_buffers.storages import LazyTensorStorage
+from torchrl.data import CompositeSpec, UnboundedContinuousTensorSpec
 from torchrl.modules import ProbabilisticActor, TanhNormal
 from torchrl.modules.distributions import MaskedCategorical
 from torchrl.objectives import ClipPPOLoss, LossModule, ValueEstimators
 
 from benchmarl.algorithms.common import Algorithm, AlgorithmConfig
 from benchmarl.models.common import ModelConfig
-from benchmarl.utils import DEVICE_TYPING, read_yaml_config
+from benchmarl.utils import read_yaml_config
 
 
 class Ippo(Algorithm):
@@ -46,20 +39,6 @@ class Ippo(Algorithm):
     #############################
     # Overridden abstract methods
     #############################
-
-    def _get_replay_buffer(
-        self,
-        group: str,
-        memory_size: int,
-        sampling_size: int,
-        traj_len: int,
-        storing_device: DEVICE_TYPING,
-    ) -> ReplayBuffer:
-        return TensorDictReplayBuffer(
-            storage=LazyTensorStorage(memory_size, device=storing_device),
-            sampler=SamplerWithoutReplacement(),
-            batch_size=sampling_size,
-        )
 
     def _get_loss(
         self, group: str, policy_for_loss: TensorDictModule, continuous: bool
