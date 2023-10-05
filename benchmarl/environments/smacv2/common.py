@@ -11,7 +11,7 @@ from benchmarl.utils import DEVICE_TYPING
 
 
 class Smacv2Task(Task):
-    protoss_5_vs_5 = None
+    PROTOSS_5_VS_5 = None
 
     def get_env_fun(
         self,

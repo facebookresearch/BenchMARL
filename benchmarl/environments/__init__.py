@@ -15,7 +15,7 @@ task_config_registry = {
     "vmas/balance": VmasTask.BALANCE,
     "vmas/sampling": VmasTask.SAMPLING,
     "vmas/navigation": VmasTask.NAVIGATION,
-    "smacv2/protoss_5_vs_5": Smacv2Task.protoss_5_vs_5,
+    "smacv2/protoss_5_vs_5": Smacv2Task.PROTOSS_5_VS_5,
     "pettingzoo/multiwalker": PettingZooTask.MULTIWALKER,
     "pettingzoo/simple_tag": PettingZooTask.SIMPLE_TAG,
 }
