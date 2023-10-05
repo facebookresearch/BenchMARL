@@ -12,6 +12,8 @@ class VmasTask(Task):
     BALANCE = None
     SAMPLING = None
     NAVIGATION = None
+    TRANSPORT = None
+    WHEEL = None
 
     def get_env_fun(
         self,
@@ -53,13 +55,17 @@ class VmasTask(Task):
 
     def observation_spec(self, env: EnvBase) -> CompositeSpec:
         observation_spec = env.unbatched_observation_spec.clone()
-        del observation_spec[("agents", "info")]
+        if "info" in observation_spec["agents"]:
+            del observation_spec[("agents", "info")]
         return observation_spec
 
     def info_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
         info_spec = env.unbatched_observation_spec.clone()
         del info_spec[("agents", "observation")]
-        return info_spec
+        if "info" in info_spec["agents"]:
+            return info_spec
+        else:
+            return None
 
     def action_spec(self, env: EnvBase) -> CompositeSpec:
         return env.unbatched_action_spec

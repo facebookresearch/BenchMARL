@@ -7,3 +7,4 @@ class TaskConfig:
     n_agents: int = MISSING
     shared_rew: bool = MISSING
     n_gaussians: int = MISSING
+    lidar_range: float = MISSING

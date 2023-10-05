@@ -1,0 +1,9 @@
+defaults:
+  - _self_
+  - vmas_wheel_config
+
+max_steps: 100
+n_agents: 4
+line_length: 1
+line_mass: 30
+desired_velocity: 0.05

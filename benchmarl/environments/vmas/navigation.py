@@ -9,3 +9,6 @@ class TaskConfig:
     agents_with_same_goal: int = MISSING
     observe_all_goals: bool = MISSING
     shared_rew: bool = MISSING
+    split_goals: bool = MISSING
+    lidar_range: float = MISSING
+    agent_radius: float = MISSING

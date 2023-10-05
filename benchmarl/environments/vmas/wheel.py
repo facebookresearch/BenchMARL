@@ -5,5 +5,6 @@ from dataclasses import dataclass, MISSING
 class TaskConfig:
     max_steps: int = MISSING
     n_agents: int = MISSING
-    random_package_pos_on_line: bool = MISSING
-    package_mass: float = MISSING
+    line_length: float = MISSING
+    line_mass: float = MISSING
+    desired_velocity: float = MISSING
