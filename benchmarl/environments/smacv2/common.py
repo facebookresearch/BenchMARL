@@ -7,6 +7,7 @@ from torchrl.envs import EnvBase
 from torchrl.envs.libs.smacv2 import SMACv2Env
 
 from benchmarl.environments.common import Task
+from benchmarl.utils import DEVICE_TYPING
 
 
 class Smacv2Task(Task):
@@ -17,8 +18,11 @@ class Smacv2Task(Task):
         num_envs: int,
         continuous_actions: bool,
         seed: Optional[int],
+        device: DEVICE_TYPING,
     ) -> Callable[[], EnvBase]:
-        return lambda: SMACv2Env(categorical_actions=True, seed=seed, **self.config)
+        return lambda: SMACv2Env(
+            categorical_actions=True, seed=seed, device=device, **self.config
+        )
 
     def supports_continuous_actions(self) -> bool:
         return False

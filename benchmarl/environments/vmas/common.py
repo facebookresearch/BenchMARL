@@ -5,6 +5,7 @@ from torchrl.envs import EnvBase
 from torchrl.envs.libs.vmas import VmasEnv
 
 from benchmarl.environments.common import Task
+from benchmarl.utils import DEVICE_TYPING
 
 
 class VmasTask(Task):
@@ -17,12 +18,14 @@ class VmasTask(Task):
         num_envs: int,
         continuous_actions: bool,
         seed: Optional[int],
+        device: DEVICE_TYPING,
     ) -> Callable[[], EnvBase]:
         return lambda: VmasEnv(
             scenario=self.name.lower(),
             num_envs=num_envs,
             continuous_actions=continuous_actions,
             seed=seed,
+            device=device,
             categorical_actions=True,
             **self.config,
         )

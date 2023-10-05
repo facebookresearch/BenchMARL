@@ -13,7 +13,7 @@ share_policy_params: True
 prefer_continuous_actions: True
 
 # Discount factor
-gamma: 0.99
+gamma: 0.9
 # Learning rate
 lr: 0.00005
 # Clips grad norm if true and clips grad value if false
@@ -35,6 +35,8 @@ exploration_eps_end: 0.01
 
 # Number of frames collected and each experiment iteration
 collected_frames_per_batch: 6000
+# Number of initial collection batches containing random interactions
+init_random_batches: 0
 # Number of environments used for collection
 # If the environment is vectorized, this will be the number of batched environments.
 # Otherwise this batching will be simulated and each env will be run sequentially.
@@ -73,5 +75,5 @@ create_json: True
 save_folder: null
 # Absolute path to a checkpoint file where the experiment was saved. If null the experiment is started fresh.
 restore_file: null
-# Interval for experiment saving in terms of experiment iterations
+# Interval for experiment saving in terms of experiment iterations. Set it to 0 to disable checkpointing
 checkpoint_interval: 50

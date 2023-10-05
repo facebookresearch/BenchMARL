@@ -11,7 +11,7 @@ from tensordict import TensorDictBase
 from torchrl.data import CompositeSpec
 from torchrl.envs import EnvBase
 
-from benchmarl.utils import read_yaml_config
+from benchmarl.utils import DEVICE_TYPING, read_yaml_config
 
 
 def _load_config(name: str, config: Dict[str, Any]):
@@ -57,6 +57,7 @@ class Task(Enum):
         num_envs: int,
         continuous_actions: bool,
         seed: Optional[int],
+        device: DEVICE_TYPING,
     ) -> Callable[[], EnvBase]:
         raise NotImplementedError
 

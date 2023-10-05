@@ -52,6 +52,7 @@ class ExperimentConfig:
     exploration_eps_end: float = MISSING
 
     collected_frames_per_batch: int = MISSING
+    init_random_batches: int = MISSING
     n_envs_per_worker: int = MISSING
     n_iters: int = MISSING
     n_optimizer_steps: int = MISSING
@@ -105,6 +106,10 @@ class ExperimentConfig:
     @property
     def exploration_anneal_frames(self) -> int:
         return self.total_frames // 3
+
+    @property
+    def init_random_frames(self) -> int:
+        return self.init_random_batches * self.collected_frames_per_batch
 
     @staticmethod
     def get_from_yaml(path: Optional[str] = None):
@@ -191,6 +196,7 @@ class Experiment:
                 num_envs=self.config.evaluation_episodes,
                 continuous_actions=self.continuous_actions,
                 seed=self.seed,
+                device=self.config.sampling_device,
             )
         )()
         env_func = self.model_config.process_env_fun(
@@ -198,6 +204,7 @@ class Experiment:
                 num_envs=self.config.n_envs_per_worker,
                 continuous_actions=self.continuous_actions,
                 seed=self.seed,
+                device=self.config.sampling_device,
             )
         )
 
@@ -219,7 +226,7 @@ class Experiment:
         else:
             self.env_func = lambda: TransformedEnv(env_func(), transform.clone())
 
-        self.test_env = test_env
+        self.test_env = test_env.to(self.config.sampling_device)
 
     def _setup_algorithm(self):
         self.algorithm = self.algorithm_config.get_algorithm(
@@ -248,7 +255,7 @@ class Experiment:
         }
         self.optimizers = {
             group: {
-                loss_name: torch.optim.Adam(params, lr=self.config.lr, eps=1e-4)
+                loss_name: torch.optim.Adam(params, lr=self.config.lr, eps=1e-6)
                 for loss_name, params in self.algorithm.get_parameters(group).items()
             }
             for group in self.group_map.keys()
@@ -270,6 +277,7 @@ class Experiment:
             storing_device=self.config.train_device,
             frames_per_batch=self.config.collected_frames_per_batch,
             total_frames=self.config.total_frames,
+            init_random_frames=self.config.init_random_frames,
         )
 
     def _setup_name(self):
@@ -278,6 +286,12 @@ class Experiment:
         self.environment_name = self.task.env_name().lower()
         self.task_name = self.task.name.lower()
 
+        if self.config.restore_file is not None and self.config.save_folder is not None:
+            raise ValueError(
+                "Experiment restore file and save folder have both been specified."
+                "Do not set a save_folder when you are reloading an experiment as"
+                "it will by default reloaded into the old folder."
+            )
         if self.config.restore_file is None:
             if self.config.save_folder is not None:
                 folder_name = Path(self.config.save_folder)

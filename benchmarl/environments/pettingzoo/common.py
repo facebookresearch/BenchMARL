@@ -5,6 +5,8 @@ from torchrl.envs import EnvBase, PettingZooEnv
 
 from benchmarl.environments.common import Task
 
+from benchmarl.utils import DEVICE_TYPING
+
 
 class PettingZooTask(Task):
     MULTIWALKER = None
@@ -15,12 +17,14 @@ class PettingZooTask(Task):
         num_envs: int,
         continuous_actions: bool,
         seed: Optional[int],
+        device: DEVICE_TYPING,
     ) -> Callable[[], EnvBase]:
         if self.supports_continuous_actions() and self.supports_discrete_actions():
             self.config.update({"continuous_actions": continuous_actions})
 
         return lambda: PettingZooEnv(
             categorical_actions=True,
+            device=device,
             seed=seed,
             parallel=True,
             return_state=self.has_state(),
