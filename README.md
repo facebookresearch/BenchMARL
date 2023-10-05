@@ -1,3 +1,5 @@
+![BenchMARL](https://drive.google.com/uc?export=view&id=15rSPUadQCXfsJq7G2UPor9f-VwzvQ8k7)
+
 # BenchMARL
 [![tests](https://github.com/facebookresearch/BenchMARL/actions/workflows/unit_tests.yml/badge.svg)](test)
 [![Python](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10-blue.svg)](https://www.python.org/downloads/)
@@ -200,7 +202,8 @@ determine the training strategy. Here is a table with the currently implemented 
 
 
 **Tasks**. Tasks are scenarios from a specific environment which constitute the MARL
-challange to solve. They differe based on many aspects, here is a table with the current environments in BenchMARL
+challenge to solve.
+They differ based on many aspects, here is a table with the current environments in BenchMARL
 
 | Enviromnent | Tasks                                 | Cooperation               | Global state | Reward function               | 
 |-------------|---------------------------------------|---------------------------|--------------|-------------------------------|
@@ -209,6 +212,12 @@ challange to solve. They differe based on many aspects, here is a table with the
 | [SMACv2](https://github.com/oxwhirl/smacv2) | [TBC](benchmarl/conf/task/smacv2)     | Cooperative               | Yes          | Global                        |  
 | [MPE](https://github.com/openai/multiagent-particle-envs)     | [TBC](benchmarl/conf/task/pettingzoo) | Cooperative + Competitive | Yes          | Shared + Independent          |   
 | [SISL](https://github.com/sisl/MADRL)    | [TBC](benchmarl/conf/task/pettingzoo)       | Cooperative               | No           | Shared                        |  
+
+> [!NOTE]  
+> BenchMARL uses the [TorchRL MARL API](https://github.com/pytorch/rl/issues/1463) for grouping agents.
+> In competitive environments like MPE, for example, teams will be in different groups. Each group has its own loss,
+> models, buffers, and so on. Parameter sharing options refer to sharing within the group. See the example on [creating
+> a custom algorithm](examples/extending/custom_algorithm.py) for more info.
 
 **Models**. Models are neural networks used to process data. They can be used as actors (policies) or, 
 when possible, as critics. We provide a set of base models (layers) and a SequenceModel to concatenate
@@ -228,88 +237,136 @@ And the ones that are _work in progress_
 
 
 ## Reporting and plotting
-TBC
+
+Reporting and plotting is compatible with [marl-eval](https://github.com/instadeepai/marl-eval). 
+If `experiment.create_json=True` (this is the default in the [experiment config](benchmarl/conf/experiment/base_experiment.yaml))
+a file named `{experiment_name}.json` will be created in the experiment output folder with the format of [marl-eval](https://github.com/instadeepai/marl-eval).
+You can load and merge these files using the utils in [eval_results](benchmarl/eval_results.py) to create beautiful plots of 
+your benchmarks.
+
+[![Example](https://img.shields.io/badge/Example-blue.svg)](examples/plotting)
+
+![aggregate_scores](https://drive.google.com/uc?export=view&id=1-f3NolMSjsWppCSXv_DJcs_GUD_fv7vO)
+![sample_efficiancy](https://drive.google.com/uc?export=view&id=1FK37EfiqD3AQXWlQj7HQCkQDRNe2TuLy)
 
 ## Extending
-TBC
+One of the core tenets of BenchMARL is allowing users to leverage the existing algorithm
+and tasks implementations to benchmark their newly proposed solution.
+
+For this reason we expose standard interfaces for [algorithms](benchmarl/algorithms/common.py), [tasks](benchmarl/environments/common.py) and [models](benchmarl/models/common.py).
+To introduce your solution in the library, you just need to implement the abstract methods
+exposed by these base classes which use objects from the [TorchRL](https://github.com/pytorch/rl) library.
+
+Here is an example on how you can create a custom algorithm [![Example](https://img.shields.io/badge/Example-blue.svg)](examples/extending/custom_algorithm.py).
+
+Here is an example on how you can create a custom task [![Example](https://img.shields.io/badge/Example-blue.svg)](examples/extending/custom_task.py).
+
+Here is an example on how you can create a custom model [![Example](https://img.shields.io/badge/Example-blue.svg)](examples/extending/custom_model.py).
 
 
 ## Configuring
+As highlighted in the [run](#run) section, the project can be configured either
+in the script itself or via [hydra](https://hydra.cc/docs/intro/). 
+We suggest to read the hydra documentation
+to get familiar with all its functionalities. 
+
 Experiment configurations are in [`benchmarl/conf/config.yaml`](benchmarl/conf/config.yaml),
 with the experiment hyperparameters in [`benchmarl/conf/experiment`](benchmarl/conf/experiment).
-
-
 Running custom experiments is extremely simplified by the [Hydra](https://hydra.cc/) configurations.
+The default configuration for the library is contained in the [`benchmarl/conf`](benchmarl/conf) folder.
 
-The default configuration for the library is contained in the [`conf`](benchmarl/conf) folder.
+When running an experiment you can override its hyperparameters like so
+```bash
+python benchmarl/run.py task=vmas/balance algorithm=mappo experiment.lr=0.03 experiment.evaluation=true experiment.train_device="cpu"
+```
 
-To run an experiment, you need to select a task and an algorithm
-```bash
-python hydra_run.py task=vmas/balance algorithm=mappo
-```
-You can run a set of experiments. For example like this
-```bash
-python hydra_run.py --multirun task=vmas/balance algorithm=mappo,maddpg,masac,qmix
-```
+Experiment hyperparameters are loaded from [`benchmarl/conf/experiment/base_experiment.yaml`](benchmarl/conf/experiment/base_experiment.yaml)
+into a dataclass [`ExperimentConfig`](benchmarl/experiment/experiment.py) defining their domain.
+This makes it so that all and only the parameters expected are loaded with the right types.
+You can also directly load them from a script by calling `ExperimentConfig.get_from_yaml()`.
+
+Here is an example of overriding experiment hyperparameters from hydra 
+[![Example](https://img.shields.io/badge/Example-blue.svg)](examples/configuring/configuring_experiment.sh) or from
+a script [![Example](https://img.shields.io/badge/Example-blue.svg)](examples/configuring/configuring_experiment.py).
 
 ### Algorithm
 
-You will need to specify an algorithm when launching your hydra script.
+You can override an algorithm configuration when launching BenchMARL.
 
 ```bash
-python hydra_run.py algorithm=mappo
+python benchmarl/run.py task=vmas/balance algorithm=masac algorithm.num_qvalue_nets=3 algorithm.target_entropy=auto algorithm.share_param_critic=true
 ```
 
-Available ones and their configs can be found at [`conf/algorithm`](benchmarl/conf/algorithm).
+Available algorithms and their default configs can be found at [`benchmarl/conf/algorithm`](benchmarl/conf/algorithm).
+They are loaded into a dataclass [`AlgorithmConfig`](benchmarl/algorithms/common.py), present for each algorithm, defining their domain.
+This makes it so that all and only the parameters expected are loaded with the right types.
+You can also directly load them from a script by calling `YourAlgorithmConfig.get_from_yaml()`.
 
-We suggest to not modify the algorithms config when running your benchmarks in order to guarantee
-reproducibility. 
+Here is an example of overriding algorithm hyperparameters from hydra 
+[![Example](https://img.shields.io/badge/Example-blue.svg)](examples/configuring/configuring_algorithm.sh) or from
+a script [![Example](https://img.shields.io/badge/Example-blue.svg)](examples/configuring/configuring_algorithm.py).
+
 
 ### Task
 
-You will need to specify a task when launching your hydra script.
-
-Available ones and their configs can be found at [`conf/task`](benchmarl/conf/task) and are sorted
-in enviornment folders.
-
-We suggest to not modify the tasks config when running your benchmarks in order to guarantee
-reproducibility. 
+You can override a task configuration when launching BenchMARL.
+However this is not recommended for benchmarking as tasks should have fixed version and parameters for reproducibility.
 
 ```bash
-python hydra_run.py task=vmas/balance
+python benchmarl/run.py task=vmas/balance algorithm=mappo task.n_agents=4
 ```
+
+Available tasks and their default configs can be found at [`benchmarl/conf/task`](benchmarl/conf/task).
+They are loaded into a dataclass [`TaskConfig`](benchmarl/environments/common.py), defining their domain.
+Tasks are enumerations under the environment name. For example, `VmasTask.NAVIGATION` represents the navigation task in the
+VMAS simulator. This allows autocompletion and seeing all available tasks at once.
+You can also directly load them from a script by calling `YourEnvTask.TASK_NAME.get_from_yaml()`.
+
+Here is an example of overriding task hyperparameters from hydra 
+[![Example](https://img.shields.io/badge/Example-blue.svg)](examples/configuring/configuring_task.sh) or from
+a script [![Example](https://img.shields.io/badge/Example-blue.svg)](examples/configuring/configuring_task.py).
 
 ### Model
 
+You can override the model configuration when launching BenchMARL.
 By default an MLP model will be loaded with the default config.
-
-Available models and their configs can be found at [`conf/model/layers`](benchmarl/conf/model/layers).
+You can change it like so:
 
 ```bash
-python hydra_run.py model=layers/mlp
+python benchmarl/run.py task=vmas/balance algorithm=mappo model=layers/mlp model=layers/mlp model.layer_class="torch.nn.Linear" "model.num_cells=[32,32]" model.activation_class="torch.nn.ReLU"
 ```
 
+Available models and their configs can be found at [`benchmarl/conf/model/layers`](benchmarl/conf/model/layers).
+They are loaded into a dataclass [`ModelConfig`](benchmarl/models/common.py), defining their domain.
+You can also directly load them from a script by calling `YourModelConfig.get_from_yaml()`.
+
+Here is an example of overriding model hyperparameters from hydra 
+[![Example](https://img.shields.io/badge/Example-blue.svg)](examples/configuring/configuring_model.sh) or from
+a script [![Example](https://img.shields.io/badge/Example-blue.svg)](examples/configuring/configuring_model.py).
 
 #### Sequence model
-To use the sequence model. Available layer names are in the [`conf/model/layers`](benchmarl/conf/model/layers) folder.
-```bash
-python hydra_run.py "model=sequence" "model.intermediate_sizes=[256]" "model/layers@model.layers.l1=mlp" "model/layers@model.layers.l2=mlp" 
-```
-Adding a layer
-```bash
-python hydra_run.py "+model/layers@model.layers.l3=mlp"
-```
-Removing a layer
-```bash
-python hydra_run.py "~model.layers.l2"
-```
-Configuring a layer
-```bash
-python hydra_run.py "model.layers.l1.num_cells=[3]"
-```
+You can compose layers into a sequence model.
+Available layer names are in the [`benchmarl/conf/model/layers`](benchmarl/conf/model/layers) folder.
 
+```bash
+python benchmarl/run.py task=vmas/balance algorithm=mappo model=sequence "model.intermediate_sizes=[256]" "model/layers@model.layers.l1=mlp" "model/layers@model.layers.l2=mlp" "+model/layers@model.layers.l3=mlp" "model.layers.l3.num_cells=[3]"
+```
+Add a layer with `"+model/layers@model.layers.l3=mlp"`.
+
+Remove a layer with `"~model.layers.l2"`.
+
+Configure a layer with `"model.layers.l1.num_cells=[3]"`.
+
+Here is an example of creating a sequence model from hydra 
+[![Example](https://img.shields.io/badge/Example-blue.svg)](examples/configuring/configuring_sequence_model.sh) or from
+a script [![Example](https://img.shields.io/badge/Example-blue.svg)](examples/configuring/configuring_sequence_model.py).
 
 ## Features
+
+BenchMARL has several features:
+- A test CI with test routines run for all simulators and algorithms
+- Integration in the official TorchRL ecosystem for dedicated support
+
 
 ### Logging
 
@@ -318,13 +375,28 @@ A list of logger names can be provided in the [experiment config](benchmarl/conf
 Example of available options are: `wandb`, `csv`, `mflow`, `tensorboard` or any other option available in TorchRL. You can specify the loggers
 in the yaml config files or in the script arguments like so:
 ```bash
-python hydra_run.py "experiment.loggers=[wandb]"
+python benchmarl/run.py algorithm=mappo task=vmas/balance "experiment.loggers=[wandb]"
 ```
 
-Additionally, you can specify a `create_json` argument which instructs the trainer to output a `.json` file in the
-format specified by [marl-eval](https://github.com/instadeepai/marl-eval).
+### Checkpointing
 
-### Checkpointing 
-TBC
+Experiments can be checkpointed every `experiment.checkpoint_interval` iterations.
+Experiments will use an output folder for logging and checkpointing which can be specified in `experiment.save_folder`.
+If this is left unspecified,
+the default will be the hydra output folder (if using hydra) or (otherwise) the current directory 
+where the script is launched.
+The output folder will contain a folder for each experiment with the corresponding experiment name.
+Their checkpoints will be stored in a `"checkpoints"` folder within the experiment folder.
+```bash
+python benchmarl/run.py task=vmas/balance algorithm=mappo experiment.n_iters=3 experiment.checkpoint_interval=1 experiment.save_folder="/my/folder"
+```
+
+To load from a checkpoint, pass the absolute checkpoint file name to `experiment.restore_file`.
+```bash
+python benchmarl/run.py task=vmas/balance algorithm=mappo experiment.n_iters=6  experiment.restore_file="/my/folder/checkpoint/checkpoint_03.pt"
+```
+
+[![Example](https://img.shields.io/badge/Example-blue.svg)](examples/checkpointing/reload_experiment.py)
+
 ### Callbacks
 TBC

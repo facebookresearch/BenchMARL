@@ -22,7 +22,7 @@ if _has_marl_eval:
 
 
 def get_raw_dict_from_multirun_folder(multirun_folder: str) -> Dict:
-    return _load_and_merge_json_dicts(_get_json_files_from_multirun(multirun_folder))
+    return load_and_merge_json_dicts(_get_json_files_from_multirun(multirun_folder))
 
 
 def _get_json_files_from_multirun(multirun_folder: str) -> List[str]:
@@ -34,7 +34,7 @@ def _get_json_files_from_multirun(multirun_folder: str) -> List[str]:
     return files
 
 
-def _load_and_merge_json_dicts(
+def load_and_merge_json_dicts(
     json_input_files: List[str], json_output_file: Optional[str] = None
 ) -> Dict:
     def update(d, u):

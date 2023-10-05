@@ -30,6 +30,7 @@ class ExperimentUtils:
         experiment_config.restore_file = (
             exp_folder / "checkpoints" / f"checkpoint_{n_iters}.pt"
         )
+        experiment_config.save_folder = None
         experiment = Experiment(
             algorithm_config=algo_config,
             model_config=model_config,

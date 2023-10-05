@@ -8,13 +8,14 @@ if __name__ == "__main__":
     # Loads from "benchmarl/conf/experiment/base_experiment.yaml"
     experiment_config = ExperimentConfig.get_from_yaml()
 
-    # Loads from "benchmarl/conf/task/vmas/balance.yaml"
+    # You can override from the script
+    experiment_config.lr = 0.03  # Change the learning rate
+    experiment_config.evaluation = True  # Set evaluation to true
+    experiment_config.train_device = "cpu"  # Change the training device
+
+    # Some basic other configs
     task = VmasTask.BALANCE.get_from_yaml()
-
-    # Loads from "benchmarl/conf/algorithm/mappo.yaml"
     algorithm_config = MappoConfig.get_from_yaml()
-
-    # Loads from "benchmarl/conf/model/layers/mlp.yaml"
     model_config = MlpConfig.get_from_yaml()
     critic_model_config = MlpConfig.get_from_yaml()
 
