@@ -50,17 +50,21 @@ class ExperimentConfig:
 
     exploration_eps_init: float = MISSING
     exploration_eps_end: float = MISSING
+    exploration_anneal_frames: Optional[int] = MISSING
 
-    collected_frames_per_batch: int = MISSING
-    init_random_batches: int = MISSING
-    n_envs_per_worker: int = MISSING
-    n_iters: int = MISSING
-    n_optimizer_steps: int = MISSING
+    max_n_iters: Optional[int] = MISSING
+    max_n_frames: Optional[int] = MISSING
 
+    on_policy_collected_frames_per_batch: int = MISSING
+    on_policy_n_envs_per_worker: int = MISSING
+    on_policy_n_minibatch_iters: int = MISSING
     on_policy_minibatch_size: int = MISSING
 
-    off_policy_memory_size: int = MISSING
+    off_policy_collected_frames_per_batch: int = MISSING
+    off_policy_n_envs_per_worker: int = MISSING
+    off_policy_n_optimizer_steps: int = MISSING
     off_policy_train_batch_size: int = MISSING
+    off_policy_memory_size: int = MISSING
 
     evaluation: bool = MISSING
     render: bool = MISSING
@@ -76,7 +80,7 @@ class ExperimentConfig:
 
     def train_batch_size(self, on_policy: bool) -> int:
         return (
-            self.collected_frames_per_batch
+            self.collected_frames_per_batch(on_policy)
             if on_policy
             else self.off_policy_train_batch_size
         )
@@ -88,28 +92,59 @@ class ExperimentConfig:
             else self.train_batch_size(on_policy)
         )
 
+    def n_optimizer_steps(self, on_policy: bool) -> int:
+        return (
+            self.on_policy_n_minibatch_iters
+            if on_policy
+            else self.off_policy_n_optimizer_steps
+        )
+
     def replay_buffer_memory_size(self, on_policy: bool) -> int:
         return (
-            self.collected_frames_per_batch
+            self.collected_frames_per_batch(on_policy)
             if on_policy
             else self.off_policy_memory_size
         )
 
-    @property
-    def traj_len(self) -> int:
-        return -(-self.collected_frames_per_batch // self.n_envs_per_worker)
+    def collected_frames_per_batch(self, on_policy: bool) -> int:
+        return (
+            self.on_policy_collected_frames_per_batch
+            if on_policy
+            else self.off_policy_collected_frames_per_batch
+        )
 
-    @property
-    def total_frames(self) -> int:
-        return self.n_iters * self.collected_frames_per_batch
+    def n_envs_per_worker(self, on_policy: bool) -> int:
+        return (
+            self.on_policy_n_envs_per_worker
+            if on_policy
+            else self.off_policy_n_envs_per_worker
+        )
 
-    @property
-    def exploration_anneal_frames(self) -> int:
-        return self.total_frames // 3
+    def get_max_n_frames(self, on_policy: bool) -> int:
+        if self.max_n_frames is None and self.max_n_iters is None:
+            raise ValueError("n_iters and total_frames are both not set")
+        if self.max_n_frames is not None and self.max_n_iters is not None:
+            return min(
+                self.max_n_frames,
+                self.max_n_iters * self.collected_frames_per_batch(on_policy),
+            )
+        elif self.max_n_frames is not None:
+            return self.max_n_frames
+        elif self.max_n_iters is not None:
+            return self.max_n_iters * self.collected_frames_per_batch(on_policy)
 
-    @property
-    def init_random_frames(self) -> int:
-        return self.init_random_batches * self.collected_frames_per_batch
+    def get_max_n_iters(self, on_policy: bool) -> int:
+        return -(
+            -self.get_max_n_frames(on_policy)
+            // self.collected_frames_per_batch(on_policy)
+        )
+
+    def get_exploration_anneal_frames(self, on_policy: bool):
+        return (
+            (self.get_max_n_frames(on_policy) // 3)
+            if self.exploration_anneal_frames is None
+            else self.exploration_anneal_frames
+        )
 
     @staticmethod
     def get_from_yaml(path: Optional[str] = None):
@@ -201,7 +236,7 @@ class Experiment:
         )()
         env_func = self.model_config.process_env_fun(
             self.task.get_env_fun(
-                num_envs=self.config.n_envs_per_worker,
+                num_envs=self.config.n_envs_per_worker(self.on_policy),
                 continuous_actions=self.continuous_actions,
                 seed=self.seed,
                 device=self.config.sampling_device,
@@ -221,7 +256,8 @@ class Experiment:
 
         if test_env.batch_size == ():
             self.env_func = lambda: TransformedEnv(
-                SerialEnv(self.config.n_envs_per_worker, env_func), transform.clone()
+                SerialEnv(self.config.n_envs_per_worker(self.on_policy), env_func),
+                transform.clone(),
             )
         else:
             self.env_func = lambda: TransformedEnv(env_func(), transform.clone())
@@ -275,9 +311,8 @@ class Experiment:
             self.policy,
             device=self.config.sampling_device,
             storing_device=self.config.train_device,
-            frames_per_batch=self.config.collected_frames_per_batch,
-            total_frames=self.config.total_frames,
-            init_random_frames=self.config.init_random_frames,
+            frames_per_batch=self.config.collected_frames_per_batch(self.on_policy),
+            total_frames=self.config.get_max_n_frames(self.on_policy),
         )
 
     def _setup_name(self):
@@ -352,7 +387,7 @@ class Experiment:
 
         pbar = tqdm(
             initial=self.n_iters_performed,
-            total=self.config.n_iters,
+            total=self.config.get_max_n_iters(self.on_policy),
         )
         sampling_start = time.time()
 
@@ -381,7 +416,7 @@ class Experiment:
                 self.replay_buffers[group].extend(group_batch)
 
                 training_tds = []
-                for _ in range(self.config.n_optimizer_steps):
+                for _ in range(self.config.n_optimizer_steps(self.on_policy)):
                     for _ in range(
                         self.config.train_batch_size(self.on_policy)
                         // self.config.train_minibatch_size(self.on_policy)
@@ -424,7 +459,7 @@ class Experiment:
             if (
                 self.config.evaluation
                 and self.n_iters_performed % self.config.evaluation_interval == 0
-                and len(self.config.loggers)
+                and (len(self.config.loggers) or self.config.create_json)
             ):
                 self._evaluation_loop(iter=self.n_iters_performed)
 
@@ -499,16 +534,16 @@ class Experiment:
         evaluation_start = time.time()
         with set_exploration_type(ExplorationType.MODE):
             if self.task.has_render(self.test_env) and self.config.render:
-                frames = []
+                video_frames = []
 
                 def callback(env, td):
                     try:
-                        frames.append(env.render(mode="rgb_array"))
+                        video_frames.append(env.render(mode="rgb_array"))
                     except TypeError:
-                        frames.append(env.render())
+                        video_frames.append(env.render())
 
             else:
-                frames = None
+                video_frames = None
                 callback = None
 
             if self.test_env.batch_size == ():
@@ -535,7 +570,12 @@ class Experiment:
                 rollouts = list(rollouts.unbind(0))
         evaluation_time = time.time() - evaluation_start
         self.logger.log({"timers/evaluation_time": evaluation_time}, step=iter)
-        self.logger.log_evaluation(rollouts, frames, step=iter)
+        self.logger.log_evaluation(
+            rollouts,
+            video_frames=video_frames,
+            step=iter,
+            total_frames=self.total_frames,
+        )
 
     # Saving trainer state
     def state_dict(self) -> OrderedDict:

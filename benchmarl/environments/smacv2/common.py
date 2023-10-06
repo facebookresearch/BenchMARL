@@ -83,7 +83,7 @@ class Smacv2Task(Task):
         return env.input_spec["full_action_spec"]
 
     @staticmethod
-    def log_info(batch: TensorDictBase) -> Dict:
+    def log_info(batch: TensorDictBase) -> Dict[str, float]:
         done = batch.get(("next", "done")).squeeze(-1)
         return {
             "collection/info/win_rate": batch.get(("next", "info", "battle_won"))[done]

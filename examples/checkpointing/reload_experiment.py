@@ -14,7 +14,7 @@ if __name__ == "__main__":
     # Checkpoint at every iteration
     experiment_config.checkpoint_interval = 1
     # Run 3 iterations
-    experiment_config.n_iters = 3
+    experiment_config.max_n_iters = 3
 
     task = VmasTask.BALANCE.get_from_yaml()
     algorithm_config = MappoConfig.get_from_yaml()
@@ -39,7 +39,7 @@ if __name__ == "__main__":
     # The experiment will be saved in the ame folder as the one it is restoring from
     experiment_config.save_folder = None
     # Let's do 3 more iters
-    experiment_config.n_iters += 3
+    experiment_config.max_n_iters += 3
 
     experiment = Experiment(
         algorithm_config=algorithm_config,

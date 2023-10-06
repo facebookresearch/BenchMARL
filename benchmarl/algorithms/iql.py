@@ -123,7 +123,9 @@ class Iql(Algorithm):
             action_mask_key = None
 
         greedy = EGreedyModule(
-            annealing_num_steps=self.experiment_config.exploration_anneal_frames,
+            annealing_num_steps=self.experiment_config.get_exploration_anneal_frames(
+                self.on_policy
+            ),
             action_key=(group, "action"),
             spec=self.action_spec[(group, "action")],
             action_mask_key=action_mask_key,

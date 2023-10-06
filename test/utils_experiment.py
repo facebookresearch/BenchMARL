@@ -12,7 +12,7 @@ class ExperimentUtils:
         experiment_config: ExperimentConfig,
         model_config: ModelConfig,
     ):
-        n_iters = experiment_config.n_iters
+        max_n_iters = experiment_config.max_n_iters
         experiment = Experiment(
             algorithm_config=algo_config,
             model_config=model_config,
@@ -26,9 +26,9 @@ class ExperimentUtils:
         losses = experiment.losses
         exp_folder = experiment.folder_name
 
-        experiment_config.n_iters = n_iters + 3
+        experiment_config.max_n_iters = max_n_iters + 3
         experiment_config.restore_file = (
-            exp_folder / "checkpoints" / f"checkpoint_{n_iters}.pt"
+            exp_folder / "checkpoints" / f"checkpoint_{max_n_iters}.pt"
         )
         experiment_config.save_folder = None
         experiment = Experiment(
@@ -47,7 +47,7 @@ class ExperimentUtils:
                 list(loss1.parameters()), list(loss2.parameters())
             ):
                 assert (param1 == param2).all()
-        assert experiment.n_iters_performed == n_iters
+        assert experiment.n_iters_performed == max_n_iters
         assert experiment.folder_name == exp_folder
         experiment.run()
-        assert experiment.n_iters_performed == n_iters + 3
+        assert experiment.n_iters_performed == max_n_iters + 3

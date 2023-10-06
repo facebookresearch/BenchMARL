@@ -96,7 +96,7 @@ class Task(Enum):
         raise NotImplementedError
 
     @staticmethod
-    def log_info(batch: TensorDictBase) -> Dict:
+    def log_info(batch: TensorDictBase) -> Dict[str, float]:
         return {}
 
     def __repr__(self):

@@ -32,30 +32,40 @@ hard_target_update_frequency: 5
 exploration_eps_init: 0.8
 # When an exploration wrapper is used. This is its final epsilon after annealing
 exploration_eps_end: 0.01
+# Number of frames for annealing of exploration strategy in deterministic policy algorithms
+# If null it will default to max_n_frames / 3
+exploration_anneal_frames: null
+
+# The maximum number of experiment iterations before the experiment terminates, exclusive with max_n_frames
+max_n_iters: null
+# Number of collected frames before ending, exclusive with max_n_iters
+max_n_frames: 10_000_00
 
 # Number of frames collected and each experiment iteration
-collected_frames_per_batch: 6000
-# Number of initial collection batches containing random interactions
-init_random_batches: 0
+on_policy_collected_frames_per_batch: 6000
 # Number of environments used for collection
 # If the environment is vectorized, this will be the number of batched environments.
-# Otherwise this batching will be simulated and each env will be run sequentially.
-n_envs_per_worker: 10
-# The maximum number of experiment iterations before the experiment terminates
-n_iters: 500
-# Number of optimization iterations per each experiment iteration
-# In on-policy settings this is the number of times collected_frames_per_batch will be split into minibatches and trained over.
-# In off-policy settings this is the number of times off_policy_train_batch_size will be sampled from the buffer and trained over.
-n_optimizer_steps: 45
-
-# In on-policy algorithms the train_batch_size will be equal to the collected_frames_per_batch
+# Otherwise batching will be simulated and each env will be run sequentially.
+on_policy_n_envs_per_worker: 10
+# This is the number of times collected_frames_per_batch will be split into minibatches and trained
+on_policy_n_minibatch_iters: 45
+# In on-policy algorithms the train_batch_size will be equal to the on_policy_collected_frames_per_batch
 # and it will be split into minibatches with this number of frames for training
 on_policy_minibatch_size: 400
 
+# Number of frames collected and each experiment iteration
+off_policy_collected_frames_per_batch: 1000
+# Number of environments used for collection
+# If the environment is vectorized, this will be the number of batched environments.
+# Otherwise batching will be simulated and each env will be run sequentially.
+off_policy_n_envs_per_worker: 10
+# This is the number of times off_policy_train_batch_size will be sampled from the buffer and trained over.
+off_policy_n_optimizer_steps: 1000
+# Number of frames used for each off_policy_n_optimizer_steps when training off-policy algorithms
+off_policy_train_batch_size: 128
 # Maximum number of frames to keep in replay buffer memory for off-policy algorithms
-off_policy_memory_size: 100_000
-# Number of frames used for each n_optimizer_step when training off-policy algorithms
-off_policy_train_batch_size: 15_000
+off_policy_memory_size: 1_000_000
+
 
 evaluation: True
 # Whether to render the evaluation (if rendering is available)

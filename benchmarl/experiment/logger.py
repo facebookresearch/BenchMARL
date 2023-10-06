@@ -88,9 +88,9 @@ class MultiAgentLogger:
             reward = self._get_reward(group, batch)
             to_log.update(
                 {
-                    f"collection/{group}/reward/reward_min": reward.min().item(),
-                    f"collection/{group}/reward/reward_mean": reward.mean().item(),
-                    f"collection/{group}/reward/reward_max": reward.max().item(),
+                    f"collection/{group}/reward_min": reward.min().item(),
+                    f"collection/{group}/reward_mean": reward.mean().item(),
+                    f"collection/{group}/reward_max": reward.max().item(),
                 }
             )
             json_metrics[group + "_return"] = episode_reward.mean(-2)[done.any(-2)]
@@ -98,9 +98,9 @@ class MultiAgentLogger:
             if episode_reward.numel() > 0:
                 to_log.update(
                     {
-                        f"collection/{group}/reward/episode_reward_min": episode_reward.min().item(),
-                        f"collection/{group}/reward/episode_reward_mean": episode_reward.mean().item(),
-                        f"collection/{group}/reward/episode_reward_max": episode_reward.max().item(),
+                        f"collection/{group}/episode_reward_min": episode_reward.min().item(),
+                        f"collection/{group}/episode_reward_mean": episode_reward.mean().item(),
+                        f"collection/{group}/episode_reward_max": episode_reward.max().item(),
                     }
                 )
             if "info" in batch.get(("next", group)).keys():
@@ -126,15 +126,10 @@ class MultiAgentLogger:
         if mean_group_return.numel() > 0:
             to_log.update(
                 {
-                    "collection/reward/episode_reward_min": mean_group_return.min().item(),
-                    "collection/reward/episode_reward_mean": mean_group_return.mean().item(),
-                    "collection/reward/episode_reward_max": mean_group_return.max().item(),
+                    "collection/episode_reward_min": mean_group_return.min().item(),
+                    "collection/episode_reward_mean": mean_group_return.mean().item(),
+                    "collection/episode_reward_max": mean_group_return.max().item(),
                 }
-            )
-        json_metrics["return"] = mean_group_return
-        if self.json_writer is not None:
-            self.json_writer.write(
-                metrics=json_metrics, total_frames=total_frames, step=step
             )
         self.log(to_log, step=step)
         return mean_group_return.mean().item()
@@ -150,14 +145,19 @@ class MultiAgentLogger:
 
     def log_evaluation(
         self,
-        rollouts=List[TensorDictBase],
-        frames: Optional[List] = None,
-        step: int = None,
+        rollouts: List[TensorDictBase],
+        total_frames: int,
+        step: int,
+        video_frames: Optional[List] = None,
     ):
-        if not len(self.loggers):
+        if (
+            not len(self.loggers) and not self.experiment_config.create_json
+        ) or not len(rollouts):
             return
         to_log = {}
+        json_metrics = {}
         for group in self.group_map.keys():
+            # Cut the rollouts at the first done
             for k, r in enumerate(rollouts):
                 next_done = self._get_done(group, r)
                 # Reduce it to batch size
@@ -165,28 +165,47 @@ class MultiAgentLogger:
                     tuple(range(r.batch_dims, next_done.ndim)),
                     dtype=torch.bool,
                 )
-                done_index = next_done.nonzero(as_tuple=True)[0][
-                    0
-                ]  # First done index for this traj
-                rollouts[k] = r[: done_index + 1]
+                # First done index for this traj
+                done_index = next_done.nonzero(as_tuple=True)[0]
+                if done_index.numel() > 0:
+                    done_index = done_index[0]
+                    rollouts[k] = r[: done_index + 1]
 
-            rewards = [self._get_reward(group, td).sum(0).mean() for td in rollouts]
+            returns = [
+                self._get_reward(group, td).sum(0).mean().item() for td in rollouts
+            ]
+            json_metrics[group + "_return"] = torch.tensor(
+                returns, device=rollouts[0].device
+            )
             to_log.update(
                 {
-                    f"eval/{group}/episode_reward_min": min(rewards),
-                    f"eval/{group}/episode_reward_mean": sum(rewards) / len(rollouts),
-                    f"eval/{group}/episode_reward_max": max(rewards),
-                    f"eval/{group}/episode_len_mean": sum(
-                        td.batch_size[0] for td in rollouts
-                    )
-                    / len(rollouts),
+                    f"eval/{group}/episode_reward_min": min(returns),
+                    f"eval/{group}/episode_reward_mean": sum(returns) / len(rollouts),
+                    f"eval/{group}/episode_reward_max": max(returns),
                 }
             )
-        self.log(to_log, step=step)
 
-        if frames is not None:
+        mean_group_return = torch.stack(
+            [value for key, value in json_metrics.items()], dim=0
+        ).mean(0)
+        to_log.update(
+            {
+                "eval/episode_reward_min": mean_group_return.min().item(),
+                "eval/episode_reward_mean": mean_group_return.mean().item(),
+                "eval/episode_reward_max": mean_group_return.max().item(),
+                "eval/episode_len_mean": sum(td.batch_size[0] for td in rollouts)
+                / len(rollouts),
+            }
+        )
+        json_metrics["return"] = mean_group_return
+        if self.json_writer is not None:
+            self.json_writer.write(
+                metrics=json_metrics, total_frames=total_frames, step=step
+            )
+        self.log(to_log, step=step)
+        if video_frames is not None:
             vid = torch.tensor(
-                np.transpose(frames[: rollouts[0].batch_size[0]], (0, 3, 1, 2)),
+                np.transpose(video_frames[: rollouts[0].batch_size[0]], (0, 3, 1, 2)),
                 dtype=torch.uint8,
             ).unsqueeze(0)
             for logger in self.loggers:
@@ -222,7 +241,6 @@ class MultiAgentLogger:
             reward = (
                 td.get(("next", "reward")).expand(td.get(group).shape).unsqueeze(-1)
             )
-
         else:
             reward = td.get(("next", group, "reward"))
         return reward.mean(-2) if remove_agent_dim else reward
@@ -243,7 +261,6 @@ class MultiAgentLogger:
                 .expand(td.get(group).shape)
                 .unsqueeze(-1)
             )
-
         else:
             episode_reward = td.get(("next", group, "episode_reward"))
         return episode_reward.mean(-2) if remove_agent_dim else episode_reward
