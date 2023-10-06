@@ -190,10 +190,10 @@ class MultiAgentLogger:
         ).mean(0)
         to_log.update(
             {
-                "eval/episode_reward_min": mean_group_return.min().item(),
-                "eval/episode_reward_mean": mean_group_return.mean().item(),
-                "eval/episode_reward_max": mean_group_return.max().item(),
-                "eval/episode_len_mean": sum(td.batch_size[0] for td in rollouts)
+                "eval/reward/episode_reward_min": mean_group_return.min().item(),
+                "eval/reward/episode_reward_mean": mean_group_return.mean().item(),
+                "eval/reward/episode_reward_max": mean_group_return.max().item(),
+                "eval/reward/episode_len_mean": sum(td.batch_size[0] for td in rollouts)
                 / len(rollouts),
             }
         )
