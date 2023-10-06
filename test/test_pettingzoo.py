@@ -5,7 +5,6 @@ import pytest
 from benchmarl.algorithms import (
     algorithm_config_registry,
     IppoConfig,
-    IsacConfig,
     MaddpgConfig,
     MasacConfig,
     QmixConfig,
@@ -94,7 +93,7 @@ class TestPettingzoo:
     ):
         experiment_config.prefer_continuous_actions = prefer_continuous
         algo_config = algo_config.get_from_yaml()
-        if isinstance(algo_config, (VdnConfig, IsacConfig, MasacConfig)):
+        if isinstance(algo_config, VdnConfig):
             # There are some bugs currently in TorchRL
             return
         ExperimentUtils.check_experiment_loading(
