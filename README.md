@@ -111,8 +111,8 @@ python benchmarl/run.py -m algorithm=mappo,qmix,masac task=vmas/balance,vmas/sam
 ```
 [![Example](https://img.shields.io/badge/Example-blue.svg)](examples/running/run_benchmark.sh)
 
-The default implementation for hydra multi-runs is sequential, but [parallel execution is
-also available](https://hydra.cc/docs/plugins/joblib_launcher/).
+The default implementation for hydra multi-runs is sequential, but [parallel](https://hydra.cc/docs/plugins/joblib_launcher/)
+ and [slurm](https://hydra.cc/docs/plugins/submitit_launcher/) launchers are also available.
 
 #### Script
 
