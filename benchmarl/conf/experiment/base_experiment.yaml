@@ -16,6 +16,8 @@ prefer_continuous_actions: True
 gamma: 0.9
 # Learning rate
 lr: 0.00005
+# The epsilon parameter of the adam optimizer
+adam_eps: 0.000001
 # Clips grad norm if true and clips grad value if false
 clip_grad_norm: True
 # The value for the clipping, if null no clipping
@@ -39,7 +41,7 @@ exploration_anneal_frames: null
 # The maximum number of experiment iterations before the experiment terminates, exclusive with max_n_frames
 max_n_iters: null
 # Number of collected frames before ending, exclusive with max_n_iters
-max_n_frames: 10_000_00
+max_n_frames: 3_000_000
 
 # Number of frames collected and each experiment iteration
 on_policy_collected_frames_per_batch: 6000
