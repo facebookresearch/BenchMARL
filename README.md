@@ -388,12 +388,12 @@ where the script is launched.
 The output folder will contain a folder for each experiment with the corresponding experiment name.
 Their checkpoints will be stored in a `"checkpoints"` folder within the experiment folder.
 ```bash
-python benchmarl/run.py task=vmas/balance algorithm=mappo experiment.n_iters=3 experiment.checkpoint_interval=1 experiment.save_folder="/my/folder"
+python benchmarl/run.py task=vmas/balance algorithm=mappo experiment.max_n_iters=3 experiment.checkpoint_interval=1 experiment.save_folder="/my/folder"
 ```
 
 To load from a checkpoint, pass the absolute checkpoint file name to `experiment.restore_file`.
 ```bash
-python benchmarl/run.py task=vmas/balance algorithm=mappo experiment.n_iters=6  experiment.restore_file="/my/folder/checkpoint/checkpoint_03.pt"
+python benchmarl/run.py task=vmas/balance algorithm=mappo experiment.max_n_iters=6 experiment.restore_file="/my/folder/checkpoint/checkpoint_03.pt"
 ```
 
 [![Example](https://img.shields.io/badge/Example-blue.svg)](examples/checkpointing/reload_experiment.py)
