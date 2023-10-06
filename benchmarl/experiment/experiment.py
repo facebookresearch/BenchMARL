@@ -21,6 +21,8 @@ from tqdm import tqdm
 
 from benchmarl.algorithms.common import AlgorithmConfig
 from benchmarl.environments import Task
+
+from benchmarl.experiment.callback import Callback, CallbackNotifier
 from benchmarl.experiment.logger import MultiAgentLogger
 from benchmarl.models.common import ModelConfig
 from benchmarl.utils import read_yaml_config
@@ -160,7 +162,7 @@ class ExperimentConfig:
             return ExperimentConfig(**read_yaml_config(path))
 
 
-class Experiment:
+class Experiment(CallbackNotifier):
     def __init__(
         self,
         task: Task,
@@ -169,7 +171,12 @@ class Experiment:
         seed: int,
         config: ExperimentConfig,
         critic_model_config: Optional[ModelConfig] = None,
+        callbacks: Optional[List[Callback]] = None,
     ):
+        super().__init__(
+            experiment=self, callbacks=callbacks if callbacks is not None else []
+        )
+
         self.config = config
 
         self.task = task
@@ -407,6 +414,9 @@ class Experiment:
             pbar.set_description(f"mean return = {self.mean_return}", refresh=False)
             pbar.update()
 
+            # Callback
+            self.on_batch_collected(batch)
+
             # Loop over groups
             training_start = time.time()
             for group in self.group_map.keys():
@@ -422,10 +432,13 @@ class Experiment:
                         // self.config.train_minibatch_size(self.on_policy)
                     ):
                         training_tds.append(self._optimizer_loop(group))
-
+                training_td = torch.stack(training_tds)
                 self.logger.log_training(
-                    group, torch.stack(training_tds), step=self.n_iters_performed
+                    group, training_td, step=self.n_iters_performed
                 )
+
+                # Callback
+                self.on_train_end(training_td)
 
                 # Exploration update
                 if isinstance(self.group_policies[group], TensorDictSequential):
@@ -576,6 +589,8 @@ class Experiment:
             step=iter,
             total_frames=self.total_frames,
         )
+        # Callback
+        self.on_evaluation_end(rollouts)
 
     # Saving trainer state
     def state_dict(self) -> OrderedDict:

@@ -398,4 +398,9 @@ python benchmarl/run.py task=vmas/balance algorithm=mappo experiment.max_n_iters
 [![Example](https://img.shields.io/badge/Example-blue.svg)](examples/checkpointing/reload_experiment.py)
 
 ### Callbacks
-TBC
+
+Experiments optionally take a list of [`Callback`](benchmarl/experiment/callback.py) which have several methods
+that you can implement to see what's going on during training such 
+as `on_batch_collected`, `on_train_end`, and `on_evaluation_end`.
+
+[![Example](https://img.shields.io/badge/Example-blue.svg)](examples/callback/custom_callback.py)
