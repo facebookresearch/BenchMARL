@@ -23,8 +23,10 @@ _has_pettingzoo = importlib.util.find_spec("pettingzoo") is not None
 class TestPettingzoo:
     @pytest.mark.parametrize("algo_config", algorithm_config_registry.values())
     @pytest.mark.parametrize("prefer_continuous", [True, False])
-    @pytest.mark.parametrize("task", list(PettingZooTask))
-    def test_all_algos_all_tasks(
+    @pytest.mark.parametrize(
+        "task", [PettingZooTask.MULTIWALKER, PettingZooTask.SIMPLE_TAG]
+    )
+    def test_all_algos(
         self,
         algo_config: AlgorithmConfig,
         task: Task,
@@ -50,6 +52,26 @@ class TestPettingzoo:
 
         task = task.get_from_yaml()
         experiment_config.prefer_continuous_actions = prefer_continuous
+        experiment = Experiment(
+            algorithm_config=algo_config.get_from_yaml(),
+            model_config=mlp_sequence_config,
+            seed=0,
+            config=experiment_config,
+            task=task,
+        )
+        experiment.run()
+
+    @pytest.mark.parametrize("algo_config", [IppoConfig, MasacConfig])
+    @pytest.mark.parametrize("task", list(PettingZooTask))
+    def test_all_tasks(
+        self,
+        algo_config: AlgorithmConfig,
+        task: Task,
+        experiment_config,
+        mlp_sequence_config,
+    ):
+
+        task = task.get_from_yaml()
         experiment = Experiment(
             algorithm_config=algo_config.get_from_yaml(),
             model_config=mlp_sequence_config,

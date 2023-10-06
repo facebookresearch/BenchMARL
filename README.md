@@ -205,13 +205,12 @@ determine the training strategy. Here is a table with the currently implemented 
 challenge to solve.
 They differ based on many aspects, here is a table with the current environments in BenchMARL
 
-| Enviromnent | Tasks                                 | Cooperation               | Global state | Reward function               | 
-|-------------|---------------------------------------|---------------------------|--------------|-------------------------------|
-| [VMAS](https://github.com/proroklab/VectorizedMultiAgentSimulator) | [TBC](benchmarl/conf/task/vmas)       | Cooperative + Competitive | No           | Shared + Independent + Global |  
-| [SMAC](https://github.com/oxwhirl/smac)   | [TBC](benchmarl/conf/task/smacv2)     | Cooperative               | Yes          | Global                        |  
-| [SMACv2](https://github.com/oxwhirl/smacv2) | [TBC](benchmarl/conf/task/smacv2)     | Cooperative               | Yes          | Global                        |  
-| [MPE](https://github.com/openai/multiagent-particle-envs)     | [TBC](benchmarl/conf/task/pettingzoo) | Cooperative + Competitive | Yes          | Shared + Independent          |   
-| [SISL](https://github.com/sisl/MADRL)    | [TBC](benchmarl/conf/task/pettingzoo)       | Cooperative               | No           | Shared                        |  
+| Enviromnent | Tasks                               | Cooperation               | Global state | Reward function               | 
+|-------------|-------------------------------------|---------------------------|--------------|-------------------------------|
+| [VMAS](https://github.com/proroklab/VectorizedMultiAgentSimulator) | [5](benchmarl/conf/task/vmas)       | Cooperative + Competitive | No           | Shared + Independent + Global |  
+| [SMACv2](https://github.com/oxwhirl/smacv2) | [15](benchmarl/conf/task/smacv2)    | Cooperative               | Yes          | Global                        |  
+| [MPE](https://github.com/openai/multiagent-particle-envs)     | [8](benchmarl/conf/task/pettingzoo) | Cooperative + Competitive | Yes          | Shared + Independent          |   
+| [SISL](https://github.com/sisl/MADRL)    | [3](benchmarl/conf/task/pettingzoo) | Cooperative               | No           | Shared                        |  
 
 > [!NOTE]  
 > BenchMARL uses the [TorchRL MARL API](https://github.com/pytorch/rl/issues/1463) for grouping agents.

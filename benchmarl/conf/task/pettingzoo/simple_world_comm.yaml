@@ -1,0 +1,11 @@
+defaults:
+  - _self_
+  - pettingzoo_simple_world_comm_config
+
+task: "simple_world_comm_v3"
+num_good: 2
+num_adversaries: 4
+num_obstacles: 1
+num_food: 2
+num_forests: 2
+max_cycles: 100

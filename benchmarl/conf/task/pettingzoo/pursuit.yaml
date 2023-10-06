@@ -1,0 +1,32 @@
+defaults:
+  - _self_
+  - pettingzoo_pursuit_config
+
+task: "pursuit_v4"
+# Size of environment world space
+x_size: 16
+y_size: 16
+# Whether the rewards should be distributed among all agents
+shared_reward: true
+# Number of evaders
+n_evaders: 30
+#  Number of pursuers
+n_pursuers: 8
+# Size of the box around the agent that the agent observes.
+obs_range: 7
+# Number pursuers required around an evader to be considered caught
+n_catch: 2
+# Toggles if evaders can move or not
+freeze_evaders: false
+# Reward for ‘tagging’, or being single evader.
+tag_reward: 0.01
+# Reward added when a pursuer or pursuers catch an evade
+cetch_reward: 5.0
+#Reward to agent added in each step
+urgency_reward: -0.1
+# Toggles whether evader is removed when surrounded, or when n_catch pursuers are on top of evader
+surround: true
+# Size of box (from center, in proportional units) which agents can randomly spawn into the environment world.
+# Default is 1.0, which means they can spawn anywhere on the map. A value of 0 means all agents spawn in the center.
+constraint_window: 1.0
+max_cycles: 500

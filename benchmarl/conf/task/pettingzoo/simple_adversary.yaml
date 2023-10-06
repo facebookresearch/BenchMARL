@@ -1,0 +1,7 @@
+defaults:
+  - _self_
+  - pettingzoo_simple_adversary_config
+
+task: "simple_adversary_v3"
+N: 2
+max_cycles: 100

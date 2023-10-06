@@ -10,7 +10,14 @@ from benchmarl.utils import DEVICE_TYPING
 
 class PettingZooTask(Task):
     MULTIWALKER = None
+    SIMPLE_ADVERSARY = None
+    SIMPLE_CRYPTO = None
+    SIMPLE_PUSH = None
+    SIMPLE_REFERENCE = None
+    SIMPLE_SPEAKER_LISTENER = None
+    SIMPLE_SPREAD = None
     SIMPLE_TAG = None
+    SIMPLE_WORLD_COMM = None
 
     def get_env_fun(
         self,
@@ -33,17 +40,48 @@ class PettingZooTask(Task):
         )
 
     def supports_continuous_actions(self) -> bool:
-        if self in {PettingZooTask.MULTIWALKER, PettingZooTask.SIMPLE_TAG}:
+        if self in {
+            PettingZooTask.MULTIWALKER,
+            PettingZooTask.SIMPLE_TAG,
+            PettingZooTask.SIMPLE_ADVERSARY,
+            PettingZooTask.SIMPLE_CRYPTO,
+            PettingZooTask.SIMPLE_PUSH,
+            PettingZooTask.SIMPLE_REFERENCE,
+            PettingZooTask.SIMPLE_SPEAKER_LISTENER,
+            PettingZooTask.SIMPLE_SPREAD,
+            PettingZooTask.SIMPLE_TAG,
+            PettingZooTask.SIMPLE_WORLD_COMM,
+        }:
             return True
         return False
 
     def supports_discrete_actions(self) -> bool:
-        if self in {PettingZooTask.SIMPLE_TAG}:
+        if self in {
+            PettingZooTask.SIMPLE_TAG,
+            PettingZooTask.SIMPLE_ADVERSARY,
+            PettingZooTask.SIMPLE_CRYPTO,
+            PettingZooTask.SIMPLE_PUSH,
+            PettingZooTask.SIMPLE_REFERENCE,
+            PettingZooTask.SIMPLE_SPEAKER_LISTENER,
+            PettingZooTask.SIMPLE_SPREAD,
+            PettingZooTask.SIMPLE_TAG,
+            PettingZooTask.SIMPLE_WORLD_COMM,
+        }:
             return True
         return False
 
     def has_state(self) -> bool:
-        if self in {PettingZooTask.SIMPLE_TAG}:
+        if self in {
+            PettingZooTask.SIMPLE_TAG,
+            PettingZooTask.SIMPLE_ADVERSARY,
+            PettingZooTask.SIMPLE_CRYPTO,
+            PettingZooTask.SIMPLE_PUSH,
+            PettingZooTask.SIMPLE_REFERENCE,
+            PettingZooTask.SIMPLE_SPEAKER_LISTENER,
+            PettingZooTask.SIMPLE_SPREAD,
+            PettingZooTask.SIMPLE_TAG,
+            PettingZooTask.SIMPLE_WORLD_COMM,
+        }:
             return True
         return False
 
