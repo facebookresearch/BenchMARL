@@ -88,9 +88,9 @@ class MultiAgentLogger:
             reward = self._get_reward(group, batch)
             to_log.update(
                 {
-                    f"collection/{group}/reward_min": reward.min().item(),
-                    f"collection/{group}/reward_mean": reward.mean().item(),
-                    f"collection/{group}/reward_max": reward.max().item(),
+                    f"collection/{group}/reward/reward_min": reward.min().item(),
+                    f"collection/{group}/reward/reward_mean": reward.mean().item(),
+                    f"collection/{group}/reward/reward_max": reward.max().item(),
                 }
             )
             json_metrics[group + "_return"] = episode_reward.mean(-2)[done.any(-2)]
@@ -98,9 +98,9 @@ class MultiAgentLogger:
             if episode_reward.numel() > 0:
                 to_log.update(
                     {
-                        f"collection/{group}/episode_reward_min": episode_reward.min().item(),
-                        f"collection/{group}/episode_reward_mean": episode_reward.mean().item(),
-                        f"collection/{group}/episode_reward_max": episode_reward.max().item(),
+                        f"collection/{group}/reward/episode_reward_min": episode_reward.min().item(),
+                        f"collection/{group}/reward/episode_reward_mean": episode_reward.mean().item(),
+                        f"collection/{group}/reward/episode_reward_max": episode_reward.max().item(),
                     }
                 )
             if "info" in batch.get(("next", group)).keys():
@@ -126,9 +126,9 @@ class MultiAgentLogger:
         if mean_group_return.numel() > 0:
             to_log.update(
                 {
-                    "collection/episode_reward_min": mean_group_return.min().item(),
-                    "collection/episode_reward_mean": mean_group_return.mean().item(),
-                    "collection/episode_reward_max": mean_group_return.max().item(),
+                    "collection/reward/episode_reward_min": mean_group_return.min().item(),
+                    "collection/reward/episode_reward_mean": mean_group_return.mean().item(),
+                    "collection/reward/episode_reward_max": mean_group_return.max().item(),
                 }
             )
         self.log(to_log, step=step)
@@ -179,9 +179,10 @@ class MultiAgentLogger:
             )
             to_log.update(
                 {
-                    f"eval/{group}/episode_reward_min": min(returns),
-                    f"eval/{group}/episode_reward_mean": sum(returns) / len(rollouts),
-                    f"eval/{group}/episode_reward_max": max(returns),
+                    f"eval/{group}/reward/episode_reward_min": min(returns),
+                    f"eval/{group}/reward/episode_reward_mean": sum(returns)
+                    / len(rollouts),
+                    f"eval/{group}/reward/episode_reward_max": max(returns),
                 }
             )
 
