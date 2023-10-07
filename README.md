@@ -8,7 +8,7 @@
 python benchmarl/run.py algorithm=mappo task=vmas/balance
 ```
 
-[![Examples](https://img.shields.io/badge/Examples-blue.svg)](examples) 
+[![Examples](https://img.shields.io/badge/Examples-blue.svg)](examples) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/facebookresearch/BenchMARL/blob/main/notebooks/run.ipynb)
 <!--
 [![Static Badge](https://img.shields.io/badge/Benchmarks-Wandb-yellow)]()
 -->
@@ -44,6 +44,7 @@ statistically strong evaluations.
 ## How to use
 
 ### Notebooks
+- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/facebookresearch/BenchMARL/blob/main/notebooks/run.ipynb) &ensp; **Running BenchMARL experiments**.
 
 ### Install
 

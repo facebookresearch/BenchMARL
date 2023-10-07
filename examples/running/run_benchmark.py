@@ -9,7 +9,7 @@ if __name__ == "__main__":
     # Loads from "benchmarl/conf/experiment/base_experiment.yaml"
     experiment_config = ExperimentConfig.get_from_yaml()
 
-    # Loads from "benchmarl/conf/task"
+    # Loads from "benchmarl/conf/task/vmas"
     tasks = [VmasTask.BALANCE.get_from_yaml(), VmasTask.SAMPLING.get_from_yaml()]
 
     # Loads from "benchmarl/conf/algorithm"
