@@ -47,7 +47,7 @@ class Smacv2Task(Task):
     def has_render(self, env: EnvBase) -> bool:
         return True
 
-    def max_steps(self, env: EnvBase) -> bool:
+    def max_steps(self, env: EnvBase) -> int:
         return env.episode_limit
 
     def group_map(self, env: EnvBase) -> Dict[str, List[str]]:

@@ -189,35 +189,35 @@ See the [run](#run) section for more information.
 **Algorithms**. Algorithms are an ensemble of components (e.g., losss, replay buffer) which
 determine the training strategy. Here is a table with the currently implemented algorithms in BenchMARL.
 
-| Name                                   | On/Off policy | Actor-critic | Full-observability in critic | Action compatibility          | Probabilistic actor |   
-|----------------------------------------|---------------|--------------|------------------------------|-------------------------------|---------------------|
-| [MAPPO](https://arxiv.org/abs/2103.01955)                              | On            | Yes          | Yes                          | Continuous + Discrete         | Yes                 |   
-| [IPPO](https://arxiv.org/abs/2011.09533)                               | On            | Yes          | No                           | Continuous + Discrete         | Yes                 |  
-| [MADDPG](https://arxiv.org/abs/1706.02275)                             | Off           | Yes          | Yes                          | Continuous                    | No                  | 
-| [IDDPG](benchmarl/algorithms/iddpg.py) | Off           | Yes          | No                           | Continuous                    |  No                 |   
-| [MASAC](benchmarl/algorithms/masac.py) | Off           | Yes          | Yes                          | Continuous + Discrete         |  Yes                |   
-| [ISAC](benchmarl/algorithms/isac.py)   | Off           | Yes          | No                           | Continuous + Discrete         |  Yes                |   
-| [QMIX](https://arxiv.org/abs/1803.11485)                               | Off           | No           | NA                           | Discrete                      |  No                 | 
-| [VDN](https://arxiv.org/abs/1706.05296)                                | Off           | No           | NA                           | Discrete                      |  No                 |  
-| [IQL](https://www.semanticscholar.org/paper/Multi-Agent-Reinforcement-Learning%3A-Independent-Tan/59de874c1e547399b695337bcff23070664fa66e)                                | Off           | No           | NA                           | Discrete                      |  No                 |  
+| Name                                                                                                                                        | On/Off policy | Actor-critic | Full-observability in critic | Action compatibility  | Probabilistic actor |   
+|---------------------------------------------------------------------------------------------------------------------------------------------|---------------|--------------|------------------------------|-----------------------|---------------------|
+| [MAPPO](https://arxiv.org/abs/2103.01955)                                                                                                   | On            | Yes          | Yes                          | Continuous + Discrete | Yes                 |   
+| [IPPO](https://arxiv.org/abs/2011.09533)                                                                                                    | On            | Yes          | No                           | Continuous + Discrete | Yes                 |  
+| [MADDPG](https://arxiv.org/abs/1706.02275)                                                                                                  | Off           | Yes          | Yes                          | Continuous            | No                  | 
+| [IDDPG](benchmarl/algorithms/iddpg.py)                                                                                                      | Off           | Yes          | No                           | Continuous            | No                  |   
+| [MASAC](benchmarl/algorithms/masac.py)                                                                                                      | Off           | Yes          | Yes                          | Continuous + Discrete | Yes                 |   
+| [ISAC](benchmarl/algorithms/isac.py)                                                                                                        | Off           | Yes          | No                           | Continuous + Discrete | Yes                 |   
+| [QMIX](https://arxiv.org/abs/1803.11485)                                                                                                    | Off           | No           | NA                           | Discrete              | No                  | 
+| [VDN](https://arxiv.org/abs/1706.05296)                                                                                                     | Off           | No           | NA                           | Discrete              | No                  |  
+| [IQL](https://www.semanticscholar.org/paper/Multi-Agent-Reinforcement-Learning%3A-Independent-Tan/59de874c1e547399b695337bcff23070664fa66e) | Off           | No           | NA                           | Discrete              | No                  |  
 
 
 **Tasks**. Tasks are scenarios from a specific environment which constitute the MARL
 challenge to solve.
 They differ based on many aspects, here is a table with the current environments in BenchMARL
 
-| Enviromnent | Tasks                               | Cooperation               | Global state | Reward function               | 
-|-------------|-------------------------------------|---------------------------|--------------|-------------------------------|
-| [VMAS](https://github.com/proroklab/VectorizedMultiAgentSimulator) | [5](benchmarl/conf/task/vmas)       | Cooperative + Competitive | No           | Shared + Independent + Global |  
-| [SMACv2](https://github.com/oxwhirl/smacv2) | [15](benchmarl/conf/task/smacv2)    | Cooperative               | Yes          | Global                        |  
-| [MPE](https://github.com/openai/multiagent-particle-envs)     | [8](benchmarl/conf/task/pettingzoo) | Cooperative + Competitive | Yes          | Shared + Independent          |   
-| [SISL](https://github.com/sisl/MADRL)    | [3](benchmarl/conf/task/pettingzoo) | Cooperative               | No           | Shared                        |  
+| Environment                                                        | Tasks                               | Cooperation               | Global state | Reward function               | Action space          | 
+|--------------------------------------------------------------------|-------------------------------------|---------------------------|--------------|-------------------------------|-----------------------|
+| [VMAS](https://github.com/proroklab/VectorizedMultiAgentSimulator) | [5](benchmarl/conf/task/vmas)       | Cooperative + Competitive | No           | Shared + Independent + Global | Continuous + Discrete |
+| [SMACv2](https://github.com/oxwhirl/smacv2)                        | [15](benchmarl/conf/task/smacv2)    | Cooperative               | Yes          | Global                        | Discrete              |
+| [MPE](https://github.com/openai/multiagent-particle-envs)          | [8](benchmarl/conf/task/pettingzoo) | Cooperative + Competitive | Yes          | Shared + Independent          | Continuous + Discrete |
+| [SISL](https://github.com/sisl/MADRL)                              | [2](benchmarl/conf/task/pettingzoo) | Cooperative               | No           | Shared                        | Continuous            |
 
 > [!NOTE]  
 > BenchMARL uses the [TorchRL MARL API](https://github.com/pytorch/rl/issues/1463) for grouping agents.
 > In competitive environments like MPE, for example, teams will be in different groups. Each group has its own loss,
 > models, buffers, and so on. Parameter sharing options refer to sharing within the group. See the example on [creating
-> a custom algorithm](examples/extending/custom_algorithm.py) for more info.
+> a custom algorithm](examples/extending/algorithm/custom_algorithm.py) for more info.
 
 **Models**. Models are neural networks used to process data. They can be used as actors (policies) or, 
 when possible, as critics. We provide a set of base models (layers) and a SequenceModel to concatenate
@@ -257,11 +257,11 @@ For this reason we expose standard interfaces for [algorithms](benchmarl/algorit
 To introduce your solution in the library, you just need to implement the abstract methods
 exposed by these base classes which use objects from the [TorchRL](https://github.com/pytorch/rl) library.
 
-Here is an example on how you can create a custom algorithm [![Example](https://img.shields.io/badge/Example-blue.svg)](examples/extending/custom_algorithm.py).
+Here is an example on how you can create a custom algorithm [![Example](https://img.shields.io/badge/Example-blue.svg)](examples/extending/algorithm).
 
-Here is an example on how you can create a custom task [![Example](https://img.shields.io/badge/Example-blue.svg)](examples/extending/custom_task.py).
+Here is an example on how you can create a custom task [![Example](https://img.shields.io/badge/Example-blue.svg)](examples/extending/task).
 
-Here is an example on how you can create a custom model [![Example](https://img.shields.io/badge/Example-blue.svg)](examples/extending/custom_model.py).
+Here is an example on how you can create a custom model [![Example](https://img.shields.io/badge/Example-blue.svg)](examples/extending/model).
 
 
 ## Configuring

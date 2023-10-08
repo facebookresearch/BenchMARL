@@ -12,7 +12,6 @@ for env in [VmasTask, Smacv2Task, PettingZooTask]:
 
 
 from .pettingzoo.multiwalker import TaskConfig as MultiwalkerConfig
-from .pettingzoo.pursuit import TaskConfig as PursuitConfig
 from .pettingzoo.simple_adverasary import TaskConfig as SimpleAdversaryConfig
 from .pettingzoo.simple_crypto import TaskConfig as SimpleCryptoConfig
 from .pettingzoo.simple_push import TaskConfig as SimplePushConfig
@@ -37,7 +36,6 @@ _task_class_registry = {
     "vmas_transport_config": TransportConfig,
     "vmas_wheel_config": WheelConfig,
     "pettingzoo_multiwalker_config": MultiwalkerConfig,
-    "pettingzoo_pursuit_config": PursuitConfig,
     "pettingzoo_waterworld_config": WaterworldConfig,
     "pettingzoo_simple_adversary_config": SimpleAdversaryConfig,
     "pettingzoo_simple_crypto_config": SimpleCryptoConfig,

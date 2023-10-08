@@ -10,6 +10,7 @@ from benchmarl.utils import DEVICE_TYPING
 
 class PettingZooTask(Task):
     MULTIWALKER = None
+    WATERWORLD = None
     SIMPLE_ADVERSARY = None
     SIMPLE_CRYPTO = None
     SIMPLE_PUSH = None
@@ -42,6 +43,7 @@ class PettingZooTask(Task):
     def supports_continuous_actions(self) -> bool:
         if self in {
             PettingZooTask.MULTIWALKER,
+            PettingZooTask.WATERWORLD,
             PettingZooTask.SIMPLE_TAG,
             PettingZooTask.SIMPLE_ADVERSARY,
             PettingZooTask.SIMPLE_CRYPTO,
@@ -88,7 +90,7 @@ class PettingZooTask(Task):
     def has_render(self, env: EnvBase) -> bool:
         return True
 
-    def max_steps(self, env: EnvBase) -> bool:
+    def max_steps(self, env: EnvBase) -> int:
         return self.config["max_cycles"]
 
     def group_map(self, env: EnvBase) -> Dict[str, List[str]]:

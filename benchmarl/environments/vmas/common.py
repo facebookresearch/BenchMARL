@@ -41,7 +41,7 @@ class VmasTask(Task):
     def has_render(self, env: EnvBase) -> bool:
         return True
 
-    def max_steps(self, env: EnvBase) -> bool:
+    def max_steps(self, env: EnvBase) -> int:
         return self.config["max_steps"]
 
     def group_map(self, env: EnvBase) -> Dict[str, List[str]]:
