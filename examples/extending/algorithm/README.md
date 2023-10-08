@@ -6,7 +6,7 @@ created for this example in [`custom_agorithm.py`](custom_algorithm.py).
 
 1. Create your `CustomAlgorithm` and `CustomAlgorithmConfig` following the example
 in [`custom_agorithm.py`](custom_algorithm.py). These will be the algorithm code
-and a associated dataclass to validate loaded configs.
+and an associated dataclass to validate loaded configs.
 2. Create a `customalgorithm.yaml` with the configuration parameters you defined 
 in your script. Make sure it has `customalgorithm_config` within its defaults at 
 the top of the file to let hydra know which python dataclass it is 

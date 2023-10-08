@@ -17,3 +17,7 @@ override from).
 ```bash
 python benchmarl/run.py task=customenv/task_name algorithm=...
 ```
+
+6. (Optional) You can create python dataclasses to use as schemas for your tasks
+to validate their config. We are not going to illustrate this here, but if
+you want to see an example, check out [`benchmarl/environments/vmas`](../../../benchmarl/environments/vmas).
