@@ -2,6 +2,6 @@ defaults:
   - customalgorithm_config
   - _self_
 
-delay_value: bool = True
-loss_function: str = "l2"
-my_custom_arg: int = 3
+delay_value: True
+loss_function: "l2"
+my_custom_arg: 3

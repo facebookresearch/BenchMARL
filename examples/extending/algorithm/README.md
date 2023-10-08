@@ -11,8 +11,12 @@ and a associated dataclass to validate loaded configs.
 in your script. Make sure it has `customalgorithm_config` within its defaults at 
 the top of the file to let hydra know which python dataclass it is 
 associated to. You can see [`customiqlalgorithm.yaml`](customiqlalgorithm.yaml)
-for an example
+for an example.
 3. Place your algorithm script in [`benchmarl/algorithms`](../../../benchmarl/algorithms) and 
 your config in [`benchmarl/conf/algorithm`](../../../benchmarl/conf/algorithm) (or any other place you want to 
 override from)
 4. Add `{"custom_agorithm": CustomAlgorithmConfig}` to the [`benchmarl.algorithm.algorithm_config_registry`](../../../benchmarl/algorithms/__init__.py)
+5. Load it with
+```bash
+python benchmarl/run.py algorithm=customalgorithm task=...
+```

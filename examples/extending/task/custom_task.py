@@ -25,7 +25,7 @@ class CustomEnvTask(Task):
     ) -> Callable[[], EnvBase]:
         return lambda: YourTorchRLEnvConstructor(
             scenario=self.name.lower(),
-            num_envs=num_envs,  # Number of vectorized envs (do not use this param if the env is not vecotrized)
+            num_envs=num_envs,  # Number of vectorized envs (do not use this param if the env is not vectorized)
             continuous_actions=continuous_actions,  # Ignore this param if your env does not have this choice
             seed=seed,
             device=device,
