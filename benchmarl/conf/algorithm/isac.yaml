@@ -9,6 +9,7 @@ num_qvalue_nets:  2
 loss_function:  "l2"
 delay_qvalue:  True
 target_entropy: "auto"
+discrete_target_entropy_weight: 0.2
 
 alpha_init: 1.0
 min_alpha: null

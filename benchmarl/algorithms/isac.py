@@ -28,6 +28,7 @@ class Isac(Algorithm):
         loss_function: str,
         delay_qvalue: bool,
         target_entropy: Union[float, str],
+        discrete_target_entropy_weight: float,
         alpha_init: float,
         min_alpha: Optional[float],
         max_alpha: Optional[float],
@@ -41,6 +42,7 @@ class Isac(Algorithm):
         self.num_qvalue_nets = num_qvalue_nets
         self.loss_function = loss_function
         self.target_entropy = target_entropy
+        self.discrete_target_entropy_weight = discrete_target_entropy_weight
         self.alpha_init = alpha_init
         self.min_alpha = min_alpha
         self.max_alpha = max_alpha
@@ -86,9 +88,10 @@ class Isac(Algorithm):
                 alpha_init=self.alpha_init,
                 min_alpha=self.min_alpha,
                 max_alpha=self.max_alpha,
-                action_space=self.action_spec[group, "action"],
+                action_space=self.action_spec,
                 fixed_alpha=self.fixed_alpha,
                 target_entropy=self.target_entropy,
+                target_entropy_weight=self.discrete_target_entropy_weight,
                 delay_qvalue=self.delay_qvalue,
                 num_actions=self.action_spec[group, "action"].space.n,
             )
@@ -351,6 +354,7 @@ class IsacConfig(AlgorithmConfig):
     loss_function: str = MISSING
     delay_qvalue: bool = MISSING
     target_entropy: Union[float, str] = MISSING
+    discrete_target_entropy_weight: float = MISSING
 
     alpha_init: float = MISSING
     min_alpha: Optional[float] = MISSING
