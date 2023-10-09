@@ -201,6 +201,13 @@ class CustomIqlAlgorithm(Algorithm):
 
         return batch
 
+    def process_loss_vals(
+        self, group: str, loss_vals: TensorDictBase
+    ) -> TensorDictBase:
+        # Here you can modify the loss_vals tensordict containing entries loss_name->loss_value
+        # For example you can sum two entries in a new entry to optimize them together.
+        return loss_vals
+
     #####################
     # Custom new methods
     #####################
