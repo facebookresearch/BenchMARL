@@ -17,7 +17,6 @@ from torchrl.objectives import (
 
 from benchmarl.algorithms.common import Algorithm, AlgorithmConfig
 from benchmarl.models.common import ModelConfig
-from benchmarl.utils import read_yaml_config
 
 
 class Isac(Algorithm):
@@ -376,14 +375,3 @@ class IsacConfig(AlgorithmConfig):
     @staticmethod
     def on_policy() -> bool:
         return False
-
-    @staticmethod
-    def get_from_yaml(path: Optional[str] = None):
-        if path is None:
-            return IsacConfig(
-                **AlgorithmConfig._load_from_yaml(
-                    name=IsacConfig.associated_class().__name__,
-                )
-            )
-        else:
-            return IsacConfig(**read_yaml_config(path))

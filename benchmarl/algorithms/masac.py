@@ -11,7 +11,6 @@ from torchrl.objectives import DiscreteSACLoss, LossModule, SACLoss, ValueEstima
 
 from benchmarl.algorithms.common import Algorithm, AlgorithmConfig
 from benchmarl.models.common import ModelConfig
-from benchmarl.utils import read_yaml_config
 
 
 class Masac(Algorithm):
@@ -451,14 +450,3 @@ class MasacConfig(AlgorithmConfig):
     @staticmethod
     def on_policy() -> bool:
         return False
-
-    @staticmethod
-    def get_from_yaml(path: Optional[str] = None):
-        if path is None:
-            return MasacConfig(
-                **AlgorithmConfig._load_from_yaml(
-                    name=MasacConfig.associated_class().__name__,
-                )
-            )
-        else:
-            return MasacConfig(**read_yaml_config(path))

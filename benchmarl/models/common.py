@@ -178,10 +178,16 @@ class ModelConfig(ABC):
         cfg = read_yaml_config(str(yaml_path.resolve()))
         return parse_model_config(cfg)
 
-    @staticmethod
-    @abstractmethod
-    def get_from_yaml(path: Optional[str] = None):
-        raise NotImplementedError
+    @classmethod
+    def get_from_yaml(cls, path: Optional[str] = None):
+        if path is None:
+            return cls(
+                **ModelConfig._load_from_yaml(
+                    name=cls.associated_class().__name__,
+                )
+            )
+        else:
+            return cls(**parse_model_config(read_yaml_config(path)))
 
 
 @dataclass
@@ -263,6 +269,6 @@ class SequenceModelConfig(ModelConfig):
             env_fun = model_config.process_env_fun(env_fun)
         return env_fun
 
-    @staticmethod
-    def get_from_yaml(path: Optional[str] = None):
+    @classmethod
+    def get_from_yaml(cls, path: Optional[str] = None):
         raise NotImplementedError

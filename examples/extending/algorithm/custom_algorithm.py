@@ -1,9 +1,8 @@
 from dataclasses import dataclass, MISSING
-from typing import Dict, Iterable, Optional, Tuple, Type
+from typing import Dict, Iterable, Tuple, Type
 
 from benchmarl.algorithms.common import Algorithm, AlgorithmConfig
 from benchmarl.models.common import ModelConfig
-from benchmarl.utils import read_yaml_config
 
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModule, TensorDictSequential
@@ -245,17 +244,3 @@ class CustomIqlConfig(AlgorithmConfig):
     def on_policy() -> bool:
         # Should it be trained on or off policy?
         return False
-
-    @staticmethod
-    def get_from_yaml(path: Optional[str] = None):
-        if path is None:
-            # If get_from_yaml is called without a path,
-            # we load from benchmarl/conf/algorithm/{CustomIqlConfig.associated_class().__name__}
-            return CustomIqlConfig(
-                **AlgorithmConfig._load_from_yaml(
-                    name=CustomIqlConfig.associated_class().__name__,
-                )
-            )
-        else:
-            # Otherwise, we load it from the given absolute path
-            return CustomIqlConfig(**read_yaml_config(path))

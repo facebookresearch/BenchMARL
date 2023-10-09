@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, MISSING
-from typing import Optional, Type
+from typing import Type
 
 import torch
 
-from benchmarl.models.common import Model, ModelConfig, parse_model_config
-from benchmarl.utils import read_yaml_config
+from benchmarl.models.common import Model, ModelConfig
 from tensordict import TensorDictBase
 from torch import nn
 from torchrl.modules import MLP, MultiAgentMLP
@@ -166,17 +165,3 @@ class CustomModelConfig(ModelConfig):
     def associated_class():
         # The associated algorithm class
         return CustomModel
-
-    @staticmethod
-    def get_from_yaml(path: Optional[str] = None) -> CustomModelConfig:
-        if path is None:
-            # If get_from_yaml is called without a path,
-            # we load from benchmarl/conf/algorithm/{CustomModelConfig.associated_class().__name__}
-            return CustomModelConfig(
-                **ModelConfig._load_from_yaml(
-                    name=CustomModelConfig.associated_class().__name__,
-                )
-            )
-        else:
-            # Otherwise, we load it from the given absolute path
-            return CustomModelConfig(**parse_model_config(read_yaml_config(path)))

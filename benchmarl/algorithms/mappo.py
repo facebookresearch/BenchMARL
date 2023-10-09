@@ -1,5 +1,5 @@
 from dataclasses import dataclass, MISSING
-from typing import Dict, Iterable, Optional, Tuple, Type
+from typing import Dict, Iterable, Tuple, Type
 
 import torch
 from tensordict import TensorDictBase
@@ -12,7 +12,6 @@ from torchrl.objectives import ClipPPOLoss, LossModule, ValueEstimators
 
 from benchmarl.algorithms.common import Algorithm, AlgorithmConfig
 from benchmarl.models.common import ModelConfig
-from benchmarl.utils import read_yaml_config
 
 
 class Mappo(Algorithm):
@@ -317,14 +316,3 @@ class MappoConfig(AlgorithmConfig):
     @staticmethod
     def on_policy() -> bool:
         return True
-
-    @staticmethod
-    def get_from_yaml(path: Optional[str] = None):
-        if path is None:
-            return MappoConfig(
-                **AlgorithmConfig._load_from_yaml(
-                    name=MappoConfig.associated_class().__name__,
-                )
-            )
-        else:
-            return MappoConfig(**read_yaml_config(path))

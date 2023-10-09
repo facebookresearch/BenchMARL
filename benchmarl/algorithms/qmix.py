@@ -1,5 +1,5 @@
 from dataclasses import dataclass, MISSING
-from typing import Dict, Iterable, Optional, Tuple, Type
+from typing import Dict, Iterable, Tuple, Type
 
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModule, TensorDictSequential
@@ -9,7 +9,6 @@ from torchrl.objectives import LossModule, QMixerLoss, ValueEstimators
 
 from benchmarl.algorithms.common import Algorithm, AlgorithmConfig
 from benchmarl.models.common import ModelConfig
-from benchmarl.utils import read_yaml_config
 
 
 class Qmix(Algorithm):
@@ -216,14 +215,3 @@ class QmixConfig(AlgorithmConfig):
     @staticmethod
     def on_policy() -> bool:
         return False
-
-    @staticmethod
-    def get_from_yaml(path: Optional[str] = None):
-        if path is None:
-            return QmixConfig(
-                **AlgorithmConfig._load_from_yaml(
-                    name=QmixConfig.associated_class().__name__,
-                )
-            )
-        else:
-            return QmixConfig(**read_yaml_config(path))
