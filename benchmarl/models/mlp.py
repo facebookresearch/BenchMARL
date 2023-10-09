@@ -8,8 +8,7 @@ from tensordict import TensorDictBase
 from torch import nn
 from torchrl.modules import MLP, MultiAgentMLP
 
-from benchmarl.models.common import Model, ModelConfig, parse_model_config
-from benchmarl.utils import read_yaml_config
+from benchmarl.models.common import Model, ModelConfig
 
 
 class Mlp(Model):
@@ -112,14 +111,3 @@ class MlpConfig(ModelConfig):
     @staticmethod
     def associated_class():
         return Mlp
-
-    @staticmethod
-    def get_from_yaml(path: Optional[str] = None) -> MlpConfig:
-        if path is None:
-            return MlpConfig(
-                **ModelConfig._load_from_yaml(
-                    name=MlpConfig.associated_class().__name__,
-                )
-            )
-        else:
-            return MlpConfig(**parse_model_config(read_yaml_config(path)))

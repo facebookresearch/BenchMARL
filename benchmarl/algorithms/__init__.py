@@ -8,6 +8,8 @@ from .masac import Masac, MasacConfig
 from .qmix import Qmix, QmixConfig
 from .vdn import Vdn, VdnConfig
 
+# A registry mapping "algoname" to its config dataclass
+# This is used to aid loading of algorithms from yaml
 algorithm_config_registry = {
     "mappo": MappoConfig,
     "ippo": IppoConfig,

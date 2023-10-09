@@ -3,6 +3,8 @@ from .pettingzoo.common import PettingZooTask
 from .smacv2.common import Smacv2Task
 from .vmas.common import VmasTask
 
+# This is a registry mapping "envname/task_name" to the EnvNameTask.TASK_NAME enum
+# It is used by automatically load task enums from yaml files
 task_config_registry = {}
 for env in [VmasTask, Smacv2Task, PettingZooTask]:
     env_config_registry = {
@@ -29,6 +31,10 @@ from .vmas.sampling import TaskConfig as SamplingConfig
 from .vmas.transport import TaskConfig as TransportConfig
 from .vmas.wheel import TaskConfig as WheelConfig
 
+# This is a registry mapping task config schemas names to their python dataclass
+# It is used by hydra to validate loaded configs.
+# You will see the "envname_taskname_config" strings in the hydra defaults at the top of yaml files.
+# This feature is optional.
 _task_class_registry = {
     "vmas_balance_config": BalanceConfig,
     "vmas_sampling_config": SamplingConfig,

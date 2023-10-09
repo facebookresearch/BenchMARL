@@ -60,7 +60,7 @@ class CustomEnvTask(Task):
         return env.full_observation_spec
 
     def action_spec(self, env: EnvBase) -> CompositeSpec:
-        # A spec for the observation.
+        # A spec for the action.
         # If provided, must be a CompositeSpec with one (group_name, "action") entry per group.
         return env.full_action_spec
 
@@ -70,12 +70,12 @@ class CustomEnvTask(Task):
         return None
 
     def action_mask_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
-        # A spec for the state.
+        # A spec for the action mask.
         # If provided, must be a CompositeSpec with one (group_name, "action_mask") entry per group.
         return None
 
     def info_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
-        # A spec for the observation.
+        # A spec for the info.
         # If provided, must be a CompositeSpec with one (group_name, "info") entry per group (this entry can be composite).
         return None
 
@@ -86,5 +86,5 @@ class CustomEnvTask(Task):
 
     def log_info(self, batch: TensorDictBase) -> Dict[str, float]:
         # Optionally return a str->float dict with extra things to log
-        # This function has access to the collected batch and its optional
+        # This function has access to the collected batch and is optional
         return {}

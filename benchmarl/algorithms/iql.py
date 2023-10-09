@@ -1,5 +1,5 @@
 from dataclasses import dataclass, MISSING
-from typing import Dict, Iterable, Optional, Tuple, Type
+from typing import Dict, Iterable, Tuple, Type
 
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModule, TensorDictSequential
@@ -9,7 +9,6 @@ from torchrl.objectives import DQNLoss, LossModule, ValueEstimators
 
 from benchmarl.algorithms.common import Algorithm, AlgorithmConfig
 from benchmarl.models.common import ModelConfig
-from benchmarl.utils import read_yaml_config
 
 
 class Iql(Algorithm):
@@ -189,14 +188,3 @@ class IqlConfig(AlgorithmConfig):
     @staticmethod
     def on_policy() -> bool:
         return False
-
-    @staticmethod
-    def get_from_yaml(path: Optional[str] = None):
-        if path is None:
-            return IqlConfig(
-                **AlgorithmConfig._load_from_yaml(
-                    name=IqlConfig.associated_class().__name__,
-                )
-            )
-        else:
-            return IqlConfig(**read_yaml_config(path))
