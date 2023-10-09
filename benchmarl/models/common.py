@@ -28,6 +28,13 @@ def parse_model_config(cfg: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def output_has_agent_dim(share_params: bool, centralised: bool) -> bool:
+    """
+    This is a dynamically computed attribute that indicates if the output will have the agent dimension.
+    This will be false when share_params==True and centralised==True, and true in all other cases.
+    When output_has_agent_dim is true, your model's output should contain the multiagent dimension,
+    and the dimension should be absent otherwise
+
+    """
     if share_params and centralised:
         return False
     else:
@@ -35,6 +42,33 @@ def output_has_agent_dim(share_params: bool, centralised: bool) -> bool:
 
 
 class Model(TensorDictModuleBase, ABC):
+    """
+    Abstract class representing a model.
+
+    Models in BenchMARL are instantiated per agent group.
+    This means that each model will process the inputs for a whole group of agents
+    They are associated with input and output specs that define their domains.
+
+    Args:
+        input_spec (CompositeSpec): the input spec of the model
+        output_spec (CompositeSpec): the output spec of the model
+        agent_group (str): the name of the agent group the model is for
+        n_agents (int): the number of agents this module is for
+        device (str): the mdoel's device
+        input_has_agent_dim (bool): This tells the model if the input will have a multi-agent dimension or not.
+            For example, the input of policies will always have this set to true,
+            but critics that use a global state have this set to false as the state is shared by all agents
+        centralised (bool): This tells the model if it has full observability.
+            This will always be true when self.input_has_agent_dim==False,
+            but in cases where the input has the agent dimension, this parameter is
+            used to distinguish between a decentralised model (where each agent's data
+            is processed separately) and a centralized model, where the model pools all data together
+        share_params (bool): This tells the model if it should have only one set of parameters
+            or a different set of parameters for each agent.
+            This is independent of the other options as it is possible to have different parameters
+            for centralized critics with global input.
+    """
+
     def __init__(
         self,
         input_spec: CompositeSpec,
@@ -70,6 +104,12 @@ class Model(TensorDictModuleBase, ABC):
 
     @property
     def output_has_agent_dim(self) -> bool:
+        """
+        This is a dynamically computed attribute that indicates if the output will have the agent dimension.
+        This will be false when share_params==True and centralised==True, and true in all other cases.
+        When output_has_agent_dim is true, your model's output should contain the multiagent dimension,
+        and the dimension should be absent otherwise
+        """
         return output_has_agent_dim(self.share_params, self.centralised)
 
     def _perform_checks(self):
@@ -108,6 +148,16 @@ class Model(TensorDictModuleBase, ABC):
 
     @abstractmethod
     def _forward(self, tensordict: TensorDictBase) -> TensorDictBase:
+        """
+        Method to implement for the forward pass of the model.
+        It should read self.in_key, process it and write self.out_key.
+
+        Args:
+            tensordict (TensorDictBase): the input td
+
+        Returns: the input td with the written self.out_key
+
+        """
         raise NotImplementedError
 
 
@@ -135,6 +185,14 @@ class SequenceModel(Model):
 
 @dataclass
 class ModelConfig(ABC):
+    """
+    Dataclass representing an model configuration.
+    This should be overridden by implemented models.
+    Implementors should:
+     1. add configuration parameters for their algorithm
+     2. implement all abstract methods
+    """
+
     def get_model(
         self,
         input_spec: CompositeSpec,
@@ -146,6 +204,31 @@ class ModelConfig(ABC):
         share_params: bool,
         device: DEVICE_TYPING,
     ) -> Model:
+        """
+        Creates the model from the config.
+
+        Args:
+            input_spec (CompositeSpec): the input spec of the model
+            output_spec (CompositeSpec): the output spec of the model
+            agent_group (str): the name of the agent group the model is for
+            n_agents (int): the number of agents this module is for
+            device (str): the mdoel's device
+            input_has_agent_dim (bool): This tells the model if the input will have a multi-agent dimension or not.
+                For example, the input of policies will always have this set to true,
+                but critics that use a global state have this set to false as the state is shared by all agents
+            centralised (bool): This tells the model if it has full observability.
+                This will always be true when self.input_has_agent_dim==False,
+                but in cases where the input has the agent dimension, this parameter is
+                used to distinguish between a decentralised model (where each agent's data
+                is processed separately) and a centralized model, where the model pools all data together
+            share_params (bool): This tells the model if it should have only one set of parameters
+                or a different set of parameters for each agent.
+                This is independent of the other options as it is possible to have different parameters
+                for centralized critics with global input.
+
+        Returns: the Model
+
+        """
         return self.associated_class()(
             **asdict(self),
             input_spec=input_spec,
@@ -161,9 +244,20 @@ class ModelConfig(ABC):
     @staticmethod
     @abstractmethod
     def associated_class():
+        """
+        The associated Model class
+        """
         raise NotImplementedError
 
     def process_env_fun(self, env_fun: Callable[[], EnvBase]) -> Callable[[], EnvBase]:
+        """
+        This function can be used to wrap env_fun
+        Args:
+            env_fun (callable): a function that takes no args and creates an enviornment
+
+        Returns: a function that takes no args and creates an enviornment
+
+        """
         return env_fun
 
     @staticmethod
@@ -180,6 +274,16 @@ class ModelConfig(ABC):
 
     @classmethod
     def get_from_yaml(cls, path: Optional[str] = None):
+        """
+        Load the model configuration from yaml
+
+        Args:
+            path (str, optional): The full path of the yaml file to load from.
+                If None, it will default to
+                benchmarl/conf/model/layers/self.associated_class().__name__
+
+        Returns: the loaded AlgorithmConfig
+        """
         if path is None:
             return cls(
                 **ModelConfig._load_from_yaml(
