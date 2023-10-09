@@ -43,7 +43,7 @@ experiment:
 
   off_policy_collected_frames_per_batch: 6000
   off_policy_n_envs_per_worker: 10
-  off_policy_n_optimizer_steps: 1000
+  off_policy_n_optimizer_steps: 100
   off_policy_train_batch_size: 100
   off_policy_memory_size: 1_000_000
 
