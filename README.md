@@ -235,6 +235,14 @@ And the ones that are _work in progress_
 | [GNN](https://github.com/facebookresearch/BenchMARL/pull/18) |       ✅       |               ✅               |               ❌               | 
 | CNN                                                          |       ✅       |               ✅               |               ✅               | 
 
+## Premade scripts
+> [!WARNING]  
+> This section is under a work in progress. We are constantly working on fine-tuning
+> our algorithms to enable our users to have access to state-of-the-art benchmarks.
+> If you would like to collaborate in this effort, please reach out to us.
+
+In the [premade_scripts](premade_scripts) folder we are collecting some tested hyperparameters for
+specific environments to enable users to bootstrap their benchmarking.
 
 ## Reporting and plotting
 
