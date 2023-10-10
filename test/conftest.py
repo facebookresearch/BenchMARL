@@ -29,9 +29,10 @@ def experiment_config(tmp_path) -> ExperimentConfig:
     experiment_config.evaluation = True
     experiment_config.render = True
     experiment_config.evaluation_episodes = 2
+    experiment_config.evaluation_interval = 500
     experiment_config.loggers = ["csv"]
     experiment_config.create_json = True
-    experiment_config.checkpoint_interval = 1
+    experiment_config.checkpoint_interval = 100
     return experiment_config
 
 

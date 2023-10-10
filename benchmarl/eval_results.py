@@ -137,7 +137,7 @@ class Plotting:
 
 if __name__ == "__main__":
     raw_dict = get_raw_dict_from_multirun_folder(
-        multirun_folder="/Users/matbet/PycharmProjects/BenchMARL/benchmarl/multirun/2023-09-22/17-21-34"
+        multirun_folder="/Users/matbet/18-13-24"
     )
     processed_data = Plotting.process_data(raw_dict)
     (

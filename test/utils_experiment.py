@@ -28,7 +28,7 @@ class ExperimentUtils:
 
         experiment_config.max_n_iters = max_n_iters + 3
         experiment_config.restore_file = (
-            exp_folder / "checkpoints" / f"checkpoint_{max_n_iters}.pt"
+            exp_folder / "checkpoints" / f"checkpoint_{experiment.total_frames}.pt"
         )
         experiment_config.save_folder = None
         experiment = Experiment(

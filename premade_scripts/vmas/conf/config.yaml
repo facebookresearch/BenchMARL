@@ -50,5 +50,9 @@ experiment:
 
   evaluation: True
   render: True
-  evaluation_interval: 20
+  evaluation_interval: 120_000
   evaluation_episodes: 200
+
+  save_folder: null
+  restore_file: null
+  checkpoint_interval: 300_000

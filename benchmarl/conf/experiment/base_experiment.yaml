@@ -56,11 +56,11 @@ on_policy_n_minibatch_iters: 45
 on_policy_minibatch_size: 400
 
 # Number of frames collected and each experiment iteration
-off_policy_collected_frames_per_batch: 1000
+off_policy_collected_frames_per_batch: 6000
 # Number of environments used for collection
 # If the environment is vectorized, this will be the number of batched environments.
 # Otherwise batching will be simulated and each env will be run sequentially.
-off_policy_n_envs_per_worker: 1
+off_policy_n_envs_per_worker: 10
 # This is the number of times off_policy_train_batch_size will be sampled from the buffer and trained over.
 off_policy_n_optimizer_steps: 1000
 # Number of frames used for each off_policy_n_optimizer_steps when training off-policy algorithms
@@ -72,8 +72,8 @@ off_policy_memory_size: 1_000_000
 evaluation: True
 # Whether to render the evaluation (if rendering is available)
 render: True
-# Frequency of evaluation in terms of experiment iterations
-evaluation_interval: 20
+# Frequency of evaluation in terms of collected frames (this should be a multiple of on/off_policy_collected_frames_per_batch)
+evaluation_interval: 120_000
 # Number of episodes that evaluation is run on
 evaluation_episodes: 10
 
@@ -87,5 +87,6 @@ create_json: True
 save_folder: null
 # Absolute path to a checkpoint file where the experiment was saved. If null the experiment is started fresh.
 restore_file: null
-# Interval for experiment saving in terms of experiment iterations. Set it to 0 to disable checkpointing
-checkpoint_interval: 50
+# Interval for experiment saving in terms of collected frames (this should be a multiple of on/off_policy_collected_frames_per_batch).
+# Set it to 0 to disable checkpointing
+checkpoint_interval: 300_000
