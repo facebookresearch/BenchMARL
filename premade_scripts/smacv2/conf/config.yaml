@@ -14,7 +14,7 @@ hydra:
 seed: 0
 
 experiment:
-  sampling_device: "cuda"
+  sampling_device: "cpu"
   train_device: "cuda"
 
   share_policy_params: True
@@ -31,10 +31,10 @@ experiment:
 
   exploration_eps_init: 0.8
   exploration_eps_end: 0.01
-  exploration_anneal_frames: null
+  exploration_anneal_frames: 1_000_000
 
   max_n_iters: null
-  max_n_frames: 30_000_000
+  max_n_frames: 20_000_000
 
   on_policy_collected_frames_per_batch: 6000
   on_policy_n_envs_per_worker: 10
@@ -43,11 +43,15 @@ experiment:
 
   off_policy_collected_frames_per_batch: 6000
   off_policy_n_envs_per_worker: 10
-  off_policy_n_optimizer_steps: 1000
+  off_policy_n_optimizer_steps: 100
   off_policy_train_batch_size: 100
   off_policy_memory_size: 1_000_000
 
   evaluation: True
   render: True
-  evaluation_interval: 50
+  evaluation_interval: 300_000
   evaluation_episodes: 20
+
+  save_folder: null
+  restore_file: null
+  checkpoint_interval: 600_000

@@ -12,7 +12,9 @@ if __name__ == "__main__":
     # Save the experiment in the current folder
     experiment_config.save_folder = Path(os.path.dirname(os.path.realpath(__file__)))
     # Checkpoint at every iteration
-    experiment_config.checkpoint_interval = 1
+    experiment_config.checkpoint_interval = (
+        experiment_config.on_policy_collected_frames_per_batch
+    )
     # Run 3 iterations
     experiment_config.max_n_iters = 3
 
@@ -34,7 +36,7 @@ if __name__ == "__main__":
     experiment_config.restore_file = (
         experiment.folder_name
         / "checkpoints"
-        / f"checkpoint_{experiment_config.n_iters}.pt"
+        / f"checkpoint_{experiment.total_frames}.pt"
     )
     # The experiment will be saved in the ame folder as the one it is restoring from
     experiment_config.save_folder = None

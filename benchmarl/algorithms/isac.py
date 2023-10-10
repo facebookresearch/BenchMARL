@@ -109,11 +109,13 @@ class Isac(Algorithm):
         return loss_module, True
 
     def _get_parameters(self, group: str, loss: ClipPPOLoss) -> Dict[str, Iterable]:
-        return {
+        items = {
             "loss_actor": list(loss.actor_network_params.flatten_keys().values()),
             "loss_qvalue": list(loss.qvalue_network_params.flatten_keys().values()),
-            "loss_alpha": [loss.log_alpha],
         }
+        if not self.fixed_alpha:
+            items.update({"loss_alpha": [loss.log_alpha]})
+        return items
 
     def _get_policy_for_loss(
         self, group: str, model_config: ModelConfig, continuous: bool

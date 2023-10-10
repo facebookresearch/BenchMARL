@@ -149,6 +149,22 @@ class ExperimentConfig:
             else self.exploration_anneal_frames
         )
 
+    def get_evaluation_interval(self, on_policy: bool):
+        if self.evaluation_interval % self.collected_frames_per_batch(on_policy) != 0:
+            raise ValueError(
+                f"evaluation_interval ({self.evaluation_interval}) "
+                f"is not a multiple of the collected_frames_per_batch ({self.collected_frames_per_batch(on_policy)})"
+            )
+        return self.evaluation_interval
+
+    def get_checkpoint_interval(self, on_policy: bool):
+        if self.checkpoint_interval % self.collected_frames_per_batch(on_policy) != 0:
+            raise ValueError(
+                f"checkpoint_interval ({self.checkpoint_interval}) "
+                f"is not a multiple of the collected_frames_per_batch ({self.collected_frames_per_batch(on_policy)})"
+            )
+        return self.checkpoint_interval
+
     @staticmethod
     def get_from_yaml(path: Optional[str] = None):
         if path is None:
@@ -351,7 +367,7 @@ class Experiment(CallbackNotifier):
             self.folder_name = folder_name / self.name
             if (
                 len(self.config.loggers)
-                or self.config.checkpoint_interval > 0
+                or self.config.get_checkpoint_interval(self.on_policy) > 0
                 or self.config.create_json
             ):
                 self.folder_name.mkdir(parents=False, exist_ok=False)
@@ -474,17 +490,23 @@ class Experiment(CallbackNotifier):
             # Evaluation
             if (
                 self.config.evaluation
-                and self.n_iters_performed % self.config.evaluation_interval == 0
+                and (
+                    self.total_frames
+                    % self.config.get_evaluation_interval(self.on_policy)
+                    == 0
+                )
                 and (len(self.config.loggers) or self.config.create_json)
             ):
-                self._evaluation_loop(iter=self.n_iters_performed)
+                self._evaluation_loop()
 
             # End of step
             self.n_iters_performed += 1
             self.logger.commit()
             if (
-                self.config.checkpoint_interval > 0
-                and self.n_iters_performed % self.config.checkpoint_interval == 0
+                self.config.get_checkpoint_interval(self.on_policy) > 0
+                and self.total_frames
+                % self.config.get_checkpoint_interval(self.on_policy)
+                == 0
             ):
                 self.save_trainer()
             sampling_start = time.time()
@@ -524,8 +546,6 @@ class Experiment(CallbackNotifier):
 
                 optimizer.step()
                 optimizer.zero_grad()
-            elif loss_name.startswith("loss"):
-                raise AssertionError
         self.replay_buffers[group].update_tensordict_priority(subdata)
         if self.target_updaters[group] is not None:
             self.target_updaters[group].step()
@@ -546,7 +566,7 @@ class Experiment(CallbackNotifier):
         return float(gn)
 
     @torch.no_grad()
-    def _evaluation_loop(self, iter: int):
+    def _evaluation_loop(self):
         evaluation_start = time.time()
         with set_exploration_type(ExplorationType.MODE):
             if self.task.has_render(self.test_env) and self.config.render:
@@ -585,11 +605,13 @@ class Experiment(CallbackNotifier):
                 )
                 rollouts = list(rollouts.unbind(0))
         evaluation_time = time.time() - evaluation_start
-        self.logger.log({"timers/evaluation_time": evaluation_time}, step=iter)
+        self.logger.log(
+            {"timers/evaluation_time": evaluation_time}, step=self.n_iters_performed
+        )
         self.logger.log_evaluation(
             rollouts,
             video_frames=video_frames,
-            step=iter,
+            step=self.n_iters_performed,
             total_frames=self.total_frames,
         )
         # Callback
@@ -628,7 +650,7 @@ class Experiment(CallbackNotifier):
     def save_trainer(self) -> None:
         checkpoint_folder = self.folder_name / "checkpoints"
         checkpoint_folder.mkdir(parents=False, exist_ok=True)
-        checkpoint_file = checkpoint_folder / f"checkpoint_{self.n_iters_performed}.pt"
+        checkpoint_file = checkpoint_folder / f"checkpoint_{self.total_frames}.pt"
         torch.save(self.state_dict(), checkpoint_file)
 
     def load_trainer(self) -> Experiment:
