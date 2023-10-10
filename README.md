@@ -20,7 +20,8 @@ Its mission is to present a standardized interface that allows easy integration 
 provide a fair comparison with existing solutions.
 BenchMARL uses [TorchRL](https://github.com/pytorch/rl) as its backend, which grants it high performance 
 and state-of-the-art implementations. 
-BenchMARL data reporting is compatible with [marl-eval](https://github.com/instadeepai/marl-eval) for standardized and
+BenchMARL data reporting is compatible with [marl-eval](https://sites.google.com/view/marl-standard-protocol/home)
+for standardized and
 statistically strong evaluations.
 
 - [BenchMARL](#benchmarl)
@@ -206,12 +207,12 @@ determine the training strategy. Here is a table with the currently implemented 
 challenge to solve.
 They differ based on many aspects, here is a table with the current environments in BenchMARL
 
-| Environment                                                        | Tasks                               | Cooperation               | Global state | Reward function               | Action space          | 
-|--------------------------------------------------------------------|-------------------------------------|---------------------------|--------------|-------------------------------|-----------------------|
-| [VMAS](https://github.com/proroklab/VectorizedMultiAgentSimulator) | [5](benchmarl/conf/task/vmas)       | Cooperative + Competitive | No           | Shared + Independent + Global | Continuous + Discrete |
-| [SMACv2](https://github.com/oxwhirl/smacv2)                        | [15](benchmarl/conf/task/smacv2)    | Cooperative               | Yes          | Global                        | Discrete              |
-| [MPE](https://github.com/openai/multiagent-particle-envs)          | [8](benchmarl/conf/task/pettingzoo) | Cooperative + Competitive | Yes          | Shared + Independent          | Continuous + Discrete |
-| [SISL](https://github.com/sisl/MADRL)                              | [2](benchmarl/conf/task/pettingzoo) | Cooperative               | No           | Shared                        | Continuous            |
+| Environment                                                        | Tasks                               | Cooperation               | Global state | Reward function               | Action space          |    Vectorized    |
+|--------------------------------------------------------------------|-------------------------------------|---------------------------|--------------|-------------------------------|-----------------------|:----------------:|
+| [VMAS](https://github.com/proroklab/VectorizedMultiAgentSimulator) | [5](benchmarl/conf/task/vmas)       | Cooperative + Competitive | No           | Shared + Independent + Global | Continuous + Discrete |        ✅         |    
+| [SMACv2](https://github.com/oxwhirl/smacv2)                        | [15](benchmarl/conf/task/smacv2)    | Cooperative               | Yes          | Global                        | Discrete              |        ❌         |
+| [MPE](https://github.com/openai/multiagent-particle-envs)          | [8](benchmarl/conf/task/pettingzoo) | Cooperative + Competitive | Yes          | Shared + Independent          | Continuous + Discrete |        ❌         |
+| [SISL](https://github.com/sisl/MADRL)                              | [2](benchmarl/conf/task/pettingzoo) | Cooperative               | No           | Shared                        | Continuous            |        ❌         |
 
 > [!NOTE]  
 > BenchMARL uses the [TorchRL MARL API](https://github.com/pytorch/rl/issues/1463) for grouping agents.
