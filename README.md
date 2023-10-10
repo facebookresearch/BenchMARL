@@ -19,10 +19,26 @@ and benchmarking across different MARL algorithms and environments.
 Its mission is to present a standardized interface that allows easy integration of new algorithms and environments to 
 provide a fair comparison with existing solutions.
 BenchMARL uses [TorchRL](https://github.com/pytorch/rl) as its backend, which grants it high performance 
-and state-of-the-art implementations. 
-BenchMARL data reporting is compatible with [marl-eval](https://sites.google.com/view/marl-standard-protocol/home)
-for standardized and
-statistically strong evaluations.
+and state-of-the-art implementations.
+It also uses [hydra](https://hydra.cc/docs/intro/) for flexible and modular configuration,
+and its data reporting is compatible with [marl-eval](https://sites.google.com/view/marl-standard-protocol/home) 
+for standardised and statistically strong evaluations.
+BenchMARL **core design tenets** are:
+* _Reproducibility through systematical grounding and standardization of configuration_ 
+* _Standardised and statistically-strong plotting and reporting_
+* _Experiments that are independent of the algorithm, environment, and model choices_
+* _Breadth over the MARL ecosystem_
+* _Easy implementation of new algorithms, environments, and models_
+* _Leveraging the know-how and infrastructure of RL, without reinventing the wheel_
+
+### Why would I BenchMARL 🤔?
+
+Why would you BenchMARL, I see you ask. 
+Well, you can BenchMARL to compare different algorithms, environments, models, 
+to check how your new research compares to existing ones, or if you just want to approach 
+the domain and want to easily take a picture of the landscape.
+
+### Table of contents
 
 - [BenchMARL](#benchmarl)
   * [How to use](#how-to-use)
