@@ -31,7 +31,7 @@ BenchMARL **core design tenets** are:
 * _Experiments that are independent of the algorithm, environment, and model choices_
 * _Breadth over the MARL ecosystem_
 * _Easy implementation of new algorithms, environments, and models_
-* _Leveraging the know-how and infrastructure of RL, without reinventing the wheel_
+* _Leveraging the know-how and infrastructure of TorchRL, without reinventing the wheel_
 
 ### Why would I BenchMARL 🤔?
 
