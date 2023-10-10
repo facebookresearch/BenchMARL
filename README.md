@@ -13,6 +13,7 @@ python benchmarl/run.py algorithm=mappo task=vmas/balance
 [![Static Badge](https://img.shields.io/badge/Benchmarks-Wandb-yellow)]()
 -->
 
+### What is BenchMARL 🧐?
 
 BenchMARL is a Multi-Agent Reinforcement Learning (MARL) training library created to enable reproducibility
 and benchmarking across different MARL algorithms and environments.
