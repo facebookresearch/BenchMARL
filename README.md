@@ -227,10 +227,10 @@ They differ based on many aspects, here is a table with the current environments
 
 | Environment                                                        | Tasks                               | Cooperation               | Global state | Reward function               | Action space          |    Vectorized    |
 |--------------------------------------------------------------------|-------------------------------------|---------------------------|--------------|-------------------------------|-----------------------|:----------------:|
-| [VMAS](https://github.com/proroklab/VectorizedMultiAgentSimulator) | [5](benchmarl/conf/task/vmas)       | Cooperative + Competitive | No           | Shared + Independent + Global | Continuous + Discrete |        ✅         |    
-| [SMACv2](https://github.com/oxwhirl/smacv2)                        | [15](benchmarl/conf/task/smacv2)    | Cooperative               | Yes          | Global                        | Discrete              |        ❌         |
-| [MPE](https://github.com/openai/multiagent-particle-envs)          | [8](benchmarl/conf/task/pettingzoo) | Cooperative + Competitive | Yes          | Shared + Independent          | Continuous + Discrete |        ❌         |
-| [SISL](https://github.com/sisl/MADRL)                              | [2](benchmarl/conf/task/pettingzoo) | Cooperative               | No           | Shared                        | Continuous            |        ❌         |
+| [VMAS](https://github.com/proroklab/VectorizedMultiAgentSimulator) | [5](benchmarl/conf/task/vmas)       | Cooperative + Competitive | No           | Shared + Independent + Global | Continuous + Discrete |       Yes        |    
+| [SMACv2](https://github.com/oxwhirl/smacv2)                        | [15](benchmarl/conf/task/smacv2)    | Cooperative               | Yes          | Global                        | Discrete              |        No        |
+| [MPE](https://github.com/openai/multiagent-particle-envs)          | [8](benchmarl/conf/task/pettingzoo) | Cooperative + Competitive | Yes          | Shared + Independent          | Continuous + Discrete |        No        |
+| [SISL](https://github.com/sisl/MADRL)                              | [2](benchmarl/conf/task/pettingzoo) | Cooperative               | No           | Shared                        | Continuous            |        No        |
 
 > [!NOTE]  
 > BenchMARL uses the [TorchRL MARL API](https://github.com/pytorch/rl/issues/1463) for grouping agents.
@@ -245,14 +245,14 @@ agent group. Here is a table of the models implemented in BenchMARL
 
 | Name                           | Decentralized | Centralized with local inputs | Centralized with global input | 
 |--------------------------------|:-------------:|:-----------------------------:|:-----------------------------:|
-| [MLP](benchmarl/models/mlp.py) |       ✅       |               ✅               |               ✅               | 
+| [MLP](benchmarl/models/mlp.py) |      Yes      |              Yes              |              Yes              | 
 
 And the ones that are _work in progress_
 
 | Name                                                         | Decentralized | Centralized with local inputs | Centralized with global input | 
 |--------------------------------------------------------------|:-------------:|:-----------------------------:|:-----------------------------:|
-| [GNN](https://github.com/facebookresearch/BenchMARL/pull/18) |       ✅       |               ✅               |               ❌               | 
-| CNN                                                          |       ✅       |               ✅               |               ✅               | 
+| [GNN](https://github.com/facebookresearch/BenchMARL/pull/18) |      Yes      |              Yes              |              No               | 
+| CNN                                                          |      Yes      |              Yes              |              Yes              | 
 
 ## Premade scripts
 > [!WARNING]  
