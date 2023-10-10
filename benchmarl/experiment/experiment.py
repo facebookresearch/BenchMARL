@@ -494,7 +494,6 @@ class Experiment(CallbackNotifier):
                     self.total_frames
                     % self.config.get_evaluation_interval(self.on_policy)
                     == 0
-                    or self.n_iters_performed == 0
                 )
                 and (len(self.config.loggers) or self.config.create_json)
             ):
