@@ -24,6 +24,7 @@ and state-of-the-art implementations.
 It also uses [hydra](https://hydra.cc/docs/intro/) for flexible and modular configuration,
 and its data reporting is compatible with [marl-eval](https://sites.google.com/view/marl-standard-protocol/home) 
 for standardised and statistically strong evaluations.
+
 BenchMARL **core design tenets** are:
 * _Reproducibility through systematical grounding and standardization of configuration_ 
 * _Standardised and statistically-strong plotting and reporting_
