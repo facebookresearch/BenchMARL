@@ -178,7 +178,7 @@ benchmark.run_sequential()
 ## Concept
 
 The goal of BenchMARL is to bring different MARL environments and algorithms
-under the same interfaces to enable fair and reproducible comaprison and benchmarking.
+under the same interfaces to enable fair and reproducible comparison and benchmarking.
 BenchMARL is a full-pipline unified training library with the goal of enabling users to run
 any comparison they want across our algorithms and tasks in just one line of code.
 To achieve this, BenchMARL interconnects components from [TorchRL](https://github.com/pytorch/rl), 
@@ -239,8 +239,8 @@ They differ based on many aspects, here is a table with the current environments
 > a custom algorithm](examples/extending/algorithm/custom_algorithm.py) for more info.
 
 **Models**. Models are neural networks used to process data. They can be used as actors (policies) or, 
-when possible, as critics. We provide a set of base models (layers) and a SequenceModel to concatenate
-different. All the models can be used with or without parameter sharing within an 
+when requested, as critics. We provide a set of base models (layers) and a SequenceModel to concatenate
+different layers. All the models can be used with or without parameter sharing within an 
 agent group. Here is a table of the models implemented in BenchMARL
 
 | Name                           | Decentralized | Centralized with local inputs | Centralized with global input | 
