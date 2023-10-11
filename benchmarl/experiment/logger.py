@@ -210,7 +210,10 @@ class Logger:
         json_metrics["return"] = mean_group_return
         if self.json_writer is not None:
             self.json_writer.write(
-                metrics=json_metrics, total_frames=total_frames, step=step
+                metrics=json_metrics,
+                total_frames=total_frames,
+                evaluation_step=total_frames
+                // self.experiment_config.evaluation_interval,
             )
         self.log(to_log, step=step)
         if video_frames is not None:
@@ -309,20 +312,23 @@ class JsonWriter:
             }
         }
 
-    def write(self, total_frames: int, metrics: Dict[str, List[Tensor]]):
+    def write(
+        self, total_frames: int, metrics: Dict[str, List[Tensor]], evaluation_step: int
+    ):
         """
         Writes a step into the json reporting file
 
         Args:
             total_frames (int): total frames collected so far in the experiment
             metrics (dictionary mapping str to tensor): each value is a 1-dim tensor for the metric in key
-             of len equal to the number of evaluation episodes for this step.
+                of len equal to the number of evaluation episodes for this step.
+            evaluation_step (int): the evaluation step
 
         """
         metrics = {k: val.tolist() for k, val in metrics.items()}
         step_metrics = {"step_count": total_frames}
         step_metrics.update(metrics)
-        step_str = f"step_{total_frames}"
+        step_str = f"step_{evaluation_step}"
         if step_str in self.run_data:
             self.run_data[step_str].update(step_metrics)
         else:

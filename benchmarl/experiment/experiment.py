@@ -190,9 +190,6 @@ class ExperimentConfig:
         Args:
             on_policy (bool): is the algorithms on_policy
         """
-
-        if self.max_n_frames is None and self.max_n_iters is None:
-            raise ValueError("n_iters and total_frames are both not set")
         if self.max_n_frames is not None and self.max_n_iters is not None:
             return min(
                 self.max_n_frames,
@@ -229,34 +226,6 @@ class ExperimentConfig:
             else self.exploration_anneal_frames
         )
 
-    def get_evaluation_interval(self, on_policy: bool):
-        """
-        Get the interval in terms of collected frames for running evaluation
-
-        Args:
-            on_policy (bool): is the algorithms on_policy
-        """
-        if self.evaluation_interval % self.collected_frames_per_batch(on_policy) != 0:
-            raise ValueError(
-                f"evaluation_interval ({self.evaluation_interval}) "
-                f"is not a multiple of the collected_frames_per_batch ({self.collected_frames_per_batch(on_policy)})"
-            )
-        return self.evaluation_interval
-
-    def get_checkpoint_interval(self, on_policy: bool):
-        """
-        Get the interval in terms of collected frames for checkpointing
-
-        Args:
-            on_policy (bool): is the algorithms on_policy
-        """
-        if self.checkpoint_interval % self.collected_frames_per_batch(on_policy) != 0:
-            raise ValueError(
-                f"checkpoint_interval ({self.checkpoint_interval}) "
-                f"is not a multiple of the collected_frames_per_batch ({self.collected_frames_per_batch(on_policy)})"
-            )
-        return self.checkpoint_interval
-
     @staticmethod
     def get_from_yaml(path: Optional[str] = None):
         """
@@ -279,6 +248,35 @@ class ExperimentConfig:
             return ExperimentConfig(**read_yaml_config(str(yaml_path.resolve())))
         else:
             return ExperimentConfig(**read_yaml_config(path))
+
+    def validate(self, on_policy: bool):
+        """
+        Validates config.
+
+        Args:
+            on_policy (bool): is the algorithms on_policy
+
+        """
+        if (
+            self.evaluation
+            and self.evaluation_interval % self.collected_frames_per_batch(on_policy)
+            != 0
+        ):
+            raise ValueError(
+                f"evaluation_interval ({self.evaluation_interval}) "
+                f"is not a multiple of the collected_frames_per_batch ({self.collected_frames_per_batch(on_policy)})"
+            )
+        if (
+            self.checkpoint_interval != 0
+            and self.checkpoint_interval % self.collected_frames_per_batch(on_policy)
+            != 0
+        ):
+            raise ValueError(
+                f"checkpoint_interval ({self.checkpoint_interval}) "
+                f"is not a multiple of the collected_frames_per_batch ({self.collected_frames_per_batch(on_policy)})"
+            )
+        if self.max_n_frames is None and self.max_n_iters is None:
+            raise ValueError("n_iters and total_frames are both not set")
 
 
 class Experiment(CallbackNotifier):
@@ -337,6 +335,7 @@ class Experiment(CallbackNotifier):
         return self.algorithm_config.on_policy()
 
     def _setup(self):
+        self.config.validate(self.on_policy)
         self._set_action_type()
         self._setup_task()
         self._setup_algorithm()
@@ -609,11 +608,7 @@ class Experiment(CallbackNotifier):
             # Evaluation
             if (
                 self.config.evaluation
-                and (
-                    self.total_frames
-                    % self.config.get_evaluation_interval(self.on_policy)
-                    == 0
-                )
+                and (self.total_frames % self.config.evaluation_interval == 0)
                 and (len(self.config.loggers) or self.config.create_json)
             ):
                 self._evaluation_loop()
@@ -622,10 +617,8 @@ class Experiment(CallbackNotifier):
             self.n_iters_performed += 1
             self.logger.commit()
             if (
-                self.config.get_checkpoint_interval(self.on_policy) > 0
-                and self.total_frames
-                % self.config.get_checkpoint_interval(self.on_policy)
-                == 0
+                self.config.checkpoint_interval > 0
+                and self.total_frames % self.config.checkpoint_interval == 0
             ):
                 self._save_experiment()
             sampling_start = time.time()
