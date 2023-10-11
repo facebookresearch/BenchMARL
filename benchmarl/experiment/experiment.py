@@ -40,6 +40,13 @@ if _has_hydra:
 
 @dataclass
 class ExperimentConfig:
+    """
+    Configuration class for experiments.
+    This class acts as a schema for loading and validating yaml configurations.
+
+    Parameters in this class aim to be agnostic of the algorithm, task or model used.
+    To know their meaning, please check out the descriptions in benchmarl/conf/experiment/base_experiment.yaml
+    """
 
     sampling_device: str = MISSING
     train_device: str = MISSING
@@ -88,6 +95,13 @@ class ExperimentConfig:
     checkpoint_interval: float = MISSING
 
     def train_batch_size(self, on_policy: bool) -> int:
+        """
+        The batch size of tensors used for training
+
+        Args:
+            on_policy (bool): is the algorithms on_policy
+
+        """
         return (
             self.collected_frames_per_batch(on_policy)
             if on_policy
@@ -95,6 +109,14 @@ class ExperimentConfig:
         )
 
     def train_minibatch_size(self, on_policy: bool) -> int:
+        """
+        The minibatch size of tensors used for training.
+        On-policy algorithms are trained by splitting the train_batch_size (equal to the collected frames) into minibatches.
+        Off-policy algorithms do not go through this process and thus have the train_minibatch_size==train_batch_size
+
+        Args:
+            on_policy (bool): is the algorithms on_policy
+        """
         return (
             self.on_policy_minibatch_size
             if on_policy
@@ -102,6 +124,13 @@ class ExperimentConfig:
         )
 
     def n_optimizer_steps(self, on_policy: bool) -> int:
+        """
+        Number of times to loop over the training step per collection iteration.
+
+        Args:
+            on_policy (bool): is the algorithms on_policy
+
+        """
         return (
             self.on_policy_n_minibatch_iters
             if on_policy
@@ -109,6 +138,13 @@ class ExperimentConfig:
         )
 
     def replay_buffer_memory_size(self, on_policy: bool) -> int:
+        """
+        Size of the replay buffer memory in terms of frames
+
+        Args:
+            on_policy (bool): is the algorithms on_policy
+
+        """
         return (
             self.collected_frames_per_batch(on_policy)
             if on_policy
@@ -116,6 +152,13 @@ class ExperimentConfig:
         )
 
     def collected_frames_per_batch(self, on_policy: bool) -> int:
+        """
+        Number of collected frames per collection iteration.
+
+         Args:
+             on_policy (bool): is the algorithms on_policy
+
+        """
         return (
             self.on_policy_collected_frames_per_batch
             if on_policy
@@ -123,6 +166,17 @@ class ExperimentConfig:
         )
 
     def n_envs_per_worker(self, on_policy: bool) -> int:
+        """
+        Number of environments used for collection
+
+        In vectorized environments, this will be the vectorized batch_size.
+        In other environments, this will be emulated by running them sequentially.
+
+        Args:
+            on_policy (bool): is the algorithms on_policy
+
+
+        """
         return (
             self.on_policy_n_envs_per_worker
             if on_policy
@@ -130,6 +184,13 @@ class ExperimentConfig:
         )
 
     def get_max_n_frames(self, on_policy: bool) -> int:
+        """
+        Get the maximum number of frames collected before the experiment ends.
+
+        Args:
+            on_policy (bool): is the algorithms on_policy
+        """
+
         if self.max_n_frames is None and self.max_n_iters is None:
             raise ValueError("n_iters and total_frames are both not set")
         if self.max_n_frames is not None and self.max_n_iters is not None:
@@ -143,12 +204,25 @@ class ExperimentConfig:
             return self.max_n_iters * self.collected_frames_per_batch(on_policy)
 
     def get_max_n_iters(self, on_policy: bool) -> int:
+        """
+        Get the maximum number of experiment iterations before the experiment ends.
+
+        Args:
+            on_policy (bool): is the algorithms on_policy
+        """
         return -(
             -self.get_max_n_frames(on_policy)
             // self.collected_frames_per_batch(on_policy)
         )
 
     def get_exploration_anneal_frames(self, on_policy: bool):
+        """
+        Get the number of frames for exploration annealing.
+        If self.exploration_anneal_frames is None this will be a third of the total frames to collect.
+
+        Args:
+            on_policy (bool): is the algorithms on_policy
+        """
         return (
             (self.get_max_n_frames(on_policy) // 3)
             if self.exploration_anneal_frames is None
@@ -156,6 +230,12 @@ class ExperimentConfig:
         )
 
     def get_evaluation_interval(self, on_policy: bool):
+        """
+        Get the interval in terms of collected frames for running evaluation
+
+        Args:
+            on_policy (bool): is the algorithms on_policy
+        """
         if self.evaluation_interval % self.collected_frames_per_batch(on_policy) != 0:
             raise ValueError(
                 f"evaluation_interval ({self.evaluation_interval}) "
@@ -164,6 +244,12 @@ class ExperimentConfig:
         return self.evaluation_interval
 
     def get_checkpoint_interval(self, on_policy: bool):
+        """
+        Get the interval in terms of collected frames for checkpointing
+
+        Args:
+            on_policy (bool): is the algorithms on_policy
+        """
         if self.checkpoint_interval % self.collected_frames_per_batch(on_policy) != 0:
             raise ValueError(
                 f"checkpoint_interval ({self.checkpoint_interval}) "
@@ -173,6 +259,16 @@ class ExperimentConfig:
 
     @staticmethod
     def get_from_yaml(path: Optional[str] = None):
+        """
+        Load the experiment configuration from yaml
+
+        Args:
+            path (str, optional): The full path of the yaml file to load from.
+                If None, it will default to
+                benchmarl/conf/experiment/base_experiment.yaml
+
+        Returns: the loaded ExperimentConfig
+        """
         if path is None:
             yaml_path = (
                 Path(__file__).parent.parent
@@ -186,6 +282,21 @@ class ExperimentConfig:
 
 
 class Experiment(CallbackNotifier):
+    """
+    Main experiment class in BenchMARL.
+
+
+    Args:
+        task (Task): the task configuration
+        algorithm_config (AlgorithmConfig): the algorithm configuration
+        model_config (ModelConfig): the policy model configuration
+        seed (int): the seed for the experiment
+        config (ExperimentConfig):
+        critic_model_config (ModelConfig, optional): the policy model configuration.
+            If None, it defaults to model_config
+        callbacks (list of Callback, optional): list of benchmarl.experiment.callbacks.Callback for this experiment
+    """
+
     def __init__(
         self,
         task: Task,
@@ -218,10 +329,11 @@ class Experiment(CallbackNotifier):
         self.mean_return = 0
 
         if self.config.restore_file is not None:
-            self.load_trainer()
+            self._load_experiment()
 
     @property
     def on_policy(self) -> bool:
+        """Weather the algorithm has to be run on policy"""
         return self.algorithm_config.on_policy()
 
     def _setup(self):
@@ -404,6 +516,7 @@ class Experiment(CallbackNotifier):
         )
 
     def run(self):
+        """Run the experiment until completion."""
         try:
             self._collection_loop()
         except KeyboardInterrupt as interrupt:
@@ -514,12 +627,13 @@ class Experiment(CallbackNotifier):
                 % self.config.get_checkpoint_interval(self.on_policy)
                 == 0
             ):
-                self.save_trainer()
+                self._save_experiment()
             sampling_start = time.time()
 
         self.close()
 
     def close(self):
+        """Close the experiment."""
         self.collector.shutdown()
         self.test_env.close()
         self.logger.finish()
@@ -623,9 +737,9 @@ class Experiment(CallbackNotifier):
         # Callback
         self.on_evaluation_end(rollouts)
 
-    # Saving trainer state
+    # Saving experiment state
     def state_dict(self) -> OrderedDict:
-
+        """Get the state_dict for the experiment"""
         state = OrderedDict(
             total_time=self.total_time,
             total_frames=self.total_frames,
@@ -644,6 +758,7 @@ class Experiment(CallbackNotifier):
         return state_dict
 
     def load_state_dict(self, state_dict: Dict) -> None:
+        """Load the state_dict for the experiment"""
         for group in self.group_map.keys():
             self.losses[group].load_state_dict(state_dict[f"loss_{group}"])
             self.replay_buffers[group].load_state_dict(state_dict[f"buffer_{group}"])
@@ -653,13 +768,15 @@ class Experiment(CallbackNotifier):
         self.n_iters_performed = state_dict["state"]["n_iters_performed"]
         self.mean_return = state_dict["state"]["mean_return"]
 
-    def save_trainer(self) -> None:
+    def _save_experiment(self) -> None:
+        """Checkpoint trainer"""
         checkpoint_folder = self.folder_name / "checkpoints"
         checkpoint_folder.mkdir(parents=False, exist_ok=True)
         checkpoint_file = checkpoint_folder / f"checkpoint_{self.total_frames}.pt"
         torch.save(self.state_dict(), checkpoint_file)
 
-    def load_trainer(self) -> Experiment:
+    def _load_experiment(self) -> Experiment:
+        """Load trainer from checkpoint"""
         loaded_dict: OrderedDict = torch.load(self.config.restore_file)
         self.load_state_dict(loaded_dict)
         return self
