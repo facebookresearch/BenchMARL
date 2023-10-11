@@ -6,18 +6,21 @@
 
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 import numpy as np
 import torch
+import torchrl
+
 from tensordict import TensorDictBase
-from torchrl.record.loggers import get_logger, Logger
+from torch import Tensor
+from torchrl.record.loggers import get_logger
 from torchrl.record.loggers.wandb import WandbLogger
 
 from benchmarl.environments import Task
 
 
-class MultiAgentLogger:
+class Logger:
     def __init__(
         self,
         experiment_name: str,
@@ -50,7 +53,7 @@ class MultiAgentLogger:
         else:
             self.json_writer = None
 
-        self.loggers: List[Logger] = []
+        self.loggers: List[torchrl.record.loggers.Logger] = []
         for logger_name in experiment_config.loggers:
             self.loggers.append(
                 get_logger(
@@ -275,7 +278,18 @@ class MultiAgentLogger:
 
 class JsonWriter:
     """
+    Writer to create json files for reporting according to marl-eval
+
     Follows conventions from https://github.com/instadeepai/marl-eval/tree/main#usage-
+
+    Args:
+        folder (str): folder where to write the file
+        name (str): file name
+        algorithm_name (str): algorithm name
+        task_name (str): task name
+        environment_name (str): environment name
+        seed (int): seed of the experiment
+
     """
 
     def __init__(
@@ -295,11 +309,20 @@ class JsonWriter:
             }
         }
 
-    def write(self, total_frames: int, metrics: Dict[str, Any], step: int):
+    def write(self, total_frames: int, metrics: Dict[str, List[Tensor]]):
+        """
+        Writes a step into the json reporting file
+
+        Args:
+            total_frames (int): total frames collected so far in the experiment
+            metrics (dictionary mapping str to tensor): each value is a 1-dim tensor for the metric in key
+             of len equal to the number of evaluation episodes for this step.
+
+        """
         metrics = {k: val.tolist() for k, val in metrics.items()}
         step_metrics = {"step_count": total_frames}
         step_metrics.update(metrics)
-        step_str = f"step_{step}"
+        step_str = f"step_{total_frames}"
         if step_str in self.run_data:
             self.run_data[step_str].update(step_metrics)
         else:

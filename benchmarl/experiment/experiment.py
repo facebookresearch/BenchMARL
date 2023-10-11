@@ -29,7 +29,7 @@ from benchmarl.algorithms.common import AlgorithmConfig
 from benchmarl.environments import Task
 
 from benchmarl.experiment.callback import Callback, CallbackNotifier
-from benchmarl.experiment.logger import MultiAgentLogger
+from benchmarl.experiment.logger import Logger
 from benchmarl.models.common import ModelConfig
 from benchmarl.utils import read_yaml_config
 
@@ -495,7 +495,7 @@ class Experiment(CallbackNotifier):
 
     def _setup_logger(self):
 
-        self.logger = MultiAgentLogger(
+        self.logger = Logger(
             experiment_name=self.name,
             folder_name=str(self.folder_name),
             experiment_config=self.config,
