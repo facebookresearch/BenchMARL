@@ -254,14 +254,19 @@ And the ones that are _work in progress_
 | [GNN](https://github.com/facebookresearch/BenchMARL/pull/18) |      Yes      |              Yes              |              No               | 
 | CNN                                                          |      Yes      |              Yes              |              Yes              | 
 
-## Premade scripts
+## Fine-tuned configurations
 > [!WARNING]  
 > This section is under a work in progress. We are constantly working on fine-tuning
-> our algorithms to enable our users to have access to state-of-the-art benchmarks.
+> our experiments to enable our users to have access to state-of-the-art benchmarks.
 > If you would like to collaborate in this effort, please reach out to us.
 
-In the [premade_scripts](premade_scripts) folder we are collecting some tested hyperparameters for
+In the [fine_tuned](fine_tuned) folder we are collecting some tested hyperparameters for
 specific environments to enable users to bootstrap their benchmarking.
+You can just run the scripts in this folder to automatically use the proposed hyperparameters.
+
+Currently available are:
+
+- **VMAS**:  [![Conf](https://img.shields.io/badge/Conf-purple.svg)](fine_tuned/vmas/conf/config.yaml) <!-- [![Static Badge](https://img.shields.io/badge/Plots-Wandb-yellow)]() -->
 
 ## Reporting and plotting
 
@@ -269,7 +274,7 @@ Reporting and plotting is compatible with [marl-eval](https://github.com/instade
 If `experiment.create_json=True` (this is the default in the [experiment config](benchmarl/conf/experiment/base_experiment.yaml))
 a file named `{experiment_name}.json` will be created in the experiment output folder with the format of [marl-eval](https://github.com/instadeepai/marl-eval).
 You can load and merge these files using the utils in [eval_results](benchmarl/eval_results.py) to create beautiful plots of 
-your benchmarks.
+your benchmarks.  No more struggling with matplotlib and latex!
 
 [![Example](https://img.shields.io/badge/Example-blue.svg)](examples/plotting)
 
@@ -280,7 +285,8 @@ your benchmarks.
 One of the core tenets of BenchMARL is allowing users to leverage the existing algorithm
 and tasks implementations to benchmark their newly proposed solution.
 
-For this reason we expose standard interfaces for [algorithms](benchmarl/algorithms/common.py), [tasks](benchmarl/environments/common.py) and [models](benchmarl/models/common.py).
+For this reason we expose standard interfaces with simple abstract methods
+for [algorithms](benchmarl/algorithms/common.py), [tasks](benchmarl/environments/common.py) and [models](benchmarl/models/common.py).
 To introduce your solution in the library, you just need to implement the abstract methods
 exposed by these base classes which use objects from the [TorchRL](https://github.com/pytorch/rl) library.
 
@@ -296,6 +302,17 @@ As highlighted in the [run](#run) section, the project can be configured either
 in the script itself or via [hydra](https://hydra.cc/docs/intro/). 
 We suggest to read the hydra documentation
 to get familiar with all its functionalities. 
+
+The project can be configured either the script itself or via hydra. 
+Each component in the project has a corresponding yaml configuration in the BenchMARL 
+[conf tree](benchmarl/conf). 
+Components' configurations are loaded from these files into python dataclasses that act 
+as schemas for validation of parameter names and types. That way we keep the best of 
+both words: separation of all configuration from code and strong typing for validation! 
+You can also directly load and validate configuration yaml files without using hydra from a script by calling 
+`ComponentConfig.get_from_yaml()`.
+
+### Experiment
 
 Experiment configurations are in [`benchmarl/conf/config.yaml`](benchmarl/conf/config.yaml),
 with the experiment hyperparameters in [`benchmarl/conf/experiment`](benchmarl/conf/experiment).
@@ -391,7 +408,7 @@ a script [![Example](https://img.shields.io/badge/Example-blue.svg)](examples/co
 ## Features
 
 BenchMARL has several features:
-- A test CI with test routines run for all simulators and algorithms
+- A test CI with integration and training test routines that are run for all simulators and algorithms
 - Integration in the official TorchRL ecosystem for dedicated support
 
 
@@ -404,6 +421,8 @@ in the yaml config files or in the script arguments like so:
 ```bash
 python benchmarl/run.py algorithm=mappo task=vmas/balance "experiment.loggers=[wandb]"
 ```
+The wandb logger is fully compatible with experiment restoring and will automatically resume the run of 
+the loaded experiment.
 
 ### Checkpointing
 
