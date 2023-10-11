@@ -13,16 +13,34 @@ python benchmarl/run.py algorithm=mappo task=vmas/balance
 [![Static Badge](https://img.shields.io/badge/Benchmarks-Wandb-yellow)]()
 -->
 
+### What is BenchMARL 🧐?
 
 BenchMARL is a Multi-Agent Reinforcement Learning (MARL) training library created to enable reproducibility
 and benchmarking across different MARL algorithms and environments.
 Its mission is to present a standardized interface that allows easy integration of new algorithms and environments to 
 provide a fair comparison with existing solutions.
 BenchMARL uses [TorchRL](https://github.com/pytorch/rl) as its backend, which grants it high performance 
-and state-of-the-art implementations. 
-BenchMARL data reporting is compatible with [marl-eval](https://sites.google.com/view/marl-standard-protocol/home)
-for standardized and
-statistically strong evaluations.
+and state-of-the-art implementations.
+It also uses [hydra](https://hydra.cc/docs/intro/) for flexible and modular configuration,
+and its data reporting is compatible with [marl-eval](https://sites.google.com/view/marl-standard-protocol/home) 
+for standardised and statistically strong evaluations.
+
+BenchMARL **core design tenets** are:
+* _Reproducibility through systematical grounding and standardization of configuration_ 
+* _Standardised and statistically-strong plotting and reporting_
+* _Experiments that are independent of the algorithm, environment, and model choices_
+* _Breadth over the MARL ecosystem_
+* _Easy implementation of new algorithms, environments, and models_
+* _Leveraging the know-how and infrastructure of [TorchRL](https://github.com/pytorch/rl), without reinventing the wheel_
+
+### Why would I BenchMARL 🤔?
+
+Why would you BenchMARL, I see you ask. 
+Well, you can BenchMARL to compare different algorithms, environments, models, 
+to check how your new research compares to existing ones, or if you just want to approach 
+the domain and want to easily take a picture of the landscape.
+
+### Table of contents
 
 - [BenchMARL](#benchmarl)
   * [How to use](#how-to-use)
@@ -160,7 +178,7 @@ benchmark.run_sequential()
 ## Concept
 
 The goal of BenchMARL is to bring different MARL environments and algorithms
-under the same interfaces to enable fair and reproducible comaprison and benchmarking.
+under the same interfaces to enable fair and reproducible comparison and benchmarking.
 BenchMARL is a full-pipline unified training library with the goal of enabling users to run
 any comparison they want across our algorithms and tasks in just one line of code.
 To achieve this, BenchMARL interconnects components from [TorchRL](https://github.com/pytorch/rl), 
@@ -209,10 +227,10 @@ They differ based on many aspects, here is a table with the current environments
 
 | Environment                                                        | Tasks                               | Cooperation               | Global state | Reward function               | Action space          |    Vectorized    |
 |--------------------------------------------------------------------|-------------------------------------|---------------------------|--------------|-------------------------------|-----------------------|:----------------:|
-| [VMAS](https://github.com/proroklab/VectorizedMultiAgentSimulator) | [5](benchmarl/conf/task/vmas)       | Cooperative + Competitive | No           | Shared + Independent + Global | Continuous + Discrete |        ✅         |    
-| [SMACv2](https://github.com/oxwhirl/smacv2)                        | [15](benchmarl/conf/task/smacv2)    | Cooperative               | Yes          | Global                        | Discrete              |        ❌         |
-| [MPE](https://github.com/openai/multiagent-particle-envs)          | [8](benchmarl/conf/task/pettingzoo) | Cooperative + Competitive | Yes          | Shared + Independent          | Continuous + Discrete |        ❌         |
-| [SISL](https://github.com/sisl/MADRL)                              | [2](benchmarl/conf/task/pettingzoo) | Cooperative               | No           | Shared                        | Continuous            |        ❌         |
+| [VMAS](https://github.com/proroklab/VectorizedMultiAgentSimulator) | [5](benchmarl/conf/task/vmas)       | Cooperative + Competitive | No           | Shared + Independent + Global | Continuous + Discrete |       Yes        |    
+| [SMACv2](https://github.com/oxwhirl/smacv2)                        | [15](benchmarl/conf/task/smacv2)    | Cooperative               | Yes          | Global                        | Discrete              |        No        |
+| [MPE](https://github.com/openai/multiagent-particle-envs)          | [8](benchmarl/conf/task/pettingzoo) | Cooperative + Competitive | Yes          | Shared + Independent          | Continuous + Discrete |        No        |
+| [SISL](https://github.com/sisl/MADRL)                              | [2](benchmarl/conf/task/pettingzoo) | Cooperative               | No           | Shared                        | Continuous            |        No        |
 
 > [!NOTE]  
 > BenchMARL uses the [TorchRL MARL API](https://github.com/pytorch/rl/issues/1463) for grouping agents.
@@ -221,20 +239,20 @@ They differ based on many aspects, here is a table with the current environments
 > a custom algorithm](examples/extending/algorithm/custom_algorithm.py) for more info.
 
 **Models**. Models are neural networks used to process data. They can be used as actors (policies) or, 
-when possible, as critics. We provide a set of base models (layers) and a SequenceModel to concatenate
-different. All the models can be used with or without parameter sharing within an 
+when requested, as critics. We provide a set of base models (layers) and a SequenceModel to concatenate
+different layers. All the models can be used with or without parameter sharing within an 
 agent group. Here is a table of the models implemented in BenchMARL
 
 | Name                           | Decentralized | Centralized with local inputs | Centralized with global input | 
 |--------------------------------|:-------------:|:-----------------------------:|:-----------------------------:|
-| [MLP](benchmarl/models/mlp.py) |       ✅       |               ✅               |               ✅               | 
+| [MLP](benchmarl/models/mlp.py) |      Yes      |              Yes              |              Yes              | 
 
 And the ones that are _work in progress_
 
 | Name                                                         | Decentralized | Centralized with local inputs | Centralized with global input | 
 |--------------------------------------------------------------|:-------------:|:-----------------------------:|:-----------------------------:|
-| [GNN](https://github.com/facebookresearch/BenchMARL/pull/18) |       ✅       |               ✅               |               ❌               | 
-| CNN                                                          |       ✅       |               ✅               |               ✅               | 
+| [GNN](https://github.com/facebookresearch/BenchMARL/pull/18) |      Yes      |              Yes              |              No               | 
+| CNN                                                          |      Yes      |              Yes              |              Yes              | 
 
 ## Premade scripts
 > [!WARNING]  
