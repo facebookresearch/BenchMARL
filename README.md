@@ -46,6 +46,7 @@ the domain and want to easily take a picture of the landscape.
     + [Install](#install)
     + [Run](#run)
   * [Concept](#concept)
+  * [Fine-tuned public benchmarks](#fine-tuned-public-benchmarks)
   * [Reporting and plotting](#reporting-and-plotting)
   * [Extending](#extending)
   * [Configuring](#configuring)
@@ -252,7 +253,7 @@ And the ones that are _work in progress_
 | [GNN](https://github.com/facebookresearch/BenchMARL/pull/18) |      Yes      |              Yes              |              No               | 
 | CNN                                                          |      Yes      |              Yes              |              Yes              | 
 
-## Fine-tuned configurations
+## Fine-tuned public benchmarks
 > [!WARNING]  
 > This section is under a work in progress. We are constantly working on fine-tuning
 > our experiments to enable our users to have access to state-of-the-art benchmarks.
