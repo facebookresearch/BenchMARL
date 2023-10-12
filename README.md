@@ -9,9 +9,7 @@ python benchmarl/run.py algorithm=mappo task=vmas/balance
 ```
 
 [![Examples](https://img.shields.io/badge/Examples-blue.svg)](examples) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/facebookresearch/BenchMARL/blob/main/notebooks/run.ipynb)
-<!--
-[![Static Badge](https://img.shields.io/badge/Benchmarks-Wandb-yellow)]()
--->
+[![Static Badge](https://img.shields.io/badge/Benchmarks-Wandb-yellow)](https://wandb.ai/benchmarl/public/reportlist)
 
 ### What is BenchMARL 🧐?
 
@@ -48,6 +46,7 @@ the domain and want to easily take a picture of the landscape.
     + [Install](#install)
     + [Run](#run)
   * [Concept](#concept)
+  * [Fine-tuned public benchmarks](#fine-tuned-public-benchmarks)
   * [Reporting and plotting](#reporting-and-plotting)
   * [Extending](#extending)
   * [Configuring](#configuring)
@@ -254,7 +253,7 @@ And the ones that are _work in progress_
 | [GNN](https://github.com/facebookresearch/BenchMARL/pull/18) |      Yes      |              Yes              |              No               | 
 | CNN                                                          |      Yes      |              Yes              |              Yes              | 
 
-## Fine-tuned configurations
+## Fine-tuned public benchmarks
 > [!WARNING]  
 > This section is under a work in progress. We are constantly working on fine-tuning
 > our experiments to enable our users to have access to state-of-the-art benchmarks.
@@ -264,9 +263,12 @@ In the [fine_tuned](fine_tuned) folder we are collecting some tested hyperparame
 specific environments to enable users to bootstrap their benchmarking.
 You can just run the scripts in this folder to automatically use the proposed hyperparameters.
 
-Currently available are:
+We will tune benchmarks for you and publish the config and benchmarking plots on
+[Wandb](https://wandb.ai/benchmarl/public/reportlist) publicly
 
-- **VMAS**:  [![Conf](https://img.shields.io/badge/Conf-purple.svg)](fine_tuned/vmas/conf/config.yaml) <!-- [![Static Badge](https://img.shields.io/badge/Plots-Wandb-yellow)]() -->
+Currently available ones are:
+
+- **VMAS**:  [![Conf](https://img.shields.io/badge/Conf-purple.svg)](fine_tuned/vmas/conf/config.yaml)  [![Static Badge](https://img.shields.io/badge/Benchmarks-Wandb-yellow)](https://api.wandb.ai/links/benchmarl/xf5h3p3m)
 
 ## Reporting and plotting
 
