@@ -1,0 +1,4 @@
+
+n_borks: 4
+win_on_fork: True
+forking_rate: 0.2

@@ -1,0 +1,9 @@
+defaults:
+  - _self_
+  - pettingzoo_simple_tag_config
+
+task: "simple_tag_v3"
+num_good: 2
+num_adversaries: 3
+num_obstacles: 2
+max_cycles: 100

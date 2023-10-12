@@ -1,0 +1,6 @@
+defaults:
+  - vdn_config
+  - _self_
+
+delay_value: True
+loss_function: "l2"

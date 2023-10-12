@@ -1,0 +1,26 @@
+defaults:
+  - _self_
+  - pettingzoo_multiwalker_config
+
+task: "multiwalker_v9"
+# number of bipedal walker agents in environment
+n_walkers: 3
+# whether reward is distributed among all agents or allocated individually
+shared_reward: False
+max_cycles: 500
+# noise applied to neighbors and package positional observations
+position_noise: 0.001
+#  noise applied to neighbors and package rotational observations
+angle_noise: 0.001
+# reward received is forward_reward * change in position of the package
+forward_reward: 1.0
+# reward applied when an agent falls
+fall_reward: -10
+# reward applied to each walker if they fail to carry the package to the right edge of the terrain
+terminate_reward: -100
+# If True (default), a single walker falling causes all agents to be done, and they all receive an additional terminate_reward. If False, then only the fallen agent(s) receive fall_reward, and the rest of the agents are not done i.e. the environment continues.
+terminate_on_fall: true
+# Remove a walker when it falls (only works when terminate_on_fall is False)
+remove_on_fall: true
+# length of terrain in number of steps
+terrain_length: 200

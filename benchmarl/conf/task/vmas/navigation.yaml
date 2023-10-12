@@ -1,0 +1,14 @@
+defaults:
+  - _self_
+  - vmas_navigation_config
+
+
+max_steps: 100
+n_agents: 3
+collisions: True
+agents_with_same_goal: 1
+split_goals: False
+observe_all_goals: False
+shared_rew: False
+lidar_range: 0.35
+agent_radius: 0.1

@@ -1,0 +1,9 @@
+defaults:
+  - experiment: base_experiment
+  - algorithm: ???
+  - task: ???
+  - model: layers/mlp
+  - model@critic_model: layers/mlp
+  - _self_
+
+seed: 0

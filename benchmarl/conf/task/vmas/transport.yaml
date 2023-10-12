@@ -1,0 +1,11 @@
+defaults:
+  - _self_
+  - vmas_transport_config
+
+
+max_steps: 100
+n_agents: 4
+n_packages: 1
+package_width: 0.15
+package_length: 0.15
+package_mass: 50

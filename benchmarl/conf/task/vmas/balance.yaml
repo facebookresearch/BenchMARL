@@ -1,0 +1,9 @@
+defaults:
+  - _self_
+  - vmas_balance_config
+
+
+max_steps: 100
+n_agents: 4
+random_package_pos_on_line: True
+package_mass: 5

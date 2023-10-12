@@ -1,0 +1,7 @@
+defaults:
+  - customalgorithm_config
+  - _self_
+
+delay_value: True
+loss_function: "l2"
+my_custom_arg: 3

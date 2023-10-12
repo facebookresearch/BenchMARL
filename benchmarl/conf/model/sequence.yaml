@@ -1,0 +1,15 @@
+defaults:
+  # Here is a list of layers for this model
+  # You can use configs from the "layers" folder
+  - layers@layers.l1: ??? # Example -> mlp
+  - layers@layers.l2: ??? # Example -> mlp
+  - _self_
+
+# A list of ints for the intermediate sizes between layers
+# Should be of length = num_layers - 1
+intermediate_sizes: ??? # Example -> [256]
+
+# You can override your layers for example like this
+# layers:
+#  l1:
+#    num_cells: [4]

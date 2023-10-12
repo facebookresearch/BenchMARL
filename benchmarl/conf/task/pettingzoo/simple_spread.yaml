@@ -1,0 +1,8 @@
+defaults:
+  - _self_
+  - pettingzoo_simple_spread_config
+
+task: "simple_spread_v3"
+max_cycles: 100
+N: 3
+local_ratio: 0.5

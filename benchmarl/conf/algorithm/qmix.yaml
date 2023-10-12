@@ -1,0 +1,8 @@
+defaults:
+  - qmix_config
+  - _self_
+
+
+mixing_embed_dim: 32
+delay_value: True
+loss_function: "l2"

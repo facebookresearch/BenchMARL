@@ -1,0 +1,57 @@
+defaults:
+  - experiment: base_experiment
+  - algorithm: ???
+  - task: ???
+  - model: layers/mlp
+  - model@critic_model: layers/mlp
+  - _self_
+
+hydra:
+  searchpath:
+   # Tells hydra to add the default benchmarl configuration to its path
+    - pkg://benchmarl/conf
+
+seed: 0
+
+experiment:
+  sampling_device: "cpu"
+  train_device: "cuda"
+
+  share_policy_params: True
+  prefer_continuous_actions: True
+
+  gamma: 0.99
+  lr: 0.00005
+  clip_grad_norm: True
+  clip_grad_val: 5
+
+  soft_target_update: True
+  polyak_tau: 0.005
+  hard_target_update_frequency: 5
+
+  exploration_eps_init: 0.8
+  exploration_eps_end: 0.01
+  exploration_anneal_frames: 1_000_000
+
+  max_n_iters: null
+  max_n_frames: 20_000_000
+
+  on_policy_collected_frames_per_batch: 6000
+  on_policy_n_envs_per_worker: 10
+  on_policy_n_minibatch_iters: 45
+  on_policy_minibatch_size: 400
+
+  off_policy_collected_frames_per_batch: 6000
+  off_policy_n_envs_per_worker: 10
+  off_policy_n_optimizer_steps: 100
+  off_policy_train_batch_size: 100
+  off_policy_memory_size: 1_000_000
+
+  evaluation: True
+  render: True
+  evaluation_interval: 300_000
+  evaluation_episodes: 20
+
+  save_folder: null
+  restore_file: null
+  checkpoint_interval: 600_000

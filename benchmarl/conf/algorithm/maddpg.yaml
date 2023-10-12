@@ -1,0 +1,9 @@
+defaults:
+  - maddpg_config
+  - _self_
+
+
+share_param_critic: True
+
+loss_function: "l2"
+delay_value: True
