@@ -451,3 +451,5 @@ that you can implement to see what's going on during training such
 as `on_batch_collected`, `on_train_end`, and `on_evaluation_end`.
 
 [![Example](https://img.shields.io/badge/Example-blue.svg)](examples/callback/custom_callback.py)
+
+<iframe src="https://wandb.ai/benchmarl/public/reports/VMAS-Benchmarks--Vmlldzo1NjUyODI4" style="border:none;height:1024px;width:100%">
