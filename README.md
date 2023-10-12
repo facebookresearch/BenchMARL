@@ -453,3 +453,6 @@ that you can implement to see what's going on during training such
 as `on_batch_collected`, `on_train_end`, and `on_evaluation_end`.
 
 [![Example](https://img.shields.io/badge/Example-blue.svg)](examples/callback/custom_callback.py)
+
+# License
+BenchMARL is licensed under the MIT License. See [LICENSE](LICENSE) for details.
