@@ -9,9 +9,7 @@ python benchmarl/run.py algorithm=mappo task=vmas/balance
 ```
 
 [![Examples](https://img.shields.io/badge/Examples-blue.svg)](examples) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/facebookresearch/BenchMARL/blob/main/notebooks/run.ipynb)
-<!--
-[![Static Badge](https://img.shields.io/badge/Benchmarks-Wandb-yellow)]()
--->
+[![Static Badge](https://img.shields.io/badge/Benchmarks-Wandb-yellow)](https://wandb.ai/benchmarl/public/reportlist)
 
 ### What is BenchMARL 🧐?
 
@@ -264,9 +262,12 @@ In the [fine_tuned](fine_tuned) folder we are collecting some tested hyperparame
 specific environments to enable users to bootstrap their benchmarking.
 You can just run the scripts in this folder to automatically use the proposed hyperparameters.
 
-Currently available are:
+We will tune benchmarks for you and publish the config and benchmarking plots on
+[Wandb](https://wandb.ai/benchmarl/public/reportlist) publicly
 
-- **VMAS**:  [![Conf](https://img.shields.io/badge/Conf-purple.svg)](fine_tuned/vmas/conf/config.yaml) <!-- [![Static Badge](https://img.shields.io/badge/Plots-Wandb-yellow)]() -->
+Currently available ones are:
+
+- **VMAS**:  [![Conf](https://img.shields.io/badge/Conf-purple.svg)](fine_tuned/vmas/conf/config.yaml)  [![Static Badge](https://img.shields.io/badge/Benchmarks-Wandb-yellow)](https://api.wandb.ai/links/benchmarl/xf5h3p3m)
 
 ## Reporting and plotting
 
@@ -451,5 +452,3 @@ that you can implement to see what's going on during training such
 as `on_batch_collected`, `on_train_end`, and `on_evaluation_end`.
 
 [![Example](https://img.shields.io/badge/Example-blue.svg)](examples/callback/custom_callback.py)
-
-<iframe src="https://wandb.ai/benchmarl/public/reports/VMAS-Benchmarks--Vmlldzo1NjUyODI4" style="border:none;height:1024px;width:100%">
