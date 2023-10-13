@@ -484,7 +484,7 @@ class Experiment(CallbackNotifier):
             self.folder_name = folder_name / self.name
             if (
                 len(self.config.loggers)
-                or self.config.get_checkpoint_interval(self.on_policy) > 0
+                or self.config.checkpoint_interval > 0
                 or self.config.create_json
             ):
                 self.folder_name.mkdir(parents=False, exist_ok=False)
