@@ -26,6 +26,21 @@ if _has_marl_eval:
     )
     from matplotlib import pyplot as plt
 
+def _patch_dict(in_dict):
+    for task_dict in in_dict.values():
+        for algorithm_dict in task_dict.values():
+            for seed_dict in algorithm_dict.values():
+                for seed_key in list(seed_dict.keys()):
+                    step_dict = seed_dict[seed_key]
+                    new_step_dict = {}
+                    for step_key, step_data in step_dict.items():
+                        if step_key == "absolute_metrics":
+                            new_step_dict[step_key] = step_data
+                        else:
+                            step = step_data["step_count"]
+                            new_step_dict[f"step_{step}"] = step_data
+                    seed_dict[seed_key] = new_step_dict
+    return in_dict
 
 def get_raw_dict_from_multirun_folder(multirun_folder: str) -> Dict:
     return load_and_merge_json_dicts(_get_json_files_from_multirun(multirun_folder))
