@@ -273,6 +273,13 @@ Currently available ones are:
 
 - **VMAS**:  [![Conf](https://img.shields.io/badge/Conf-purple.svg)](fine_tuned/vmas/conf/config.yaml)  [![Static Badge](https://img.shields.io/badge/Benchmarks-Wandb-yellow)](https://api.wandb.ai/links/benchmarl/xf5h3p3m)
 
+In the following, we report a table of the results:
+
+| **<p align="center">Environment</p>** | **<p align="center">Sample efficiency curves (all tasks)</p>**                            | **<p align="center">Performance profile</p>**                                             | **<p align="center">Aggregate scores</p>**                                                |
+|---------------------------------------|-------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|
+| VMAS                                  | <img src="https://drive.google.com/uc?export=view&id=1fzfFn0q54gsALRAwmqD1hRTqQIadGPoE"/> | <img src="https://drive.google.com/uc?export=view&id=151pSR2sBluSpWiYxtq3jNX0tfE0vgAuR"/> | <img src="https://drive.google.com/uc?export=view&id=1q2So9V6sL8NHMtj6vL-S3KyzZi11Vfia"/> |
+
+
 ## Reporting and plotting
 
 Reporting and plotting is compatible with [marl-eval](https://github.com/instadeepai/marl-eval). 
@@ -283,8 +290,10 @@ your benchmarks.  No more struggling with matplotlib and latex!
 
 [![Example](https://img.shields.io/badge/Example-blue.svg)](examples/plotting)
 
-![aggregate_scores](https://drive.google.com/uc?export=view&id=1-f3NolMSjsWppCSXv_DJcs_GUD_fv7vO)
-![sample_efficiancy](https://drive.google.com/uc?export=view&id=1FK37EfiqD3AQXWlQj7HQCkQDRNe2TuLy)
+![aggregate_scores](https://drive.google.com/uc?export=view&id=1q2So9V6sL8NHMtj6vL-S3KyzZi11Vfia)
+![sample_efficiancy](https://drive.google.com/uc?export=view&id=1fzfFn0q54gsALRAwmqD1hRTqQIadGPoE)
+![performace_profile](https://drive.google.com/uc?export=view&id=151pSR2sBluSpWiYxtq3jNX0tfE0vgAuR)
+
 
 ## Extending
 One of the core tenets of BenchMARL is allowing users to leverage the existing algorithm
