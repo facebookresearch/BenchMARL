@@ -4,6 +4,8 @@
 # BenchMARL
 [![tests](https://github.com/facebookresearch/BenchMARL/actions/workflows/unit_tests.yml/badge.svg)](test)
 [![Python](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10-blue.svg)](https://www.python.org/downloads/)
+<a href="https://pypi.org/project/benchmarl"><img src="https://img.shields.io/pypi/v/benchmarl" alt="pypi version"></a>
+[![Downloads](https://static.pepy.tech/personalized-badge/benchmarl?period=total&units=international_system&left_color=grey&right_color=blue&left_text=Downloads)](https://pepy.tech/project/benchmarl)
 
 ```bash
 python benchmarl/run.py algorithm=mappo task=vmas/balance
@@ -82,7 +84,7 @@ For more details, or for installing nightly versions, see the
 #### Install BenchMARL
 You can just install it from github
 ```bash
-pip install git+https://github.com/facebookresearch/BenchMARL
+pip install benchmarl
 ```
 Or also clone it locally to access the configs and scripts
 ```bash
