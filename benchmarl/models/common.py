@@ -87,7 +87,6 @@ class Model(TensorDictModuleBase, ABC):
         share_params: bool,
         device: DEVICE_TYPING,
         experiment,
-        **kwargs,
     ):
         TensorDictModuleBase.__init__(self)
 
