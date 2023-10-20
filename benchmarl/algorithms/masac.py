@@ -121,7 +121,6 @@ class Masac(Algorithm):
     def _get_policy_for_loss(
         self, group: str, model_config: ModelConfig, continuous: bool
     ) -> TensorDictModule:
-
         n_agents = len(self.group_map[group])
         if continuous:
             logits_shape = list(self.action_spec[group, "action"].shape)
@@ -162,6 +161,7 @@ class Masac(Algorithm):
             centralised=False,
             share_params=self.experiment_config.share_policy_params,
             device=self.device,
+            experiment=self.experiment,
         )
 
         if continuous:
@@ -279,6 +279,7 @@ class Masac(Algorithm):
                 agent_group=group,
                 share_params=self.share_param_critic,
                 device=self.device,
+                experiment=self.experiment,
             )
 
         else:
@@ -303,6 +304,7 @@ class Masac(Algorithm):
                 agent_group=group,
                 share_params=self.share_param_critic,
                 device=self.device,
+                experiment=self.experiment,
             )
         if self.share_param_critic:
             expand_module = TensorDictModule(
@@ -369,11 +371,11 @@ class Masac(Algorithm):
                     agent_group=group,
                     share_params=self.share_param_critic,
                     device=self.device,
+                    experiment=self.experiment,
                 )
             )
 
         else:
-
             modules.append(
                 TensorDictModule(
                     lambda obs, action: torch.cat([obs, action], dim=-1),
@@ -410,6 +412,7 @@ class Masac(Algorithm):
                     agent_group=group,
                     share_params=self.share_param_critic,
                     device=self.device,
+                    experiment=self.experiment,
                 )
             )
 
@@ -429,7 +432,6 @@ class Masac(Algorithm):
 
 @dataclass
 class MasacConfig(AlgorithmConfig):
-
     share_param_critic: bool = MISSING
 
     num_qvalue_nets: int = MISSING

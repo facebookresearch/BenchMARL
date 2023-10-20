@@ -73,6 +73,7 @@ class Model(TensorDictModuleBase, ABC):
             or a different set of parameters for each agent.
             This is independent of the other options as it is possible to have different parameters
             for centralized critics with global input.
+        experiment (Experiment): the current Experiment
     """
 
     def __init__(
@@ -85,10 +86,12 @@ class Model(TensorDictModuleBase, ABC):
         centralised: bool,
         share_params: bool,
         device: DEVICE_TYPING,
+        experiment,
         **kwargs,
     ):
         TensorDictModuleBase.__init__(self)
 
+        self.experiment = experiment
         self.input_spec = input_spec
         self.output_spec = output_spec
         self.agent_group = agent_group
@@ -172,7 +175,6 @@ class SequenceModel(Model):
         self,
         models: List[Model],
     ):
-
         super().__init__(
             n_agents=models[0].n_agents,
             input_spec=models[0].input_spec,
@@ -182,6 +184,7 @@ class SequenceModel(Model):
             device=models[0].device,
             agent_group=models[0].agent_group,
             input_has_agent_dim=models[0].input_has_agent_dim,
+            experiment=models[0].experiment,
         )
         self.models = TensorDictSequential(*models)
 
@@ -209,6 +212,7 @@ class ModelConfig(ABC):
         centralised: bool,
         share_params: bool,
         device: DEVICE_TYPING,
+        experiment,
     ) -> Model:
         """
         Creates the model from the config.
@@ -231,6 +235,7 @@ class ModelConfig(ABC):
                 or a different set of parameters for each agent.
                 This is independent of the other options as it is possible to have different parameters
                 for centralized critics with global input.
+            experiment (Experiment): the current Experiment
 
         Returns: the Model
 
@@ -245,6 +250,7 @@ class ModelConfig(ABC):
             centralised=centralised,
             share_params=share_params,
             device=device,
+            experiment=experiment,
         )
 
     @staticmethod
@@ -302,7 +308,6 @@ class ModelConfig(ABC):
 
 @dataclass
 class SequenceModelConfig(ModelConfig):
-
     model_configs: Sequence[ModelConfig]
     intermediate_sizes: Sequence[int]
 
@@ -316,8 +321,8 @@ class SequenceModelConfig(ModelConfig):
         centralised: bool,
         share_params: bool,
         device: DEVICE_TYPING,
+        experiment,
     ) -> Model:
-
         n_models = len(self.model_configs)
         if not n_models > 0:
             raise ValueError(
@@ -351,6 +356,7 @@ class SequenceModelConfig(ModelConfig):
                 centralised=centralised,
                 share_params=share_params,
                 device=device,
+                experiment=experiment,
             )
         ]
 
@@ -364,6 +370,7 @@ class SequenceModelConfig(ModelConfig):
                 centralised=next_centralised,
                 share_params=share_params,
                 device=device,
+                experiment=experiment,
             )
             for i in range(1, n_models)
         ]

@@ -101,6 +101,7 @@ class Iddpg(Algorithm):
                 centralised=False,
                 share_params=self.experiment_config.share_policy_params,
                 device=self.device,
+                experiment=self.experiment,
             )
 
             policy = ProbabilisticActor(
@@ -217,6 +218,7 @@ class Iddpg(Algorithm):
                 agent_group=group,
                 share_params=self.share_param_critic,
                 device=self.device,
+                experiment=self.experiment,
             )
         )
 

@@ -48,7 +48,6 @@ class Ippo(Algorithm):
     def _get_loss(
         self, group: str, policy_for_loss: TensorDictModule, continuous: bool
     ) -> Tuple[LossModule, bool]:
-
         # Loss
         loss_module = ClipPPOLoss(
             actor=policy_for_loss,
@@ -83,7 +82,6 @@ class Ippo(Algorithm):
     def _get_policy_for_loss(
         self, group: str, model_config: ModelConfig, continuous: bool
     ) -> TensorDictModule:
-
         n_agents = len(self.group_map[group])
         if continuous:
             logits_shape = list(self.action_spec[group, "action"].shape)
@@ -124,6 +122,7 @@ class Ippo(Algorithm):
             centralised=False,
             share_params=self.experiment_config.share_policy_params,
             device=self.device,
+            experiment=self.experiment,
         )
 
         if continuous:
@@ -261,6 +260,7 @@ class Ippo(Algorithm):
             agent_group=group,
             share_params=self.share_param_critic,
             device=self.device,
+            experiment=self.experiment,
         )
 
         return value_module
@@ -268,7 +268,6 @@ class Ippo(Algorithm):
 
 @dataclass
 class IppoConfig(AlgorithmConfig):
-
     share_param_critic: bool = MISSING
     clip_epsilon: float = MISSING
     entropy_coef: float = MISSING

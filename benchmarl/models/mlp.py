@@ -31,6 +31,7 @@ class Mlp(Model):
             centralised=kwargs.pop("centralised"),
             share_params=kwargs.pop("share_params"),
             device=kwargs.pop("device"),
+            experiment=kwargs.pop("experiment"),
         )
 
         self.input_features = self.input_leaf_spec.shape[-1]
