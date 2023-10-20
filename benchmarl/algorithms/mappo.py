@@ -3,6 +3,18 @@
 #  This source code is licensed under the license found in the
 #  LICENSE file in the root directory of this source tree.
 #
+#
+#  This source code is licensed under the license found in the
+#  LICENSE file in the root directory of this source tree.
+#
+#
+#  This source code is licensed under the license found in the
+#  LICENSE file in the root directory of this source tree.
+#
+#
+#  This source code is licensed under the license found in the
+#  LICENSE file in the root directory of this source tree.
+#
 
 from dataclasses import dataclass, MISSING
 from typing import Dict, Iterable, Tuple, Type
@@ -29,6 +41,7 @@ class Mappo(Algorithm):
         critic_coef: float,
         loss_critic_type: str,
         lmbda: float,
+        scale_mapping: str,
         **kwargs
     ):
         super().__init__(**kwargs)
@@ -39,6 +52,7 @@ class Mappo(Algorithm):
         self.critic_coef = critic_coef
         self.loss_critic_type = loss_critic_type
         self.lmbda = lmbda
+        self.scale_mapping = scale_mapping
 
     #############################
     # Overridden abstract methods
@@ -47,7 +61,6 @@ class Mappo(Algorithm):
     def _get_loss(
         self, group: str, policy_for_loss: TensorDictModule, continuous: bool
     ) -> Tuple[LossModule, bool]:
-
         # Loss
         loss_module = ClipPPOLoss(
             actor=policy_for_loss,
@@ -74,7 +87,6 @@ class Mappo(Algorithm):
         return loss_module, False
 
     def _get_parameters(self, group: str, loss: ClipPPOLoss) -> Dict[str, Iterable]:
-
         return {
             "loss_objective": list(loss.actor_params.flatten_keys().values()),
             "loss_critic": list(loss.critic_params.flatten_keys().values()),
@@ -83,7 +95,6 @@ class Mappo(Algorithm):
     def _get_policy_for_loss(
         self, group: str, model_config: ModelConfig, continuous: bool
     ) -> TensorDictModule:
-
         n_agents = len(self.group_map[group])
         if continuous:
             logits_shape = list(self.action_spec[group, "action"].shape)
@@ -128,7 +139,7 @@ class Mappo(Algorithm):
 
         if continuous:
             extractor_module = TensorDictModule(
-                NormalParamExtractor(),
+                NormalParamExtractor(scale_mapping=self.scale_mapping),
                 in_keys=[(group, "logits")],
                 out_keys=[(group, "loc"), (group, "scale")],
             )
@@ -299,13 +310,13 @@ class Mappo(Algorithm):
 
 @dataclass
 class MappoConfig(AlgorithmConfig):
-
     share_param_critic: bool = MISSING
     clip_epsilon: float = MISSING
     entropy_coef: float = MISSING
     critic_coef: float = MISSING
     loss_critic_type: str = MISSING
     lmbda: float = MISSING
+    scale_mapping: str = MISSING
 
     @staticmethod
     def associated_class() -> Type[Algorithm]:
