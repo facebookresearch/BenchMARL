@@ -4,6 +4,8 @@
 # BenchMARL
 [![tests](https://github.com/facebookresearch/BenchMARL/actions/workflows/unit_tests.yml/badge.svg)](test)
 [![Python](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10-blue.svg)](https://www.python.org/downloads/)
+<a href="https://pypi.org/project/benchmarl"><img src="https://img.shields.io/pypi/v/benchmarl" alt="pypi version"></a>
+[![Downloads](https://static.pepy.tech/personalized-badge/benchmarl?period=total&units=international_system&left_color=grey&right_color=blue&left_text=Downloads)](https://pepy.tech/project/benchmarl)
 
 ```bash
 python benchmarl/run.py algorithm=mappo task=vmas/balance
@@ -12,7 +14,7 @@ python benchmarl/run.py algorithm=mappo task=vmas/balance
 
 
 [![Examples](https://img.shields.io/badge/Examples-blue.svg)](examples) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/facebookresearch/BenchMARL/blob/main/notebooks/run.ipynb)
-[![Static Badge](https://img.shields.io/badge/Benchmarks-Wandb-yellow)](https://wandb.ai/benchmarl/public/reportlist)
+[![Static Badge](https://img.shields.io/badge/Benchmarks-Wandb-yellow)](https://wandb.ai/matteobettini/benchmarl-public/reportlist)
 
 ### What is BenchMARL 🧐?
 
@@ -82,7 +84,7 @@ For more details, or for installing nightly versions, see the
 #### Install BenchMARL
 You can just install it from github
 ```bash
-pip install git+https://github.com/facebookresearch/BenchMARL
+pip install benchmarl
 ```
 Or also clone it locally to access the configs and scripts
 ```bash
@@ -267,11 +269,11 @@ specific environments to enable users to bootstrap their benchmarking.
 You can just run the scripts in this folder to automatically use the proposed hyperparameters.
 
 We will tune benchmarks for you and publish the config and benchmarking plots on
-[Wandb](https://wandb.ai/benchmarl/public/reportlist) publicly
+[Wandb](https://wandb.ai/matteobettini/benchmarl-public/reportlist) publicly
 
 Currently available ones are:
 
-- **VMAS**:  [![Conf](https://img.shields.io/badge/Conf-purple.svg)](fine_tuned/vmas/conf/config.yaml)  [![Static Badge](https://img.shields.io/badge/Benchmarks-Wandb-yellow)](https://api.wandb.ai/links/benchmarl/xf5h3p3m)
+- **VMAS**:  [![Conf](https://img.shields.io/badge/Conf-purple.svg)](fine_tuned/vmas/conf/config.yaml)  [![Static Badge](https://img.shields.io/badge/Benchmarks-Wandb-yellow)](https://api.wandb.ai/links/matteobettini/r5744vas)
 
 In the following, we report a table of the results:
 
