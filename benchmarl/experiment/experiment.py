@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import importlib
 import os
-
 import time
 from collections import OrderedDict
 from dataclasses import dataclass, MISSING
@@ -27,7 +26,6 @@ from tqdm import tqdm
 
 from benchmarl.algorithms.common import AlgorithmConfig
 from benchmarl.environments import Task
-
 from benchmarl.experiment.callback import Callback, CallbackNotifier
 from benchmarl.experiment.logger import Logger
 from benchmarl.models.common import ModelConfig
@@ -406,16 +404,7 @@ class Experiment(CallbackNotifier):
         self.test_env = test_env.to(self.config.sampling_device)
 
     def _setup_algorithm(self):
-        self.algorithm = self.algorithm_config.get_algorithm(
-            experiment_config=self.config,
-            model_config=self.model_config,
-            critic_model_config=self.critic_model_config,
-            observation_spec=self.observation_spec,
-            action_spec=self.action_spec,
-            state_spec=self.state_spec,
-            action_mask_spec=self.action_mask_spec,
-            group_map=self.group_map,
-        )
+        self.algorithm = self.algorithm_config.get_algorithm(experiment=self)
         self.replay_buffers = {
             group: self.algorithm.get_replay_buffer(
                 group=group,
@@ -493,7 +482,6 @@ class Experiment(CallbackNotifier):
             self.name = self.folder_name.name
 
     def _setup_logger(self):
-
         self.logger = Logger(
             experiment_name=self.name,
             folder_name=str(self.folder_name),
@@ -528,7 +516,6 @@ class Experiment(CallbackNotifier):
             raise err
 
     def _collection_loop(self):
-
         pbar = tqdm(
             initial=self.n_iters_performed,
             total=self.config.get_max_n_iters(self.on_policy),
@@ -537,7 +524,6 @@ class Experiment(CallbackNotifier):
 
         # Training/collection iterations
         for batch in self.collector:
-
             # Logging collection
             collection_time = time.time() - sampling_start
             current_frames = batch.numel()

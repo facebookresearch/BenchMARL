@@ -31,6 +31,7 @@ class CustomIqlAlgorithm(Algorithm):
 
         # In all the class you have access to a lot of extra things like
         self.my_custom_method()  # Custom methods
+        _ = self.experiment  # Experiment class
         _ = self.experiment_config  # Experiment config
         _ = self.model_config  # Policy config
         _ = self.critic_model_config  # Eventual critic config
@@ -156,7 +157,6 @@ class CustomIqlAlgorithm(Algorithm):
     def _get_policy_for_collection(
         self, policy_for_loss: TensorDictModule, group: str, continuous: bool
     ) -> TensorDictModule:
-
         if self.action_mask_spec is not None:
             action_mask_key = (group, "action_mask")
         else:
