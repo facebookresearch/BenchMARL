@@ -269,7 +269,7 @@ specific environments to enable users to bootstrap their benchmarking.
 You can just run the scripts in this folder to automatically use the proposed hyperparameters.
 
 We will tune benchmarks for you and publish the config and benchmarking plots on
-[Wandb](https://wandb.ai/benchmarl/public/reportlist) publicly
+[Wandb](https://wandb.ai/matteobettini/benchmarl-public/reportlist) publicly
 
 Currently available ones are:
 
