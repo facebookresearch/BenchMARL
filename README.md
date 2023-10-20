@@ -14,7 +14,7 @@ python benchmarl/run.py algorithm=mappo task=vmas/balance
 
 
 [![Examples](https://img.shields.io/badge/Examples-blue.svg)](examples) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/facebookresearch/BenchMARL/blob/main/notebooks/run.ipynb)
-[![Static Badge](https://img.shields.io/badge/Benchmarks-Wandb-yellow)](https://wandb.ai/benchmarl/public/reportlist)
+[![Static Badge](https://img.shields.io/badge/Benchmarks-Wandb-yellow)](https://wandb.ai/matteobettini/benchmarl-public/reportlist)
 
 ### What is BenchMARL 🧐?
 
@@ -273,7 +273,7 @@ We will tune benchmarks for you and publish the config and benchmarking plots on
 
 Currently available ones are:
 
-- **VMAS**:  [![Conf](https://img.shields.io/badge/Conf-purple.svg)](fine_tuned/vmas/conf/config.yaml)  [![Static Badge](https://img.shields.io/badge/Benchmarks-Wandb-yellow)](https://api.wandb.ai/links/benchmarl/xf5h3p3m)
+- **VMAS**:  [![Conf](https://img.shields.io/badge/Conf-purple.svg)](fine_tuned/vmas/conf/config.yaml)  [![Static Badge](https://img.shields.io/badge/Benchmarks-Wandb-yellow)](https://api.wandb.ai/links/matteobettini/r5744vas)
 
 In the following, we report a table of the results:
 
