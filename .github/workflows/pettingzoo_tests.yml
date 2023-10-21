@@ -37,3 +37,5 @@ jobs:
     - name: Test with pytest
       run: |
         xvfb-run -s "-screen 0 1024x768x24" pytest test/test_pettingzoo.py --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml --cov-report=html
+    - name: Upload test coverage
+      uses: codecov/codecov-action@v2
