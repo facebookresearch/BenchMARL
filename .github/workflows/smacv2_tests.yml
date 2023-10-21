@@ -43,3 +43,5 @@ jobs:
         echo 'SC2PATH is set to ' "$SC2PATH"
 
         pytest test/test_smacv2.py --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml --cov-report=html
+    - name: Upload test coverage
+      uses: codecov/codecov-action@v2
