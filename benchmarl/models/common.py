@@ -73,6 +73,7 @@ class Model(TensorDictModuleBase, ABC):
             or a different set of parameters for each agent.
             This is independent of the other options as it is possible to have different parameters
             for centralized critics with global input.
+        action_spec (CompositeSpec): The action spec of the environment
     """
 
     def __init__(
@@ -85,7 +86,7 @@ class Model(TensorDictModuleBase, ABC):
         centralised: bool,
         share_params: bool,
         device: DEVICE_TYPING,
-        **kwargs,
+        action_spec: CompositeSpec,
     ):
         TensorDictModuleBase.__init__(self)
 
@@ -97,6 +98,7 @@ class Model(TensorDictModuleBase, ABC):
         self.share_params = share_params
         self.device = device
         self.n_agents = n_agents
+        self.action_spec = action_spec
 
         self.in_keys = list(self.input_spec.keys(True, True))
         self.out_keys = list(self.output_spec.keys(True, True))
@@ -181,6 +183,7 @@ class SequenceModel(Model):
             device=models[0].device,
             agent_group=models[0].agent_group,
             input_has_agent_dim=models[0].input_has_agent_dim,
+            action_spec=models[0].action_spec,
         )
         self.models = TensorDictSequential(*models)
 
@@ -208,6 +211,7 @@ class ModelConfig(ABC):
         centralised: bool,
         share_params: bool,
         device: DEVICE_TYPING,
+        action_spec: CompositeSpec,
     ) -> Model:
         """
         Creates the model from the config.
@@ -230,6 +234,7 @@ class ModelConfig(ABC):
                 or a different set of parameters for each agent.
                 This is independent of the other options as it is possible to have different parameters
                 for centralized critics with global input.
+            action_spec (CompositeSpec): The action spec of the environment
 
         Returns: the Model
 
@@ -244,6 +249,7 @@ class ModelConfig(ABC):
             centralised=centralised,
             share_params=share_params,
             device=device,
+            action_spec=action_spec,
         )
 
     @staticmethod
@@ -314,6 +320,7 @@ class SequenceModelConfig(ModelConfig):
         centralised: bool,
         share_params: bool,
         device: DEVICE_TYPING,
+        action_spec: CompositeSpec,
     ) -> Model:
         n_models = len(self.model_configs)
         if not n_models > 0:
@@ -348,6 +355,7 @@ class SequenceModelConfig(ModelConfig):
                 centralised=centralised,
                 share_params=share_params,
                 device=device,
+                action_spec=action_spec,
             )
         ]
 
@@ -361,6 +369,7 @@ class SequenceModelConfig(ModelConfig):
                 centralised=next_centralised,
                 share_params=share_params,
                 device=device,
+                action_spec=action_spec,
             )
             for i in range(1, n_models)
         ]

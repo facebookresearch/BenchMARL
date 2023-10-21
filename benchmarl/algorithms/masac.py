@@ -163,6 +163,7 @@ class Masac(Algorithm):
             centralised=False,
             share_params=self.experiment_config.share_policy_params,
             device=self.device,
+            action_spec=self.action_spec,
         )
 
         if continuous:
@@ -280,6 +281,7 @@ class Masac(Algorithm):
                 agent_group=group,
                 share_params=self.share_param_critic,
                 device=self.device,
+                action_spec=self.action_spec,
             )
 
         else:
@@ -304,6 +306,7 @@ class Masac(Algorithm):
                 agent_group=group,
                 share_params=self.share_param_critic,
                 device=self.device,
+                action_spec=self.action_spec,
             )
         if self.share_param_critic:
             expand_module = TensorDictModule(
@@ -370,6 +373,7 @@ class Masac(Algorithm):
                     agent_group=group,
                     share_params=self.share_param_critic,
                     device=self.device,
+                    action_spec=self.action_spec,
                 )
             )
 
@@ -410,6 +414,7 @@ class Masac(Algorithm):
                     agent_group=group,
                     share_params=self.share_param_critic,
                     device=self.device,
+                    action_spec=self.action_spec,
                 )
             )
 

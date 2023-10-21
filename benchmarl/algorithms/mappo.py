@@ -123,6 +123,7 @@ class Mappo(Algorithm):
             centralised=False,
             share_params=self.experiment_config.share_policy_params,
             device=self.device,
+            action_spec=self.action_spec,
         )
 
         if continuous:
@@ -258,6 +259,7 @@ class Mappo(Algorithm):
                 agent_group=group,
                 share_params=self.share_param_critic,
                 device=self.device,
+                action_spec=self.action_spec,
             )
 
         else:
@@ -282,6 +284,7 @@ class Mappo(Algorithm):
                 agent_group=group,
                 share_params=self.share_param_critic,
                 device=self.device,
+                action_spec=self.action_spec,
             )
         if self.share_param_critic:
             expand_module = TensorDictModule(
