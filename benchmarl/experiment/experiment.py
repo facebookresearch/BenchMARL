@@ -18,7 +18,7 @@ import torch
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictSequential
 from torchrl.collectors import SyncDataCollector
-from torchrl.envs import RewardSum, SerialEnv, TransformedEnv
+from torchrl.envs import SerialEnv, TransformedEnv
 from torchrl.envs.transforms import Compose
 from torchrl.envs.utils import ExplorationType, set_exploration_type
 from torchrl.record.loggers import generate_exp_name
@@ -390,7 +390,7 @@ class Experiment(CallbackNotifier):
         self.group_map = self.task.group_map(test_env)
         self.max_steps = self.task.max_steps(test_env)
 
-        transforms = [RewardSum()]
+        transforms = [self.task.get_reward_sum_transform(test_env)]
         transform = Compose(*transforms)
 
         if test_env.batch_size == ():
