@@ -39,6 +39,7 @@ class CustomModel(Model):
         # And access some of the ones already available to your module
         _ = self.input_spec  # Like its input_spec
         _ = self.output_spec  # or output_spec
+        _ = self.action_spec  # the action spec of the env
         _ = self.agent_group  # the name of the agent group the model is for
         _ = self.n_agents  # or the number of agents this module is for
 
