@@ -4,4 +4,7 @@ API
 .. autosummary::
    :toctree: generated
 
-   benchmarl
+   benchmarl.algorithms
+   benchmarl.models
+   benchmarl.experiment
+   benchmarl.environments
