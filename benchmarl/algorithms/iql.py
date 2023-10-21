@@ -62,7 +62,6 @@ class Iql(Algorithm):
     def _get_policy_for_loss(
         self, group: str, model_config: ModelConfig, continuous: bool
     ) -> TensorDictModule:
-
         n_agents = len(self.group_map[group])
         logits_shape = [
             *self.action_spec[group, "action"].shape,
@@ -99,6 +98,7 @@ class Iql(Algorithm):
             centralised=False,
             share_params=self.experiment_config.share_policy_params,
             device=self.device,
+            action_spec=self.action_spec,
         )
         if self.action_mask_spec is not None:
             action_mask_key = (group, "action_mask")
@@ -175,7 +175,6 @@ class Iql(Algorithm):
 
 @dataclass
 class IqlConfig(AlgorithmConfig):
-
     delay_value: bool = MISSING
     loss_function: str = MISSING
 

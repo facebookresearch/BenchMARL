@@ -30,6 +30,7 @@ class Ippo(Algorithm):
         critic_coef: float,
         loss_critic_type: str,
         lmbda: float,
+        scale_mapping: str,
         **kwargs
     ):
         super().__init__(**kwargs)
@@ -40,6 +41,7 @@ class Ippo(Algorithm):
         self.critic_coef = critic_coef
         self.loss_critic_type = loss_critic_type
         self.lmbda = lmbda
+        self.scale_mapping = scale_mapping
 
     #############################
     # Overridden abstract methods
@@ -48,7 +50,6 @@ class Ippo(Algorithm):
     def _get_loss(
         self, group: str, policy_for_loss: TensorDictModule, continuous: bool
     ) -> Tuple[LossModule, bool]:
-
         # Loss
         loss_module = ClipPPOLoss(
             actor=policy_for_loss,
@@ -83,7 +84,6 @@ class Ippo(Algorithm):
     def _get_policy_for_loss(
         self, group: str, model_config: ModelConfig, continuous: bool
     ) -> TensorDictModule:
-
         n_agents = len(self.group_map[group])
         if continuous:
             logits_shape = list(self.action_spec[group, "action"].shape)
@@ -124,11 +124,12 @@ class Ippo(Algorithm):
             centralised=False,
             share_params=self.experiment_config.share_policy_params,
             device=self.device,
+            action_spec=self.action_spec,
         )
 
         if continuous:
             extractor_module = TensorDictModule(
-                NormalParamExtractor(),
+                NormalParamExtractor(scale_mapping=self.scale_mapping),
                 in_keys=[(group, "logits")],
                 out_keys=[(group, "loc"), (group, "scale")],
             )
@@ -261,6 +262,7 @@ class Ippo(Algorithm):
             agent_group=group,
             share_params=self.share_param_critic,
             device=self.device,
+            action_spec=self.action_spec,
         )
 
         return value_module
@@ -268,13 +270,13 @@ class Ippo(Algorithm):
 
 @dataclass
 class IppoConfig(AlgorithmConfig):
-
     share_param_critic: bool = MISSING
     clip_epsilon: float = MISSING
     entropy_coef: float = MISSING
     critic_coef: float = MISSING
     loss_critic_type: str = MISSING
     lmbda: float = MISSING
+    scale_mapping: str = MISSING
 
     @staticmethod
     def associated_class() -> Type[Algorithm]:

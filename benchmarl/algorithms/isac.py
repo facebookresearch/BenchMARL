@@ -38,6 +38,7 @@ class Isac(Algorithm):
         min_alpha: Optional[float],
         max_alpha: Optional[float],
         fixed_alpha: bool,
+        scale_mapping: str,
         **kwargs
     ):
         super().__init__(**kwargs)
@@ -52,6 +53,7 @@ class Isac(Algorithm):
         self.min_alpha = min_alpha
         self.max_alpha = max_alpha
         self.fixed_alpha = fixed_alpha
+        self.scale_mapping = scale_mapping
 
     #############################
     # Overridden abstract methods
@@ -126,7 +128,6 @@ class Isac(Algorithm):
     def _get_policy_for_loss(
         self, group: str, model_config: ModelConfig, continuous: bool
     ) -> TensorDictModule:
-
         n_agents = len(self.group_map[group])
         if continuous:
             logits_shape = list(self.action_spec[group, "action"].shape)
@@ -167,11 +168,12 @@ class Isac(Algorithm):
             centralised=False,
             share_params=self.experiment_config.share_policy_params,
             device=self.device,
+            action_spec=self.action_spec,
         )
 
         if continuous:
             extractor_module = TensorDictModule(
-                NormalParamExtractor(),
+                NormalParamExtractor(scale_mapping=self.scale_mapping),
                 in_keys=[(group, "logits")],
                 out_keys=[(group, "loc"), (group, "scale")],
             )
@@ -291,6 +293,7 @@ class Isac(Algorithm):
             agent_group=group,
             share_params=self.share_param_critic,
             device=self.device,
+            action_spec=self.action_spec,
         )
 
         return value_module
@@ -346,6 +349,7 @@ class Isac(Algorithm):
                 agent_group=group,
                 share_params=self.share_param_critic,
                 device=self.device,
+                action_spec=self.action_spec,
             )
         )
 
@@ -354,7 +358,6 @@ class Isac(Algorithm):
 
 @dataclass
 class IsacConfig(AlgorithmConfig):
-
     share_param_critic: bool = MISSING
 
     num_qvalue_nets: int = MISSING
@@ -367,6 +370,7 @@ class IsacConfig(AlgorithmConfig):
     min_alpha: Optional[float] = MISSING
     max_alpha: Optional[float] = MISSING
     fixed_alpha: bool = MISSING
+    scale_mapping: str = MISSING
 
     @staticmethod
     def associated_class() -> Type[Algorithm]:

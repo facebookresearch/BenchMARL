@@ -62,7 +62,6 @@ class Maddpg(Algorithm):
             )
 
     def _get_parameters(self, group: str, loss: LossModule) -> Dict[str, Iterable]:
-
         return {
             "loss_actor": list(loss.actor_network_params.flatten_keys().values()),
             "loss_value": list(loss.value_network_params.flatten_keys().values()),
@@ -103,6 +102,7 @@ class Maddpg(Algorithm):
                 centralised=False,
                 share_params=self.experiment_config.share_policy_params,
                 device=self.device,
+                action_spec=self.action_spec,
             )
 
             policy = ProbabilisticActor(
@@ -222,11 +222,11 @@ class Maddpg(Algorithm):
                     agent_group=group,
                     share_params=self.share_param_critic,
                     device=self.device,
+                    action_spec=self.action_spec,
                 )
             )
 
         else:
-
             modules.append(
                 TensorDictModule(
                     lambda obs, action: torch.cat([obs, action], dim=-1),
@@ -263,6 +263,7 @@ class Maddpg(Algorithm):
                     agent_group=group,
                     share_params=self.share_param_critic,
                     device=self.device,
+                    action_spec=self.action_spec,
                 )
             )
 
@@ -282,7 +283,6 @@ class Maddpg(Algorithm):
 
 @dataclass
 class MaddpgConfig(AlgorithmConfig):
-
     share_param_critic: bool = MISSING
 
     loss_function: str = MISSING

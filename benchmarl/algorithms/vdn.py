@@ -59,7 +59,6 @@ class Vdn(Algorithm):
             return loss_module, True
 
     def _get_parameters(self, group: str, loss: LossModule) -> Dict[str, Iterable]:
-
         return {
             "loss": loss.parameters(),
         }
@@ -67,7 +66,6 @@ class Vdn(Algorithm):
     def _get_policy_for_loss(
         self, group: str, model_config: ModelConfig, continuous: bool
     ) -> TensorDictModule:
-
         n_agents = len(self.group_map[group])
         logits_shape = [
             *self.action_spec[group, "action"].shape,
@@ -104,6 +102,7 @@ class Vdn(Algorithm):
             centralised=False,
             share_params=self.experiment_config.share_policy_params,
             device=self.device,
+            action_spec=self.action_spec,
         )
         if self.action_mask_spec is not None:
             action_mask_key = (group, "action_mask")
@@ -175,7 +174,6 @@ class Vdn(Algorithm):
     #####################
 
     def get_mixer(self, group: str) -> TensorDictModule:
-
         n_agents = len(self.group_map[group])
         mixer = TensorDictModule(
             module=VDNMixer(
@@ -191,7 +189,6 @@ class Vdn(Algorithm):
 
 @dataclass
 class VdnConfig(AlgorithmConfig):
-
     delay_value: bool = MISSING
     loss_function: str = MISSING
 

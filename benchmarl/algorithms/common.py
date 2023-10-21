@@ -7,12 +7,11 @@
 import pathlib
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Type
+from typing import Any, Dict, Iterable, Optional, Tuple, Type
 
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModule, TensorDictSequential
 from torchrl.data import (
-    CompositeSpec,
     DiscreteTensorSpec,
     LazyTensorStorage,
     OneHotDiscreteTensorSpec,
@@ -34,40 +33,22 @@ class Algorithm(ABC):
     and all abstract methods should be implemented.
 
      Args:
-        experiment_config (ExperimentConfig): the configuration dataclass for the experiment
-        model_config (ModelConfig): the configuration dataclass for the policy
-        critic_model_config (ModelConfig): the configuration dataclass for the (eventual) critic
-        observation_spec (CompositeSpec): the observation spec of the task
-        action_spec (CompositeSpec): the action spec of the task
-        state_spec (CompositeSpec): the state spec of the task
-        action_mask_spec (CompositeSpec): the action_mask spec of the task
-        group_map (Dictionary): the group map of the task
-        on_policy (bool): whether the algorithm has to be trained on policy
+        experiment (Experiment): the experiment class
     """
 
-    def __init__(
-        self,
-        experiment_config: "DictConfig",  # noqa: F821
-        model_config: ModelConfig,
-        critic_model_config: ModelConfig,
-        observation_spec: CompositeSpec,
-        action_spec: CompositeSpec,
-        state_spec: Optional[CompositeSpec],
-        action_mask_spec: Optional[CompositeSpec],
-        group_map: Dict[str, List[str]],
-        on_policy: bool,
-    ):
-        self.device: DEVICE_TYPING = experiment_config.train_device
+    def __init__(self, experiment):
+        self.experiment = experiment
 
-        self.experiment_config = experiment_config
-        self.model_config = model_config
-        self.critic_model_config = critic_model_config
-        self.on_policy = on_policy
-        self.group_map = group_map
-        self.observation_spec = observation_spec
-        self.action_spec = action_spec
-        self.state_spec = state_spec
-        self.action_mask_spec = action_mask_spec
+        self.device: DEVICE_TYPING = experiment.config.train_device
+        self.experiment_config = experiment.config
+        self.model_config = experiment.model_config
+        self.critic_model_config = experiment.critic_model_config
+        self.on_policy = experiment.on_policy
+        self.group_map = experiment.group_map
+        self.observation_spec = experiment.observation_spec
+        self.action_spec = experiment.action_spec
+        self.state_spec = experiment.state_spec
+        self.action_mask_spec = experiment.action_mask_spec
 
         # Cached values that will be instantiated only once and then remain fixed
         self._losses_and_updaters = {}
@@ -346,43 +327,18 @@ class AlgorithmConfig:
      2. implement all abstract methods
     """
 
-    def get_algorithm(
-        self,
-        experiment_config,
-        model_config: ModelConfig,
-        critic_model_config: ModelConfig,
-        observation_spec: CompositeSpec,
-        action_spec: CompositeSpec,
-        state_spec: CompositeSpec,
-        action_mask_spec: Optional[CompositeSpec],
-        group_map: Dict[str, List[str]],
-    ) -> Algorithm:
+    def get_algorithm(self, experiment) -> Algorithm:
         """
         Main function to turn the config into the associated algorithm
         Args:
-            experiment_config (ExperimentConfig): the configuration dataclass for the experiment
-            model_config (ModelConfig): the configuration dataclass for the policy
-            critic_model_config (ModelConfig): the configuration dataclass for the (eventual) critic
-            observation_spec (CompositeSpec): the observation spec of the task
-            action_spec (CompositeSpec): the action spec of the task
-            state_spec (CompositeSpec): the state spec of the task
-            action_mask_spec (CompositeSpec): the action_mask spec of the task
-            group_map (Dictionary): the group map of the task
+            experiment (Experiment): the experiment class
 
         Returns: the Algorithm
 
         """
         return self.associated_class()(
             **self.__dict__,  # Passes all the custom config parameters
-            experiment_config=experiment_config,
-            model_config=model_config,
-            critic_model_config=critic_model_config,
-            observation_spec=observation_spec,
-            action_spec=action_spec,
-            state_spec=state_spec,
-            action_mask_spec=action_mask_spec,
-            group_map=group_map,
-            on_policy=self.on_policy(),
+            experiment=experiment,
         )
 
     @staticmethod
