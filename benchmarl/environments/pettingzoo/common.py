@@ -146,7 +146,11 @@ class PettingZooTask(Task):
         return env.input_spec["full_action_spec"]
 
     def get_reward_sum_transform(self, env: EnvBase) -> Transform:
-        return RewardSum(reset_keys=["_reset"] * len(self.group_map(env).keys()))
+        if "_reset" in env.reset_keys:
+            reset_keys = ["_reset"] * len(self.group_map(env).keys())
+        else:
+            reset_keys = env.reset_keys
+        return RewardSum(reset_keys=reset_keys)
 
     @staticmethod
     def env_name() -> str:
