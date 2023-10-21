@@ -15,7 +15,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 from tensordict import TensorDictBase
 from torchrl.data import CompositeSpec
-from torchrl.envs import EnvBase
+from torchrl.envs import EnvBase, RewardSum, Transform
 
 from benchmarl.utils import DEVICE_TYPING, read_yaml_config
 
@@ -228,6 +228,15 @@ class Task(Enum):
 
         """
         return {}
+
+    def get_reward_sum_transform(self, env: EnvBase) -> Transform:
+        """
+        Returns the RewardSum transform for the environment
+
+        Args:
+            env (EnvBase): An environment created via self.get_env_fun
+        """
+        return RewardSum(reset_keys=env.reset_keys)
 
     def __repr__(self):
         cls_name = self.__class__.__name__

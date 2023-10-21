@@ -19,7 +19,7 @@ import torch
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictSequential
 from torchrl.collectors import SyncDataCollector
-from torchrl.envs import RewardSum, SerialEnv, TransformedEnv
+from torchrl.envs import SerialEnv, TransformedEnv
 from torchrl.envs.transforms import Compose
 from torchrl.envs.utils import ExplorationType, set_exploration_type
 from torchrl.record.loggers import generate_exp_name
@@ -392,7 +392,7 @@ class Experiment(CallbackNotifier):
         self.group_map = self.task.group_map(test_env)
         self.max_steps = self.task.max_steps(test_env)
 
-        transforms = [RewardSum()]
+        transforms = [self.task.get_reward_sum_transform(test_env)]
         transform = Compose(*transforms)
 
         if test_env.batch_size == ():
@@ -493,7 +493,6 @@ class Experiment(CallbackNotifier):
             self.name = self.folder_name.name
 
     def _setup_logger(self):
-
         self.logger = Logger(
             experiment_name=self.name,
             folder_name=str(self.folder_name),
@@ -528,7 +527,6 @@ class Experiment(CallbackNotifier):
             raise err
 
     def _collection_loop(self):
-
         pbar = tqdm(
             initial=self.n_iters_performed,
             total=self.config.get_max_n_iters(self.on_policy),
@@ -537,7 +535,6 @@ class Experiment(CallbackNotifier):
 
         # Training/collection iterations
         for batch in self.collector:
-
             # Logging collection
             collection_time = time.time() - sampling_start
             current_frames = batch.numel()
