@@ -6,11 +6,22 @@
 
 import importlib
 
+from benchmarl import (
+    algorithms,
+    benchmark,
+    environments,
+    eval_results,
+    experiment,
+    models,
+    utils,
+)
+
+
 _has_hydra = importlib.util.find_spec("hydra") is not None
 
 if _has_hydra:
 
-    def load_hydra_schemas():
+    def _load_hydra_schemas():
         from hydra.core.config_store import ConfigStore
 
         from benchmarl.algorithms import algorithm_config_registry
@@ -28,4 +39,4 @@ if _has_hydra:
         for task_schema_name, task_schema in _task_class_registry.items():
             cs.store(name=task_schema_name, group="task", node=task_schema)
 
-    load_hydra_schemas()
+    _load_hydra_schemas()
