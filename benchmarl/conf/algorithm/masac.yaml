@@ -16,3 +16,4 @@ alpha_init: 1.0
 min_alpha: null
 max_alpha: null
 fixed_alpha: False
+scale_mapping: "biased_softplus_1.0"

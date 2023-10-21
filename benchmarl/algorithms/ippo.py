@@ -30,6 +30,7 @@ class Ippo(Algorithm):
         critic_coef: float,
         loss_critic_type: str,
         lmbda: float,
+        scale_mapping: str,
         **kwargs
     ):
         super().__init__(**kwargs)
@@ -40,6 +41,7 @@ class Ippo(Algorithm):
         self.critic_coef = critic_coef
         self.loss_critic_type = loss_critic_type
         self.lmbda = lmbda
+        self.scale_mapping = scale_mapping
 
     #############################
     # Overridden abstract methods
@@ -122,12 +124,11 @@ class Ippo(Algorithm):
             centralised=False,
             share_params=self.experiment_config.share_policy_params,
             device=self.device,
-            experiment=self.experiment,
         )
 
         if continuous:
             extractor_module = TensorDictModule(
-                NormalParamExtractor(),
+                NormalParamExtractor(scale_mapping=self.scale_mapping),
                 in_keys=[(group, "logits")],
                 out_keys=[(group, "loc"), (group, "scale")],
             )
@@ -260,7 +261,6 @@ class Ippo(Algorithm):
             agent_group=group,
             share_params=self.share_param_critic,
             device=self.device,
-            experiment=self.experiment,
         )
 
         return value_module
@@ -274,6 +274,7 @@ class IppoConfig(AlgorithmConfig):
     critic_coef: float = MISSING
     loss_critic_type: str = MISSING
     lmbda: float = MISSING
+    scale_mapping: str = MISSING
 
     @staticmethod
     def associated_class() -> Type[Algorithm]:

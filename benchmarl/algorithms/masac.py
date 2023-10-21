@@ -32,6 +32,7 @@ class Masac(Algorithm):
         min_alpha: Optional[float],
         max_alpha: Optional[float],
         fixed_alpha: bool,
+        scale_mapping: str,
         **kwargs
     ):
         super().__init__(**kwargs)
@@ -46,6 +47,7 @@ class Masac(Algorithm):
         self.min_alpha = min_alpha
         self.max_alpha = max_alpha
         self.fixed_alpha = fixed_alpha
+        self.scale_mapping = scale_mapping
 
     #############################
     # Overridden abstract methods
@@ -161,12 +163,11 @@ class Masac(Algorithm):
             centralised=False,
             share_params=self.experiment_config.share_policy_params,
             device=self.device,
-            experiment=self.experiment,
         )
 
         if continuous:
             extractor_module = TensorDictModule(
-                NormalParamExtractor(),
+                NormalParamExtractor(scale_mapping=self.scale_mapping),
                 in_keys=[(group, "logits")],
                 out_keys=[(group, "loc"), (group, "scale")],
             )
@@ -279,7 +280,6 @@ class Masac(Algorithm):
                 agent_group=group,
                 share_params=self.share_param_critic,
                 device=self.device,
-                experiment=self.experiment,
             )
 
         else:
@@ -304,7 +304,6 @@ class Masac(Algorithm):
                 agent_group=group,
                 share_params=self.share_param_critic,
                 device=self.device,
-                experiment=self.experiment,
             )
         if self.share_param_critic:
             expand_module = TensorDictModule(
@@ -371,7 +370,6 @@ class Masac(Algorithm):
                     agent_group=group,
                     share_params=self.share_param_critic,
                     device=self.device,
-                    experiment=self.experiment,
                 )
             )
 
@@ -412,7 +410,6 @@ class Masac(Algorithm):
                     agent_group=group,
                     share_params=self.share_param_critic,
                     device=self.device,
-                    experiment=self.experiment,
                 )
             )
 
@@ -444,6 +441,7 @@ class MasacConfig(AlgorithmConfig):
     min_alpha: Optional[float] = MISSING
     max_alpha: Optional[float] = MISSING
     fixed_alpha: bool = MISSING
+    scale_mapping: str = MISSING
 
     @staticmethod
     def associated_class() -> Type[Algorithm]:

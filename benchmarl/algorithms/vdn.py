@@ -102,7 +102,6 @@ class Vdn(Algorithm):
             centralised=False,
             share_params=self.experiment_config.share_policy_params,
             device=self.device,
-            experiment=self.experiment,
         )
         if self.action_mask_spec is not None:
             action_mask_key = (group, "action_mask")
