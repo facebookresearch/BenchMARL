@@ -34,6 +34,7 @@ from .pettingzoo.waterworld import TaskConfig as WaterworldConfig
 from .vmas.balance import TaskConfig as BalanceConfig
 from .vmas.navigation import TaskConfig as NavigationConfig
 from .vmas.sampling import TaskConfig as SamplingConfig
+from .vmas.simple_reference import TaskConfig as VmasSimpleReferenceConfig
 from .vmas.transport import TaskConfig as TransportConfig
 from .vmas.wheel import TaskConfig as WheelConfig
 
@@ -47,6 +48,7 @@ _task_class_registry = {
     "vmas_navigation_config": NavigationConfig,
     "vmas_transport_config": TransportConfig,
     "vmas_wheel_config": WheelConfig,
+    "vmas_simple_reference_config": VmasSimpleReferenceConfig,
     "pettingzoo_multiwalker_config": MultiwalkerConfig,
     "pettingzoo_waterworld_config": WaterworldConfig,
     "pettingzoo_simple_adversary_config": SimpleAdversaryConfig,
