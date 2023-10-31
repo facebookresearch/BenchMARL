@@ -27,7 +27,7 @@ extra_files = package_files(
 
 setup(
     name="benchmarl",
-    version="0.0.3",
+    version="0.0.4",
     description="BenchMARL",
     url="https://github.com/facebookresearch/BenchMARL",
     author="Matteo Bettini",
