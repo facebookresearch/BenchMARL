@@ -3,8 +3,12 @@
 #  This source code is licensed under the license found in the
 #  LICENSE file in the root directory of this source tree.
 #
+import importlib
 
-from omegaconf import DictConfig, OmegaConf
+_has_hydra = importlib.util.find_spec("hydra") is not None
+
+if _has_hydra:
+    from omegaconf import DictConfig, OmegaConf
 
 from benchmarl.algorithms.common import AlgorithmConfig
 from benchmarl.environments import Task, task_config_registry
