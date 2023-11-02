@@ -6,7 +6,7 @@
 
 # Docs
 docs/output/
-docs/source/modules/generated/
+docs/source/generated/
 docs/build/
 
 # Byte-compiled / optimized / DLL files
