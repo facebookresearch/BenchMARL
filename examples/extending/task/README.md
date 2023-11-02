@@ -1,5 +1,5 @@
 
-# Creating a new task (from a new environemnt)
+# Creating a new task (from a new environment)
 
 Here are the steps to create a new task. 
 

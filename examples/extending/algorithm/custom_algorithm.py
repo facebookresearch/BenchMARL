@@ -133,6 +133,7 @@ class CustomIqlAlgorithm(Algorithm):
             centralised=False,  # Always false for a policy
             share_params=self.experiment_config.share_policy_params,
             device=self.device,
+            action_spec=self.action_spec,
         )
         if self.action_mask_spec is not None:
             action_mask_key = (group, "action_mask")
