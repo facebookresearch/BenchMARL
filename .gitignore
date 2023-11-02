@@ -6,7 +6,8 @@
 
 # Docs
 docs/output/
-
+docs/source/modules/generated/
+docs/build/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
