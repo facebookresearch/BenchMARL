@@ -1,5 +1,5 @@
-Welcome to Lumache's documentation!
-===================================
+BenchMARL
+=========
 
 **BenchMARL**  is a Python library for cooks and food lovers
 that creates recipes mixing random ingredients.
@@ -17,6 +17,14 @@ Contents
 --------
 
 .. toctree::
+   :maxdepth: 1
+   :caption: Usage
 
    usage
-   api
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Package Reference
+
+   modules/root
+   modules/algorithms

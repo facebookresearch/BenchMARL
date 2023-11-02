@@ -4,16 +4,10 @@
 #  LICENSE file in the root directory of this source tree.
 #
 
+
+__version__ = "0.0.4"
+
 import importlib
-
-import benchmarl.algorithms
-import benchmarl.benchmark
-import benchmarl.environments
-import benchmarl.eval_results
-import benchmarl.experiment
-import benchmarl.models
-import benchmarl.utils
-
 
 _has_hydra = importlib.util.find_spec("hydra") is not None
 

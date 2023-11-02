@@ -1,13 +1,12 @@
 # Configuration file for the Sphinx documentation builder.
 
 # -- Project information
+import benchmarl
 
 project = "BenchMARL"
 copyright = "Meta"
 author = "Matteo Bettini"
-
-release = "0.0.2"
-version = "0.0.2"
+version = benchmarl.__version__
 
 # -- General configuration
 
@@ -17,6 +16,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.intersphinx",
+    "sphinx.ext.viewcode",
 ]
 
 intersphinx_mapping = {
