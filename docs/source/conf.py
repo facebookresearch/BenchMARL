@@ -26,6 +26,12 @@ intersphinx_mapping = {
 intersphinx_disabled_domains = ["std"]
 
 templates_path = ["_templates"]
+html_static_path = ["_static"]
+
+html_logo = "_static/benchmarl_logo.png"
+html_theme_options = {
+    "logo_only": True,
+}
 
 # -- Options for HTML output
 
