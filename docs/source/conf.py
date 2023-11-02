@@ -33,3 +33,6 @@ html_theme = "sphinx_rtd_theme"
 
 # -- Options for EPUB output
 epub_show_urls = "footnote"
+
+toc_object_entries = False
+add_module_names = False

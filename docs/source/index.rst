@@ -1,3 +1,5 @@
+:github_url: https://github.com/facebookresearch/BenchMARL
+
 BenchMARL
 =========
 

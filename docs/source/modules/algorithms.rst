@@ -11,7 +11,7 @@ Single node data collectors
 
 .. currentmodule:: benchmarl.algorithms
 .. autosummary::
-   :toctree: generated
+   :toctree: ../generated
 
    Iddpg
    IddpgConfig
