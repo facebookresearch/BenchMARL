@@ -4,6 +4,8 @@
 **/outputs/
 **/multirun/
 
+# Docs
+docs/output/
 
 
 # Byte-compiled / optimized / DLL files
