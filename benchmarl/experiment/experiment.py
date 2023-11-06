@@ -7,6 +7,8 @@
 from __future__ import annotations
 
 import importlib
+
+import math
 import os
 import time
 from collections import OrderedDict
@@ -638,6 +640,8 @@ class Experiment(CallbackNotifier):
                 loss_value.backward()
 
                 grad_norm = self._grad_clip(optimizer)
+
+                assert not math.isnan(grad_norm)
                 training_td.set(
                     f"grad_norm_{loss_name}",
                     torch.tensor(grad_norm, device=self.config.train_device),
@@ -677,10 +681,9 @@ class Experiment(CallbackNotifier):
                 video_frames = []
 
                 def callback(env, td):
-                    try:
-                        video_frames.append(env.render(mode="rgb_array"))
-                    except TypeError:
-                        video_frames.append(env.render())
+                    video_frames.append(
+                        self.task.__class__.render_callback(self, env, td)
+                    )
 
             else:
                 video_frames = None
