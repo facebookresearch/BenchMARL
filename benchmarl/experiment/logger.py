@@ -88,7 +88,6 @@ class Logger:
         total_frames: int,
         step: int,
     ) -> float:
-
         to_log = {}
         json_metrics = {}
         for group in self.group_map.keys():
@@ -218,7 +217,9 @@ class Logger:
         self.log(to_log, step=step)
         if video_frames is not None:
             vid = torch.tensor(
-                np.transpose(video_frames[: rollouts[0].batch_size[0]], (0, 3, 1, 2)),
+                np.transpose(
+                    video_frames[: rollouts[0].batch_size[0] - 1], (0, 3, 1, 2)
+                ),
                 dtype=torch.uint8,
             ).unsqueeze(0)
             for logger in self.loggers:
