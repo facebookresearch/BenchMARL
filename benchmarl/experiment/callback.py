@@ -34,12 +34,27 @@ class Callback:
         """
         pass
 
-    def on_train_end(self, training_td: TensorDictBase):
+    def on_train_step(self, batch: TensorDictBase, group: str) -> TensorDictBase:
         """
-        A callback called at the end of every training step.
+        A callback called for every training step.
+
+        Args:
+           batch (TensorDictBase): tensordict with the training batch
+           group (str): group name
+
+        Returns:
+            TensorDictBase: a new tensordict containing the loss values
+
+        """
+        pass
+
+    def on_train_end(self, training_td: TensorDictBase, group: str):
+        """
+        A callback called at the end of training.
 
         Args:
             training_td (TensorDictBase): tensordict containing the loss values
+            group (str): group name
 
         """
         pass
@@ -65,9 +80,20 @@ class CallbackNotifier:
         for callback in self.callbacks:
             callback.on_batch_collected(batch)
 
-    def on_train_end(self, training_td: TensorDictBase):
+    def on_train_step(self, batch: TensorDictBase, group: str) -> TensorDictBase:
+        train_td = None
         for callback in self.callbacks:
-            callback.on_train_end(training_td)
+            td = callback.on_train_step(batch, group)
+            if td is not None:
+                if train_td is None:
+                    train_td = td
+                else:
+                    train_td.update(td)
+        return train_td
+
+    def on_train_end(self, training_td: TensorDictBase, group: str):
+        for callback in self.callbacks:
+            callback.on_train_end(training_td, group)
 
     def on_evaluation_end(self, rollouts: List[TensorDictBase]):
         for callback in self.callbacks:
