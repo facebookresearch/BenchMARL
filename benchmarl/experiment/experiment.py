@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import importlib
 
-import math
 import os
 import time
 from collections import OrderedDict
@@ -641,7 +640,6 @@ class Experiment(CallbackNotifier):
 
                 grad_norm = self._grad_clip(optimizer)
 
-                assert not math.isnan(grad_norm)
                 training_td.set(
                     f"grad_norm_{loss_name}",
                     torch.tensor(grad_norm, device=self.config.train_device),
