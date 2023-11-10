@@ -17,6 +17,13 @@ python benchmarl/run.py algorithm=mappo task=vmas/balance
 [![Examples](https://img.shields.io/badge/Examples-blue.svg)](examples) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/facebookresearch/BenchMARL/blob/main/notebooks/run.ipynb)
 [![Static Badge](https://img.shields.io/badge/Benchmarks-Wandb-yellow)](https://wandb.ai/matteobettini/benchmarl-public/reportlist)
 
+Watch the talk on multi-agent simulation and learning in BenchMARL and TorchRL. 
+
+<p align="center">
+
+[![Video](https://img.youtube.com/vi/1tOIMgJf_VQ/0.jpg)](https://www.youtube.com/watch?v=1tOIMgJf_VQ)
+</p>
+
 ### What is BenchMARL 🧐?
 
 BenchMARL is a Multi-Agent Reinforcement Learning (MARL) training library created to enable reproducibility
