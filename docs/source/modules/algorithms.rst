@@ -2,32 +2,32 @@
 benchmarl.algorithms
 ====================
 
-
 .. contents:: Contents
     :local:
 
-Single node data collectors
----------------------------
+Common
+------
+.. currentmodule:: benchmarl.algorithms
+
+.. autosummary::
+   :nosignatures:
+   :toctree: ../generated
+   :template: autosummary/class.rst
+
+   {% for name in benchmarl.algorithms.common %}
+     {{ name }}
+   {% endfor %}
+
+Algorithms
+----------
 
 .. currentmodule:: benchmarl.algorithms
-.. autosummary::
-   :toctree: ../generated
 
-   Iddpg
-   IddpgConfig
-   Ippo
-   IppoConfig
-   Iql
-   IqlConfig
-   Isac
-   IsacConfig
-   Maddpg
-   MaddpgConfig
-   Mappo
-   MappoConfig
-   Masac
-   MasacConfig
-   Qmix
-   QmixConfig
-   Vdn
-   VdnConfig
+.. autosummary::
+   :nosignatures:
+   :toctree: ../generated
+   :template: autosummary/class.rst
+
+   {% for name in benchmarl.algorithms.classes %}
+     {{ name }}
+   {% endfor %}

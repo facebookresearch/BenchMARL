@@ -323,8 +323,10 @@ class AlgorithmConfig:
     Dataclass representing an algorithm configuration.
     This should be overridden by implemented algorithms.
     Implementors should:
-     1. add configuration parameters for their algorithm
-     2. implement all abstract methods
+
+        1. add configuration parameters for their algorithm
+        2. implement all abstract methods
+
     """
 
     def get_algorithm(self, experiment) -> Algorithm:

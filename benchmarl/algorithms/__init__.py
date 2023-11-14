@@ -4,6 +4,7 @@
 #  LICENSE file in the root directory of this source tree.
 #
 
+from .common import Algorithm, AlgorithmConfig
 from .iddpg import Iddpg, IddpgConfig
 from .ippo import Ippo, IppoConfig
 from .iql import Iql, IqlConfig
@@ -13,6 +14,30 @@ from .mappo import Mappo, MappoConfig
 from .masac import Masac, MasacConfig
 from .qmix import Qmix, QmixConfig
 from .vdn import Vdn, VdnConfig
+
+common = ["Algorithm", "AlgorithmConfig"]
+classes = [
+    "Iddpg",
+    "IddpgConfig",
+    "Ippo",
+    "IppoConfig",
+    "Iql",
+    "IqlConfig",
+    "Isac",
+    "IsacConfig",
+    "Maddpg",
+    "MaddpgConfig",
+    "Mappo",
+    "MappoConfig",
+    "Masac",
+    "MasacConfig",
+    "Qmix",
+    "QmixConfig",
+    "Vdn",
+    "VdnConfig",
+]
+__all__ = common + classes
+
 
 # A registry mapping "algoname" to its config dataclass
 # This is used to aid loading of algorithms from yaml
