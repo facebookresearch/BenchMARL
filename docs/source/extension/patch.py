@@ -60,7 +60,7 @@ def monkey_patch_find_autosummary_in_lines(
                 template = m.group(1).strip()
                 continue
 
-            # Begin of odified part by `pyg_sphinx_theme` #####################
+            # Begin of modified part #####################
             m = list_arg_re.match(line)
             if m:
                 obj_name = m.group(2).strip()
@@ -76,7 +76,7 @@ def monkey_patch_find_autosummary_in_lines(
                         )
                     )
                 continue
-            # End of modified part by `pyg_sphinx_theme` ######################
+            # End of modified part ######################
 
             if line.strip().startswith(":"):
                 continue
