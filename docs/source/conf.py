@@ -38,7 +38,7 @@ intersphinx_mapping = {
 intersphinx_disabled_domains = ["std"]
 
 templates_path = ["_templates"]
-html_static_path = ["_static"]
+# html_static_path = ["_static"]
 
 
 html_theme = "benchmarl_sphinx_theme"
