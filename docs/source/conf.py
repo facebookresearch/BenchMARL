@@ -1,9 +1,9 @@
 # Configuration file for the Sphinx documentation builder.
-import os
 import os.path as osp
 import sys
 
 import benchmarl
+import benchmarl_sphinx_theme
 
 # -- Project information
 
@@ -13,7 +13,7 @@ author = "Matteo Bettini"
 version = benchmarl.__version__
 
 # -- General configuration
-sys.path.append(osp.join(osp.dirname(os.path.realpath(__file__)), "extension"))
+sys.path.append(osp.join(osp.dirname(benchmarl_sphinx_theme.__file__), "extension"))
 
 extensions = [
     "sphinx.ext.duration",
@@ -33,20 +33,20 @@ toc_object_entries = False
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
     "sphinx": ("https://www.sphinx-doc.org/en/master/", None),
+    "torch": ("https://pytorch.org/docs/master", None),
 }
 intersphinx_disabled_domains = ["std"]
 
 templates_path = ["_templates"]
 html_static_path = ["_static"]
 
-html_logo = "_static/benchmarl_logo.png"
-html_theme_options = {"logo_only": True, "navigation_depth": 2}
-html_css_files = [
-    "css/mytheme.css",
-]
 
-# -- Options for HTML output
-html_theme = "sphinx_rtd_theme"
+html_theme = "benchmarl_sphinx_theme"
+html_logo = (
+    "https://raw.githubusercontent.com/matteobettini/benchmarl_sphinx_theme/master/benchmarl"
+    "_sphinx_theme/static/img/benchmarl_logo.png"
+)
+# html_favicon = ('')
 
 # -- Options for EPUB output
 epub_show_urls = "footnote"

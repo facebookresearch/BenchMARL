@@ -1,5 +1,6 @@
-sphinx-rtd-theme==1.3.0rc1
+git+https://github.com/matteobettini/benchmarl_sphinx_theme.git
 torchrl>=0.2.0
+torch
 tqdm
 hydra-core
 vmas>=1.2.10

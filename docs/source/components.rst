@@ -1,9 +1,8 @@
 
+.. _installation:
+
 Notebooks
 ---------
-
-
-
 
 Installation
 ------------
@@ -13,18 +12,6 @@ To use Lumache, first install it using pip:
 .. code-block:: console
 
    (.venv) $ pip install benchmarl
-
-.. code-block:: python
-
-    import torch
-    from torch_geometric.data import Data
-
-    edge_index = torch.tensor([[0, 1, 1, 2],
-                               [1, 0, 2, 1]], dtype=torch.long)
-    x = torch.tensor([[-1], [0], [1]], dtype=torch.float)
-
-    data = Data(x=x, edge_index=edge_index)
-    >>> Data(edge_index=[2, 4], x=[3, 1])
 
 Running
 -------

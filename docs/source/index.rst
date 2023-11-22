@@ -3,26 +3,54 @@
 BenchMARL
 =========
 
-**BenchMARL**  is a Python library for cooks and food lovers
-that creates recipes mixing random ingredients.
-It pulls data from the `Open Food Facts database <https://world.openfoodfacts.org/>`_
-and offers a *simple* and *intuitive* API.
 
-Check out the :doc:`usage` section for further information, including
-how to :ref:`installation` the project.
+**BenchMARL** is a Multi-Agent Reinforcement Learning (MARL) training library created to enable reproducibility
+and benchmarking across different MARL algorithms and environments.
+Its mission is to present a standardized interface that allows easy integration of new algorithms and environments to
+provide a fair comparison with existing solutions.
+BenchMARL uses :torchrl:`null` `TorchRL <https://github.com/pytorch/rl>`_ and :pytorch:`null` `PyTorch <https://pytorch.org>`_ as its backend, which grants it high performance
+and state-of-the-art implementations.
+It also uses `hydra <https://hydra.cc/docs/intro/>`_ for flexible and modular configuration,
+and its data reporting is compatible with `marl-eval <https://sites.google.com/view/marl-standard-protocol/home>`_
+for standardised and statistically strong evaluations.
 
-.. note::
+BenchMARL **core design tenets** are:
 
-   This project is under active development.
+* *Reproducibility through systematical grounding and standardization of configuration*
+* *Standardised and statistically-strong plotting and reporting*
+* *Experiments that are independent of the algorithm, environment, and model choices*
+* *Breadth over the MARL ecosystem*
+* *Easy implementation of new algorithms, environments, and models*
+* *Leveraging the know-how and infrastructure of TorchRL without reinventing the wheel*
 
-Contents
---------
+
+Why would I BenchMARL 🤔?
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Why would you BenchMARL, I see you ask.
+Well, you can BenchMARL to compare different algorithms, environments, models,
+to check how your new research compares to existing ones, or if you just want to approach
+the domain and want to easily take a picture of the landscape.
+
+.. discord_button::
 
 .. toctree::
    :maxdepth: 1
    :caption: Usage
 
    usage
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Components
+
+   components
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Features
+
+   features
 
 .. toctree::
    :maxdepth: 1
