@@ -38,19 +38,20 @@ the domain and want to easily take a picture of the landscape.
    :maxdepth: 1
    :caption: Usage
 
-   usage
+   usage/notebooks
+   usage/installation
+   usage/running
 
 .. toctree::
    :maxdepth: 1
-   :caption: Components
+   :caption: Concepts
 
-   components
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Features
-
-   features
+   concepts/components
+   concepts/benchmarks
+   concepts/reporting
+   concepts/extending
+   concepts/configuring
+   concepts/features
 
 .. toctree::
    :maxdepth: 1
