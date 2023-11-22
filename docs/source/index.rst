@@ -1,7 +1,7 @@
-:github_url: https://github.com/facebookresearch/BenchMARL
 
 BenchMARL
 =========
+:github:`null` `GitHub <https://github.com/facebookresearch/BenchMARL>`__
 
 
 **BenchMARL** is a Multi-Agent Reinforcement Learning (MARL) training library created to enable reproducibility
