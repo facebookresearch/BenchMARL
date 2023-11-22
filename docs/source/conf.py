@@ -52,9 +52,9 @@ html_logo = (
 epub_show_urls = "footnote"
 
 
-def setup(app):
-    def rst_jinja_render(app, _, source):
-        rst_context = {"benchmarl": benchmarl}
-        source[0] = app.builder.templates.render_string(source[0], rst_context)
-
-    app.connect("source-read", rst_jinja_render)
+# def setup(app):
+#     def rst_jinja_render(app, _, source):
+#         rst_context = {"benchmarl": benchmarl}
+#         source[0] = app.builder.templates.render_string(source[0], rst_context)
+#
+#     app.connect("source-read", rst_jinja_render)
