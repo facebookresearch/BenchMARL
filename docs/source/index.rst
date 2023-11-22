@@ -33,6 +33,7 @@ to check how your new research compares to existing ones, or if you just want to
 the domain and want to easily take a picture of the landscape.
 
 .. discord_button::
+   https://discord.gg/zcTf2xRC7t
 
 .. toctree::
    :maxdepth: 1
@@ -52,10 +53,3 @@ the domain and want to easily take a picture of the landscape.
    concepts/extending
    concepts/configuring
    concepts/features
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Package Reference
-
-   modules/root
-   modules/algorithms
