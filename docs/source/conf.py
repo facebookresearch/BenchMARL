@@ -41,7 +41,7 @@ templates_path = ["_templates"]
 # html_static_path = ["_static"]
 
 
-html_theme = "benchmarl_sphinx_theme"
+html_theme = "sphinx_rtd_theme"
 html_logo = (
     "https://raw.githubusercontent.com/matteobettini/benchmarl_sphinx_theme/master/benchmarl"
     "_sphinx_theme/static/img/benchmarl_logo.png"
