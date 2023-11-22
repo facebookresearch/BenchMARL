@@ -38,19 +38,19 @@ intersphinx_mapping = {
 intersphinx_disabled_domains = ["std"]
 
 templates_path = ["_templates"]
-# html_static_path = [osp.join(osp.dirname(benchmarl_sphinx_theme.__file__), "static")]
+html_static_path = [osp.join(osp.dirname(benchmarl_sphinx_theme.__file__), "static")]
 
 
-html_theme = "benchmarl_sphinx_theme"
+html_theme = "sphinx_rtd_theme"
 html_logo = (
     "https://raw.githubusercontent.com/matteobettini/benchmarl_sphinx_theme/master/benchmarl"
     "_sphinx_theme/static/img/benchmarl_logo.png"
 )
-# html_theme_options = {"logo_only": True, "navigation_depth": 2}
+html_theme_options = {"logo_only": True, "navigation_depth": 2}
 # html_favicon = ('')
-# html_css_files = [
-#     "css/mytheme.css",
-# ]
+html_css_files = [
+    "css/mytheme.css",
+]
 
 # -- Options for EPUB output
 epub_show_urls = "footnote"
