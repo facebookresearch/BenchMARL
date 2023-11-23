@@ -1,13 +1,13 @@
 
-benchmarl.algorithms
-====================
+benchmarl.models
+================
 
-.. currentmodule:: benchmarl.algorithms
+.. currentmodule:: benchmarl.models
 
 .. contents:: Contents
     :local:
 
-Here you can find the :ref:`algorithm table <algorithm-table>`.
+Here you can find the :ref:`model table <model-table>`.
 
 Common
 ------
@@ -17,17 +17,19 @@ Common
    :toctree: ../generated
    :template: autosummary/class.rst
 
-   Algorithm
-   AlgorithmConfig
+   Model
+   ModelConfig
+   SequenceModel
+   SequenceModelConfig
 
-Algorithms
-----------
+Models
+------
 
 .. autosummary::
    :nosignatures:
    :toctree: ../generated
    :template: autosummary/class.rst
 
-   {% for name in benchmarl.algorithms.classes %}
+   {% for name in benchmarl.models.classes %}
      {{ name }}
    {% endfor %}

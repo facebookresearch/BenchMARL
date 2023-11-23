@@ -4,6 +4,14 @@
 #  LICENSE file in the root directory of this source tree.
 #
 
-from .mlp import MlpConfig
+from .common import Model, ModelConfig, SequenceModel, SequenceModelConfig
+from .mlp import Mlp, MlpConfig
+
+common = ["Model", "ModelConfig", "SequenceModel", "SequenceModelConfig"]
+classes = [
+    "Mlp",
+    "MlpConfig",
+]
+__all__ = common + classes
 
 model_config_registry = {"mlp": MlpConfig}

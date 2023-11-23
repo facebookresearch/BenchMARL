@@ -197,8 +197,10 @@ class ModelConfig(ABC):
     Dataclass representing an model configuration.
     This should be overridden by implemented models.
     Implementors should:
-     1. add configuration parameters for their algorithm
-     2. implement all abstract methods
+
+        1. add configuration parameters for their algorithm
+        2. implement all abstract methods
+
     """
 
     def get_model(

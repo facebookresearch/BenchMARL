@@ -62,3 +62,4 @@ the domain and want to easily take a picture of the landscape.
    modules/experiment
    modules/algorithms
    modules/environments
+   modules/models
