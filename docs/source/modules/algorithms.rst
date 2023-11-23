@@ -2,12 +2,15 @@
 benchmarl.algorithms
 ====================
 
+.. currentmodule:: benchmarl.algorithms
+
 .. contents:: Contents
     :local:
 
+Here you can find the :ref:`algorithm table <algorithm-table>`.
+
 Common
 ------
-.. currentmodule:: benchmarl.algorithms
 
 .. autosummary::
    :nosignatures:
@@ -20,8 +23,6 @@ Common
 
 Algorithms
 ----------
-
-.. currentmodule:: benchmarl.algorithms
 
 .. autosummary::
    :nosignatures:

@@ -59,4 +59,6 @@ the domain and want to easily take a picture of the landscape.
    :caption: Package Reference
 
    modules/root
+   modules/experiment
    modules/algorithms
+   modules/environments
