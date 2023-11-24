@@ -26,7 +26,7 @@ class TaskConfig:
     poison_speed: float = MISSING
     poison_reward: float = MISSING
     food_reward: float = MISSING
-    encounter_rewar: float = MISSING
+    encounter_reward: float = MISSING
     thrust_penalty: float = MISSING
     local_ratio: float = MISSING
     speed_features: bool = MISSING
