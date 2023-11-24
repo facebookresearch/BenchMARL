@@ -11,14 +11,33 @@ your benchmarks.  No more struggling with matplotlib and latex!
 .. python_example_button::
    https://github.com/facebookresearch/BenchMARL/blob/main/examples/plotting/plot_benchmark.py
 
-.. image:: https://raw.githubusercontent.com/matteobettini/benchmarl_sphinx_theme/master/benchmarl_sphinx_theme/static/img/benchmarks/vmas/aggregate_scores.png
-  :width: 600
-  :alt: Alternative text
+Example plots
+-------------
 
-.. image:: https://raw.githubusercontent.com/matteobettini/benchmarl_sphinx_theme/master/benchmarl_sphinx_theme/static/img/benchmarks/vmas/environemnt_sample_efficiency_curves.png
-  :width: 600
-  :alt: Alternative text
+Here are some example plots you can generate, for more info, check out `marl-eval <https://github.com/instadeepai/marl-eval>`__.
 
-.. image:: https://raw.githubusercontent.com/matteobettini/benchmarl_sphinx_theme/master/benchmarl_sphinx_theme/static/img/benchmarks/vmas/performance_profile_figure.png
-  :width: 600
-  :alt: Alternative text
+
+Aggregate scores
+^^^^^^^^^^^^^^^^
+
+.. figure:: https://raw.githubusercontent.com/matteobettini/benchmarl_sphinx_theme/master/benchmarl_sphinx_theme/static/img/benchmarks/vmas/aggregate_scores.png
+   :align: center
+
+   Aggregate scores
+
+Sample efficiency curves
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. figure:: https://raw.githubusercontent.com/matteobettini/benchmarl_sphinx_theme/master/benchmarl_sphinx_theme/static/img/benchmarks/vmas/environemnt_sample_efficiency_curves.png
+   :align: center
+
+   Sample efficiency curves
+
+
+Performance profile
+^^^^^^^^^^^^^^^^^^^
+
+.. figure:: https://raw.githubusercontent.com/matteobettini/benchmarl_sphinx_theme/master/benchmarl_sphinx_theme/static/img/benchmarks/vmas/performance_profile_figure.png
+   :align: center
+
+   Performance profile

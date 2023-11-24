@@ -59,6 +59,7 @@ the domain and want to easily take a picture of the landscape.
   * [Reporting and plotting](#reporting-and-plotting)
   * [Extending](#extending)
   * [Configuring](#configuring)
+    + [Experiment](#experiment)
     + [Algorithm](#algorithm)
     + [Task](#task)
     + [Model](#model)
@@ -322,7 +323,6 @@ in the script itself or via [hydra](https://hydra.cc/docs/intro/).
 We suggest to read the hydra documentation
 to get familiar with all its functionalities. 
 
-The project can be configured either the script itself or via hydra. 
 Each component in the project has a corresponding yaml configuration in the BenchMARL 
 [conf tree](benchmarl/conf). 
 Components' configurations are loaded from these files into python dataclasses that act 
@@ -333,8 +333,7 @@ You can also directly load and validate configuration yaml files without using h
 
 ### Experiment
 
-Experiment configurations are in [`benchmarl/conf/config.yaml`](benchmarl/conf/config.yaml),
-with the experiment hyperparameters in [`benchmarl/conf/experiment`](benchmarl/conf/experiment).
+Experiment configurations are in [`benchmarl/conf/config.yaml`](benchmarl/conf/config.yaml).
 Running custom experiments is extremely simplified by the [Hydra](https://hydra.cc/) configurations.
 The default configuration for the library is contained in the [`benchmarl/conf`](benchmarl/conf) folder.
 
