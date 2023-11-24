@@ -90,6 +90,16 @@ They differ based on many aspects, here is a table with the current environments
     | :class:`~benchmarl.environments.PettingZooTask` |   10  | Cooperative + Competitive |   Yes + No   |     Shared + Independent      | Continuous + Discrete |     No     |
     +-------------------------------------------------+-------+---------------------------+--------------+-------------------------------+-----------------------+------------+
 
+
+Models
+------
+
+Models are neural networks used to process data. They can be used as actors (policies) or,
+when requested, as critics. We provide a set of base models (layers) and a :class:`~benchmarl.models.SequenceModel` to concatenate
+different layers. All the models can be used with or without parameter sharing within an
+agent group. Here is a table of the models implemented in BenchMARL
+
+
 .. _model-table:
 
 .. table:: Models in BenchMARL
