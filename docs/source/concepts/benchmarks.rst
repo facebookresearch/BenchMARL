@@ -16,4 +16,10 @@ We will tune benchmarks for you and publish the config and benchmarking plots on
 
 Currently available ones are:
 
-- **VMAS**:  `Conf <fine_tuned/vmas/conf/config.yaml>`__ | :wandb:`null` `Wandb <https://api.wandb.ai/links/matteobettini/r5744vas>`__
+VMAS
+----
+`Conf <fine_tuned/vmas/conf/config.yaml>`__ | :wandb:`null` `Wandb <https://api.wandb.ai/links/matteobettini/r5744vas>`__
+
+.. raw:: html
+
+    <iframe src="https://wandb.ai/matteobettini/benchmarl-public/reports/VMAS-Benchmarks--Vmlldzo1NzI4MDA5" style="border:none;height:1024px;width:100%">
