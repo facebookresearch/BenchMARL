@@ -13,8 +13,6 @@ from benchmarl.models.common import ModelConfig
 
 
 class Benchmark:
-    """defrfefeffe"""
-
     def __init__(
         self,
         algorithm_configs: Sequence[AlgorithmConfig],
