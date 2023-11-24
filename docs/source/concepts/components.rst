@@ -68,6 +68,14 @@ determine the training strategy. Here is a table with the currently implemented 
     | :class:`~benchmarl.algorithms.Iql`    |     Off       |      No      |              NA              |       Discrete        |         No          |  |
     +---------------------------------------+---------------+--------------+------------------------------+-----------------------+---------------------+--+
 
+Environments
+------------
+
+Tasks are scenarios from a specific environment which constitute the MARL
+challenge to solve.
+They differ based on many aspects, here is a table with the current environments in BenchMARL
+
+
 .. _environment-table:
 
 .. table:: Environments in BenchMARL
