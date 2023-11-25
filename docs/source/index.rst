@@ -70,6 +70,7 @@ the domain and want to easily take a picture of the landscape.
 
    modules/root
    modules/experiment
+   modules/benchmark
    modules/algorithms
    modules/environments
    modules/models
