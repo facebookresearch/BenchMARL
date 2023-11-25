@@ -43,7 +43,7 @@ to check how your new research compares to existing ones, or if you just want to
 the domain and want to easily take a picture of the landscape.
 
 .. discord_button::
-   https://discord.gg/zcTf2xRC7t
+   https://discord.gg/jEEWCn6T3p
 
 .. toctree::
    :maxdepth: 1

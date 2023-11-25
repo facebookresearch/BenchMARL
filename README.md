@@ -8,7 +8,7 @@
 [![Python](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10-blue.svg)](https://www.python.org/downloads/)
 <a href="https://pypi.org/project/benchmarl"><img src="https://img.shields.io/pypi/v/benchmarl" alt="pypi version"></a>
 [![Downloads](https://static.pepy.tech/personalized-badge/benchmarl?period=total&units=international_system&left_color=grey&right_color=blue&left_text=Downloads)](https://pepy.tech/project/benchmarl)
-[![Discord Shield](https://dcbadge.vercel.app/api/server/zcTf2xRC7t?style=flat)](https://discord.gg/zcTf2xRC7t)
+[![Discord Shield](https://dcbadge.vercel.app/api/server/jEEWCn6T3p?style=flat)](https://discord.gg/jEEWCn6T3p)
 
 ```bash
 python benchmarl/run.py algorithm=mappo task=vmas/balance
