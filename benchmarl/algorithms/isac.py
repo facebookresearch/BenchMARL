@@ -26,6 +26,30 @@ from benchmarl.models.common import ModelConfig
 
 
 class Isac(Algorithm):
+    """Independent Soft Actor Critic.
+
+    Args:
+        share_param_critic (bool): Whether to share the parameters of the critics withing agent groups
+        num_qvalue_nets (integer): number of Q-Value networks used.
+        loss_function (str): loss function to be used with
+            the value function loss.
+        delay_qvalue (bool): Whether to separate the target Q value
+            networks from the Q value networks used for data collection.
+        target_entropy (float or str, optional): Target entropy for the
+            stochastic policy. Default is "auto", where target entropy is
+            computed as :obj:`-prod(n_actions)`.
+        discrete_target_entropy_weight (float): weight for the target entropy term when actions are discrete
+        alpha_init (float): initial entropy multiplier.
+        min_alpha (float): min value of alpha.
+        max_alpha (float): max value of alpha.
+        fixed_alpha (bool): if ``True``, alpha will be fixed to its
+            initial value. Otherwise, alpha will be optimized to
+            match the 'target_entropy' value.
+        scale_mapping (str): positive mapping function to be used with the std.
+            choices: "softplus", "exp", "relu", "biased_softplus_1";
+
+    """
+
     def __init__(
         self,
         share_param_critic: bool,
@@ -38,6 +62,7 @@ class Isac(Algorithm):
         min_alpha: Optional[float],
         max_alpha: Optional[float],
         fixed_alpha: bool,
+        scale_mapping: str,
         **kwargs
     ):
         super().__init__(**kwargs)
@@ -52,6 +77,7 @@ class Isac(Algorithm):
         self.min_alpha = min_alpha
         self.max_alpha = max_alpha
         self.fixed_alpha = fixed_alpha
+        self.scale_mapping = scale_mapping
 
     #############################
     # Overridden abstract methods
@@ -126,7 +152,6 @@ class Isac(Algorithm):
     def _get_policy_for_loss(
         self, group: str, model_config: ModelConfig, continuous: bool
     ) -> TensorDictModule:
-
         n_agents = len(self.group_map[group])
         if continuous:
             logits_shape = list(self.action_spec[group, "action"].shape)
@@ -167,11 +192,12 @@ class Isac(Algorithm):
             centralised=False,
             share_params=self.experiment_config.share_policy_params,
             device=self.device,
+            action_spec=self.action_spec,
         )
 
         if continuous:
             extractor_module = TensorDictModule(
-                NormalParamExtractor(),
+                NormalParamExtractor(scale_mapping=self.scale_mapping),
                 in_keys=[(group, "logits")],
                 out_keys=[(group, "loc"), (group, "scale")],
             )
@@ -291,6 +317,7 @@ class Isac(Algorithm):
             agent_group=group,
             share_params=self.share_param_critic,
             device=self.device,
+            action_spec=self.action_spec,
         )
 
         return value_module
@@ -346,6 +373,7 @@ class Isac(Algorithm):
                 agent_group=group,
                 share_params=self.share_param_critic,
                 device=self.device,
+                action_spec=self.action_spec,
             )
         )
 
@@ -354,6 +382,7 @@ class Isac(Algorithm):
 
 @dataclass
 class IsacConfig(AlgorithmConfig):
+    """Configuration dataclass for :class:`~benchmarl.algorithms.Isac`."""
 
     share_param_critic: bool = MISSING
 
@@ -367,6 +396,7 @@ class IsacConfig(AlgorithmConfig):
     min_alpha: Optional[float] = MISSING
     max_alpha: Optional[float] = MISSING
     fixed_alpha: bool = MISSING
+    scale_mapping: str = MISSING
 
     @staticmethod
     def associated_class() -> Type[Algorithm]:

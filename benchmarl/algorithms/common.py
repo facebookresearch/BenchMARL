@@ -7,12 +7,11 @@
 import pathlib
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Type
+from typing import Any, Dict, Iterable, Optional, Tuple, Type
 
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModule, TensorDictSequential
 from torchrl.data import (
-    CompositeSpec,
     DiscreteTensorSpec,
     LazyTensorStorage,
     OneHotDiscreteTensorSpec,
@@ -24,7 +23,7 @@ from torchrl.objectives import LossModule
 from torchrl.objectives.utils import HardUpdate, SoftUpdate, TargetNetUpdater
 
 from benchmarl.models.common import ModelConfig
-from benchmarl.utils import DEVICE_TYPING, read_yaml_config
+from benchmarl.utils import _read_yaml_config, DEVICE_TYPING
 
 
 class Algorithm(ABC):
@@ -33,41 +32,23 @@ class Algorithm(ABC):
     This should be overridden by implemented algorithms
     and all abstract methods should be implemented.
 
-     Args:
-        experiment_config (ExperimentConfig): the configuration dataclass for the experiment
-        model_config (ModelConfig): the configuration dataclass for the policy
-        critic_model_config (ModelConfig): the configuration dataclass for the (eventual) critic
-        observation_spec (CompositeSpec): the observation spec of the task
-        action_spec (CompositeSpec): the action spec of the task
-        state_spec (CompositeSpec): the state spec of the task
-        action_mask_spec (CompositeSpec): the action_mask spec of the task
-        group_map (Dictionary): the group map of the task
-        on_policy (bool): whether the algorithm has to be trained on policy
+    Args:
+        experiment (Experiment): the experiment class
     """
 
-    def __init__(
-        self,
-        experiment_config: "DictConfig",  # noqa: F821
-        model_config: ModelConfig,
-        critic_model_config: ModelConfig,
-        observation_spec: CompositeSpec,
-        action_spec: CompositeSpec,
-        state_spec: Optional[CompositeSpec],
-        action_mask_spec: Optional[CompositeSpec],
-        group_map: Dict[str, List[str]],
-        on_policy: bool,
-    ):
-        self.device: DEVICE_TYPING = experiment_config.train_device
+    def __init__(self, experiment):
+        self.experiment = experiment
 
-        self.experiment_config = experiment_config
-        self.model_config = model_config
-        self.critic_model_config = critic_model_config
-        self.on_policy = on_policy
-        self.group_map = group_map
-        self.observation_spec = observation_spec
-        self.action_spec = action_spec
-        self.state_spec = state_spec
-        self.action_mask_spec = action_mask_spec
+        self.device: DEVICE_TYPING = experiment.config.train_device
+        self.experiment_config = experiment.config
+        self.model_config = experiment.model_config
+        self.critic_model_config = experiment.critic_model_config
+        self.on_policy = experiment.on_policy
+        self.group_map = experiment.group_map
+        self.observation_spec = experiment.observation_spec
+        self.action_spec = experiment.action_spec
+        self.state_spec = experiment.state_spec
+        self.action_mask_spec = experiment.action_mask_spec
 
         # Cached values that will be instantiated only once and then remain fixed
         self._losses_and_updaters = {}
@@ -123,14 +104,13 @@ class Algorithm(ABC):
     def get_loss_and_updater(self, group: str) -> Tuple[LossModule, TargetNetUpdater]:
         """
         Get the LossModule and TargetNetUpdater for a specific group.
-        This function calls the abstract self._get_loss() which needs to be implemented.
+        This function calls the abstract :class:`~benchmarl.algorithms.Algorithm._get_loss()` which needs to be implemented.
         The function will cache the output at the first call and return the cached values in future calls.
 
         Args:
             group (str): agent group of the loss and updater
 
         Returns: LossModule and TargetNetUpdater for the group
-
         """
         if group not in self._losses_and_updaters.keys():
             action_space = self.action_spec[group, "action"]
@@ -163,7 +143,7 @@ class Algorithm(ABC):
     ) -> ReplayBuffer:
         """
         Get the ReplayBuffer for a specific group.
-        This function will check self.on_policy and create the buffer accordingly
+        This function will check ``self.on_policy`` and create the buffer accordingly
 
         Args:
             group (str): agent group of the loss and updater
@@ -184,7 +164,7 @@ class Algorithm(ABC):
     def get_policy_for_loss(self, group: str) -> TensorDictModule:
         """
         Get the non-explorative policy for a specific group loss.
-        This function calls the abstract self._get_policy_for_loss() which needs to be implemented.
+        This function calls the abstract :class:`~benchmarl.algorithms.Algorithm._get_policy_for_loss()` which needs to be implemented.
         The function will cache the output at the first call and return the cached values in future calls.
 
         Args:
@@ -211,7 +191,7 @@ class Algorithm(ABC):
     def get_policy_for_collection(self) -> TensorDictSequential:
         """
         Get the explorative policy for all groups together.
-        This function calls the abstract self._get_policy_for_collection() which needs to be implemented.
+        This function calls the abstract :class:`~benchmarl.algorithms.Algorithm._get_policy_for_collection()` which needs to be implemented.
         The function will cache the output at the first call and return the cached values in future calls.
 
         Returns: TensorDictSequential representing all explorative policies
@@ -236,7 +216,7 @@ class Algorithm(ABC):
     def get_parameters(self, group: str) -> Dict[str, Iterable]:
         """
         Get the dictionary mapping loss names to the relative parameters to optimize for a given group.
-        This function calls the abstract self._get_parameters() which needs to be implemented.
+        This function calls the abstract :class:`~benchmarl.algorithms.Algorithm._get_parameters()` which needs to be implemented.
 
         Returns: a dictionary mapping loss names to a parameters' list
         """
@@ -342,47 +322,25 @@ class AlgorithmConfig:
     Dataclass representing an algorithm configuration.
     This should be overridden by implemented algorithms.
     Implementors should:
-     1. add configuration parameters for their algorithm
-     2. implement all abstract methods
+
+        1. add configuration parameters for their algorithm
+        2. implement all abstract methods
+
     """
 
-    def get_algorithm(
-        self,
-        experiment_config,
-        model_config: ModelConfig,
-        critic_model_config: ModelConfig,
-        observation_spec: CompositeSpec,
-        action_spec: CompositeSpec,
-        state_spec: CompositeSpec,
-        action_mask_spec: Optional[CompositeSpec],
-        group_map: Dict[str, List[str]],
-    ) -> Algorithm:
+    def get_algorithm(self, experiment) -> Algorithm:
         """
         Main function to turn the config into the associated algorithm
+
         Args:
-            experiment_config (ExperimentConfig): the configuration dataclass for the experiment
-            model_config (ModelConfig): the configuration dataclass for the policy
-            critic_model_config (ModelConfig): the configuration dataclass for the (eventual) critic
-            observation_spec (CompositeSpec): the observation spec of the task
-            action_spec (CompositeSpec): the action spec of the task
-            state_spec (CompositeSpec): the state spec of the task
-            action_mask_spec (CompositeSpec): the action_mask spec of the task
-            group_map (Dictionary): the group map of the task
+            experiment (Experiment): the experiment class
 
         Returns: the Algorithm
 
         """
         return self.associated_class()(
             **self.__dict__,  # Passes all the custom config parameters
-            experiment_config=experiment_config,
-            model_config=model_config,
-            critic_model_config=critic_model_config,
-            observation_spec=observation_spec,
-            action_spec=action_spec,
-            state_spec=state_spec,
-            action_mask_spec=action_mask_spec,
-            group_map=group_map,
-            on_policy=self.on_policy(),
+            experiment=experiment,
         )
 
     @staticmethod
@@ -393,7 +351,7 @@ class AlgorithmConfig:
             / "algorithm"
             / f"{name.lower()}.yaml"
         )
-        return read_yaml_config(str(yaml_path.resolve()))
+        return _read_yaml_config(str(yaml_path.resolve()))
 
     @classmethod
     def get_from_yaml(cls, path: Optional[str] = None):
@@ -403,7 +361,7 @@ class AlgorithmConfig:
         Args:
             path (str, optional): The full path of the yaml file to load from.
                 If None, it will default to
-                benchmarl/conf/algorithm/self.associated_class().__name__
+                ``benchmarl/conf/algorithm/self.associated_class().__name__``
 
         Returns: the loaded AlgorithmConfig
         """
@@ -414,7 +372,7 @@ class AlgorithmConfig:
                 )
             )
         else:
-            return cls(**read_yaml_config(path))
+            return cls(**_read_yaml_config(path))
 
     @staticmethod
     @abstractmethod

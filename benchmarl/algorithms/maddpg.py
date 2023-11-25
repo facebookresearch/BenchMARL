@@ -19,6 +19,15 @@ from benchmarl.models.common import ModelConfig
 
 
 class Maddpg(Algorithm):
+    """Multi Agent DDPG (from `https://arxiv.org/abs/1706.02275 <https://arxiv.org/abs/1706.02275>`__).
+
+    Args:
+        share_param_critic (bool): Whether to share the parameters of the critics withing agent groups
+        loss_function (str): loss function for the value discrepancy. Can be one of "l1", "l2" or "smooth_l1".
+        delay_value (bool): whether to separate the target value networks from the value networks used for
+            data collection.
+    """
+
     def __init__(
         self, share_param_critic: bool, loss_function: str, delay_value: bool, **kwargs
     ):
@@ -62,7 +71,6 @@ class Maddpg(Algorithm):
             )
 
     def _get_parameters(self, group: str, loss: LossModule) -> Dict[str, Iterable]:
-
         return {
             "loss_actor": list(loss.actor_network_params.flatten_keys().values()),
             "loss_value": list(loss.value_network_params.flatten_keys().values()),
@@ -103,6 +111,7 @@ class Maddpg(Algorithm):
                 centralised=False,
                 share_params=self.experiment_config.share_policy_params,
                 device=self.device,
+                action_spec=self.action_spec,
             )
 
             policy = ProbabilisticActor(
@@ -222,11 +231,11 @@ class Maddpg(Algorithm):
                     agent_group=group,
                     share_params=self.share_param_critic,
                     device=self.device,
+                    action_spec=self.action_spec,
                 )
             )
 
         else:
-
             modules.append(
                 TensorDictModule(
                     lambda obs, action: torch.cat([obs, action], dim=-1),
@@ -263,6 +272,7 @@ class Maddpg(Algorithm):
                     agent_group=group,
                     share_params=self.share_param_critic,
                     device=self.device,
+                    action_spec=self.action_spec,
                 )
             )
 
@@ -282,6 +292,7 @@ class Maddpg(Algorithm):
 
 @dataclass
 class MaddpgConfig(AlgorithmConfig):
+    """Configuration dataclass for :class:`~benchmarl.algorithms.Maddpg`."""
 
     share_param_critic: bool = MISSING
 

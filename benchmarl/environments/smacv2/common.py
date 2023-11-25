@@ -17,6 +17,8 @@ from benchmarl.utils import DEVICE_TYPING
 
 
 class Smacv2Task(Task):
+    """Enum for SMACv2 tasks."""
+
     PROTOSS_5_VS_5 = None
     PROTOSS_10_VS_10 = None
     PROTOSS_10_VS_11 = None

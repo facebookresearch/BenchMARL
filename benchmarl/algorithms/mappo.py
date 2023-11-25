@@ -21,6 +21,21 @@ from benchmarl.models.common import ModelConfig
 
 
 class Mappo(Algorithm):
+    """Multi Agent PPO (from `https://arxiv.org/abs/2103.01955 <https://arxiv.org/abs/2103.01955>`__).
+
+    Args:
+        share_param_critic (bool): Whether to share the parameters of the critics withing agent groups
+        clip_epsilon (scalar): weight clipping threshold in the clipped PPO loss equation.
+        entropy_coef (scalar): entropy multiplier when computing the total loss.
+        critic_coef (scalar): critic loss multiplier when computing the total
+        loss_critic_type (str): loss function for the value discrepancy.
+            Can be one of "l1", "l2" or "smooth_l1".
+        lmbda (float): The GAE lambda
+        scale_mapping (str): positive mapping function to be used with the std.
+            choices: "softplus", "exp", "relu", "biased_softplus_1";
+
+    """
+
     def __init__(
         self,
         share_param_critic: bool,
@@ -29,6 +44,7 @@ class Mappo(Algorithm):
         critic_coef: float,
         loss_critic_type: str,
         lmbda: float,
+        scale_mapping: str,
         **kwargs
     ):
         super().__init__(**kwargs)
@@ -39,6 +55,7 @@ class Mappo(Algorithm):
         self.critic_coef = critic_coef
         self.loss_critic_type = loss_critic_type
         self.lmbda = lmbda
+        self.scale_mapping = scale_mapping
 
     #############################
     # Overridden abstract methods
@@ -47,7 +64,6 @@ class Mappo(Algorithm):
     def _get_loss(
         self, group: str, policy_for_loss: TensorDictModule, continuous: bool
     ) -> Tuple[LossModule, bool]:
-
         # Loss
         loss_module = ClipPPOLoss(
             actor=policy_for_loss,
@@ -74,7 +90,6 @@ class Mappo(Algorithm):
         return loss_module, False
 
     def _get_parameters(self, group: str, loss: ClipPPOLoss) -> Dict[str, Iterable]:
-
         return {
             "loss_objective": list(loss.actor_params.flatten_keys().values()),
             "loss_critic": list(loss.critic_params.flatten_keys().values()),
@@ -83,7 +98,6 @@ class Mappo(Algorithm):
     def _get_policy_for_loss(
         self, group: str, model_config: ModelConfig, continuous: bool
     ) -> TensorDictModule:
-
         n_agents = len(self.group_map[group])
         if continuous:
             logits_shape = list(self.action_spec[group, "action"].shape)
@@ -124,11 +138,12 @@ class Mappo(Algorithm):
             centralised=False,
             share_params=self.experiment_config.share_policy_params,
             device=self.device,
+            action_spec=self.action_spec,
         )
 
         if continuous:
             extractor_module = TensorDictModule(
-                NormalParamExtractor(),
+                NormalParamExtractor(scale_mapping=self.scale_mapping),
                 in_keys=[(group, "logits")],
                 out_keys=[(group, "loc"), (group, "scale")],
             )
@@ -259,6 +274,7 @@ class Mappo(Algorithm):
                 agent_group=group,
                 share_params=self.share_param_critic,
                 device=self.device,
+                action_spec=self.action_spec,
             )
 
         else:
@@ -283,6 +299,7 @@ class Mappo(Algorithm):
                 agent_group=group,
                 share_params=self.share_param_critic,
                 device=self.device,
+                action_spec=self.action_spec,
             )
         if self.share_param_critic:
             expand_module = TensorDictModule(
@@ -299,6 +316,7 @@ class Mappo(Algorithm):
 
 @dataclass
 class MappoConfig(AlgorithmConfig):
+    """Configuration dataclass for :class:`~benchmarl.algorithms.Mappo`."""
 
     share_param_critic: bool = MISSING
     clip_epsilon: float = MISSING
@@ -306,6 +324,7 @@ class MappoConfig(AlgorithmConfig):
     critic_coef: float = MISSING
     loss_critic_type: str = MISSING
     lmbda: float = MISSING
+    scale_mapping: str = MISSING
 
     @staticmethod
     def associated_class() -> Type[Algorithm]:

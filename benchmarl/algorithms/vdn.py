@@ -18,6 +18,15 @@ from benchmarl.models.common import ModelConfig
 
 
 class Vdn(Algorithm):
+    """Vdn (from `https://arxiv.org/abs/1706.05296 <https://arxiv.org/abs/1706.05296>`__).
+
+    Args:
+        loss_function (str): loss function for the value discrepancy. Can be one of "l1", "l2" or "smooth_l1".
+        delay_value (bool): whether to separate the target value networks from the value networks used for
+            data collection.
+
+    """
+
     def __init__(self, delay_value: bool, loss_function: str, **kwargs):
         super().__init__(**kwargs)
 
@@ -59,7 +68,6 @@ class Vdn(Algorithm):
             return loss_module, True
 
     def _get_parameters(self, group: str, loss: LossModule) -> Dict[str, Iterable]:
-
         return {
             "loss": loss.parameters(),
         }
@@ -67,7 +75,6 @@ class Vdn(Algorithm):
     def _get_policy_for_loss(
         self, group: str, model_config: ModelConfig, continuous: bool
     ) -> TensorDictModule:
-
         n_agents = len(self.group_map[group])
         logits_shape = [
             *self.action_spec[group, "action"].shape,
@@ -104,6 +111,7 @@ class Vdn(Algorithm):
             centralised=False,
             share_params=self.experiment_config.share_policy_params,
             device=self.device,
+            action_spec=self.action_spec,
         )
         if self.action_mask_spec is not None:
             action_mask_key = (group, "action_mask")
@@ -175,7 +183,6 @@ class Vdn(Algorithm):
     #####################
 
     def get_mixer(self, group: str) -> TensorDictModule:
-
         n_agents = len(self.group_map[group])
         mixer = TensorDictModule(
             module=VDNMixer(
@@ -191,6 +198,7 @@ class Vdn(Algorithm):
 
 @dataclass
 class VdnConfig(AlgorithmConfig):
+    """Configuration dataclass for :class:`~benchmarl.algorithms.Vdn`."""
 
     delay_value: bool = MISSING
     loss_function: str = MISSING

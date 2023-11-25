@@ -15,7 +15,7 @@ from tensordict.nn import TensorDictModuleBase, TensorDictSequential
 from torchrl.data import CompositeSpec, UnboundedContinuousTensorSpec
 from torchrl.envs import EnvBase
 
-from benchmarl.utils import class_from_name, DEVICE_TYPING, read_yaml_config
+from benchmarl.utils import _class_from_name, _read_yaml_config, DEVICE_TYPING
 
 
 def _check_spec(tensordict, spec):
@@ -28,7 +28,7 @@ def parse_model_config(cfg: Dict[str, Any]) -> Dict[str, Any]:
     kwargs = {}
     for key, value in cfg.items():
         if key.endswith("class") and value is not None:
-            value = class_from_name(cfg[key])
+            value = _class_from_name(cfg[key])
         kwargs.update({key: value})
     return kwargs
 
@@ -60,12 +60,12 @@ class Model(TensorDictModuleBase, ABC):
         output_spec (CompositeSpec): the output spec of the model
         agent_group (str): the name of the agent group the model is for
         n_agents (int): the number of agents this module is for
-        device (str): the mdoel's device
+        device (str): the model's device
         input_has_agent_dim (bool): This tells the model if the input will have a multi-agent dimension or not.
             For example, the input of policies will always have this set to true,
             but critics that use a global state have this set to false as the state is shared by all agents
         centralised (bool): This tells the model if it has full observability.
-            This will always be true when self.input_has_agent_dim==False,
+            This will always be true when ``self.input_has_agent_dim==False``,
             but in cases where the input has the agent dimension, this parameter is
             used to distinguish between a decentralised model (where each agent's data
             is processed separately) and a centralized model, where the model pools all data together
@@ -73,6 +73,7 @@ class Model(TensorDictModuleBase, ABC):
             or a different set of parameters for each agent.
             This is independent of the other options as it is possible to have different parameters
             for centralized critics with global input.
+        action_spec (CompositeSpec): The action spec of the environment
     """
 
     def __init__(
@@ -85,7 +86,7 @@ class Model(TensorDictModuleBase, ABC):
         centralised: bool,
         share_params: bool,
         device: DEVICE_TYPING,
-        **kwargs,
+        action_spec: CompositeSpec,
     ):
         TensorDictModuleBase.__init__(self)
 
@@ -97,6 +98,7 @@ class Model(TensorDictModuleBase, ABC):
         self.share_params = share_params
         self.device = device
         self.n_agents = n_agents
+        self.action_spec = action_spec
 
         self.in_keys = list(self.input_spec.keys(True, True))
         self.out_keys = list(self.output_spec.keys(True, True))
@@ -112,8 +114,8 @@ class Model(TensorDictModuleBase, ABC):
     def output_has_agent_dim(self) -> bool:
         """
         This is a dynamically computed attribute that indicates if the output will have the agent dimension.
-        This will be false when share_params==True and centralised==True, and true in all other cases.
-        When output_has_agent_dim is true, your model's output should contain the multiagent dimension,
+        This will be false when ``share_params==True and centralised==True``, and true in all other cases.
+        When output_has_agent_dim is true, your model's output should contain the multi-agent dimension,
         and the dimension should be absent otherwise
         """
         return output_has_agent_dim(self.share_params, self.centralised)
@@ -168,11 +170,16 @@ class Model(TensorDictModuleBase, ABC):
 
 
 class SequenceModel(Model):
+    """A sequence of :class:`~benchmarl.models.Model`
+
+    Args:
+       models (list of Model): the models in the sequence
+    """
+
     def __init__(
         self,
         models: List[Model],
     ):
-
         super().__init__(
             n_agents=models[0].n_agents,
             input_spec=models[0].input_spec,
@@ -182,6 +189,7 @@ class SequenceModel(Model):
             device=models[0].device,
             agent_group=models[0].agent_group,
             input_has_agent_dim=models[0].input_has_agent_dim,
+            action_spec=models[0].action_spec,
         )
         self.models = TensorDictSequential(*models)
 
@@ -192,11 +200,13 @@ class SequenceModel(Model):
 @dataclass
 class ModelConfig(ABC):
     """
-    Dataclass representing an model configuration.
+    Dataclass representing a :class:`~benchmarl.models.Model` configuration.
     This should be overridden by implemented models.
     Implementors should:
-     1. add configuration parameters for their algorithm
-     2. implement all abstract methods
+
+        1. add configuration parameters for their algorithm
+        2. implement all abstract methods
+
     """
 
     def get_model(
@@ -209,6 +219,7 @@ class ModelConfig(ABC):
         centralised: bool,
         share_params: bool,
         device: DEVICE_TYPING,
+        action_spec: CompositeSpec,
     ) -> Model:
         """
         Creates the model from the config.
@@ -231,6 +242,7 @@ class ModelConfig(ABC):
                 or a different set of parameters for each agent.
                 This is independent of the other options as it is possible to have different parameters
                 for centralized critics with global input.
+            action_spec (CompositeSpec): The action spec of the environment
 
         Returns: the Model
 
@@ -245,6 +257,7 @@ class ModelConfig(ABC):
             centralised=centralised,
             share_params=share_params,
             device=device,
+            action_spec=action_spec,
         )
 
     @staticmethod
@@ -275,7 +288,7 @@ class ModelConfig(ABC):
             / "layers"
             / f"{name.lower()}.yaml"
         )
-        cfg = read_yaml_config(str(yaml_path.resolve()))
+        cfg = _read_yaml_config(str(yaml_path.resolve()))
         return parse_model_config(cfg)
 
     @classmethod
@@ -297,11 +310,12 @@ class ModelConfig(ABC):
                 )
             )
         else:
-            return cls(**parse_model_config(read_yaml_config(path)))
+            return cls(**parse_model_config(_read_yaml_config(path)))
 
 
 @dataclass
 class SequenceModelConfig(ModelConfig):
+    """Dataclass for a :class:`~benchmarl.models.SequenceModel`."""
 
     model_configs: Sequence[ModelConfig]
     intermediate_sizes: Sequence[int]
@@ -316,8 +330,8 @@ class SequenceModelConfig(ModelConfig):
         centralised: bool,
         share_params: bool,
         device: DEVICE_TYPING,
+        action_spec: CompositeSpec,
     ) -> Model:
-
         n_models = len(self.model_configs)
         if not n_models > 0:
             raise ValueError(
@@ -351,6 +365,7 @@ class SequenceModelConfig(ModelConfig):
                 centralised=centralised,
                 share_params=share_params,
                 device=device,
+                action_spec=action_spec,
             )
         ]
 
@@ -364,6 +379,7 @@ class SequenceModelConfig(ModelConfig):
                 centralised=next_centralised,
                 share_params=share_params,
                 device=device,
+                action_spec=action_spec,
             )
             for i in range(1, n_models)
         ]

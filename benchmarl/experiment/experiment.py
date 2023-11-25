@@ -7,8 +7,8 @@
 from __future__ import annotations
 
 import importlib
-import os
 
+import os
 import time
 from collections import OrderedDict
 from dataclasses import dataclass, MISSING
@@ -19,7 +19,7 @@ import torch
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictSequential
 from torchrl.collectors import SyncDataCollector
-from torchrl.envs import RewardSum, SerialEnv, TransformedEnv
+from torchrl.envs import SerialEnv, TransformedEnv
 from torchrl.envs.transforms import Compose
 from torchrl.envs.utils import ExplorationType, set_exploration_type
 from torchrl.record.loggers import generate_exp_name
@@ -27,11 +27,10 @@ from tqdm import tqdm
 
 from benchmarl.algorithms.common import AlgorithmConfig
 from benchmarl.environments import Task
-
 from benchmarl.experiment.callback import Callback, CallbackNotifier
 from benchmarl.experiment.logger import Logger
 from benchmarl.models.common import ModelConfig
-from benchmarl.utils import read_yaml_config
+from benchmarl.utils import _read_yaml_config
 
 _has_hydra = importlib.util.find_spec("hydra") is not None
 if _has_hydra:
@@ -45,7 +44,7 @@ class ExperimentConfig:
     This class acts as a schema for loading and validating yaml configurations.
 
     Parameters in this class aim to be agnostic of the algorithm, task or model used.
-    To know their meaning, please check out the descriptions in benchmarl/conf/experiment/base_experiment.yaml
+    To know their meaning, please check out the descriptions in ``benchmarl/conf/experiment/base_experiment.yaml``
     """
 
     sampling_device: str = MISSING
@@ -112,7 +111,7 @@ class ExperimentConfig:
         """
         The minibatch size of tensors used for training.
         On-policy algorithms are trained by splitting the train_batch_size (equal to the collected frames) into minibatches.
-        Off-policy algorithms do not go through this process and thus have the train_minibatch_size==train_batch_size
+        Off-policy algorithms do not go through this process and thus have the ``train_minibatch_size==train_batch_size``
 
         Args:
             on_policy (bool): is the algorithms on_policy
@@ -169,8 +168,8 @@ class ExperimentConfig:
         """
         Number of environments used for collection
 
-        In vectorized environments, this will be the vectorized batch_size.
-        In other environments, this will be emulated by running them sequentially.
+        - In vectorized environments, this will be the vectorized batch_size.
+        - In other environments, this will be emulated by running them sequentially.
 
         Args:
             on_policy (bool): is the algorithms on_policy
@@ -234,9 +233,10 @@ class ExperimentConfig:
         Args:
             path (str, optional): The full path of the yaml file to load from.
                 If None, it will default to
-                benchmarl/conf/experiment/base_experiment.yaml
+                ``benchmarl/conf/experiment/base_experiment.yaml``
 
-        Returns: the loaded ExperimentConfig
+        Returns:
+            the loaded :class:`~benchmarl.experiment.ExperimentConfig`
         """
         if path is None:
             yaml_path = (
@@ -245,9 +245,9 @@ class ExperimentConfig:
                 / "experiment"
                 / "base_experiment.yaml"
             )
-            return ExperimentConfig(**read_yaml_config(str(yaml_path.resolve())))
+            return ExperimentConfig(**_read_yaml_config(str(yaml_path.resolve())))
         else:
-            return ExperimentConfig(**read_yaml_config(path))
+            return ExperimentConfig(**_read_yaml_config(path))
 
     def validate(self, on_policy: bool):
         """
@@ -283,16 +283,15 @@ class Experiment(CallbackNotifier):
     """
     Main experiment class in BenchMARL.
 
-
     Args:
         task (Task): the task configuration
         algorithm_config (AlgorithmConfig): the algorithm configuration
         model_config (ModelConfig): the policy model configuration
         seed (int): the seed for the experiment
-        config (ExperimentConfig):
+        config (ExperimentConfig): the experiment config
         critic_model_config (ModelConfig, optional): the policy model configuration.
             If None, it defaults to model_config
-        callbacks (list of Callback, optional): list of benchmarl.experiment.callbacks.Callback for this experiment
+        callbacks (list of Callback, optional): callbacks for this experiment
     """
 
     def __init__(
@@ -331,7 +330,7 @@ class Experiment(CallbackNotifier):
 
     @property
     def on_policy(self) -> bool:
-        """Weather the algorithm has to be run on policy"""
+        """Whether the algorithm has to be run on policy."""
         return self.algorithm_config.on_policy()
 
     def _setup(self):
@@ -392,7 +391,7 @@ class Experiment(CallbackNotifier):
         self.group_map = self.task.group_map(test_env)
         self.max_steps = self.task.max_steps(test_env)
 
-        transforms = [RewardSum()]
+        transforms = [self.task.get_reward_sum_transform(test_env)]
         transform = Compose(*transforms)
 
         if test_env.batch_size == ():
@@ -406,16 +405,7 @@ class Experiment(CallbackNotifier):
         self.test_env = test_env.to(self.config.sampling_device)
 
     def _setup_algorithm(self):
-        self.algorithm = self.algorithm_config.get_algorithm(
-            experiment_config=self.config,
-            model_config=self.model_config,
-            critic_model_config=self.critic_model_config,
-            observation_spec=self.observation_spec,
-            action_spec=self.action_spec,
-            state_spec=self.state_spec,
-            action_mask_spec=self.action_mask_spec,
-            group_map=self.group_map,
-        )
+        self.algorithm = self.algorithm_config.get_algorithm(experiment=self)
         self.replay_buffers = {
             group: self.algorithm.get_replay_buffer(
                 group=group,
@@ -493,7 +483,6 @@ class Experiment(CallbackNotifier):
             self.name = self.folder_name.name
 
     def _setup_logger(self):
-
         self.logger = Logger(
             experiment_name=self.name,
             folder_name=str(self.folder_name),
@@ -528,7 +517,6 @@ class Experiment(CallbackNotifier):
             raise err
 
     def _collection_loop(self):
-
         pbar = tqdm(
             initial=self.n_iters_performed,
             total=self.config.get_max_n_iters(self.on_policy),
@@ -537,7 +525,6 @@ class Experiment(CallbackNotifier):
 
         # Training/collection iterations
         for batch in self.collector:
-
             # Logging collection
             collection_time = time.time() - sampling_start
             current_frames = batch.numel()
@@ -549,10 +536,9 @@ class Experiment(CallbackNotifier):
                 step=self.n_iters_performed,
             )
             pbar.set_description(f"mean return = {self.mean_return}", refresh=False)
-            pbar.update()
 
             # Callback
-            self.on_batch_collected(batch)
+            self._on_batch_collected(batch)
 
             # Loop over groups
             training_start = time.time()
@@ -575,7 +561,7 @@ class Experiment(CallbackNotifier):
                 )
 
                 # Callback
-                self.on_train_end(training_td)
+                self._on_train_end(training_td, group)
 
                 # Exploration update
                 if isinstance(self.group_policies[group], TensorDictSequential):
@@ -621,6 +607,7 @@ class Experiment(CallbackNotifier):
                 and self.total_frames % self.config.checkpoint_interval == 0
             ):
                 self._save_experiment()
+            pbar.update()
             sampling_start = time.time()
 
         self.close()
@@ -652,6 +639,7 @@ class Experiment(CallbackNotifier):
                 loss_value.backward()
 
                 grad_norm = self._grad_clip(optimizer)
+
                 training_td.set(
                     f"grad_norm_{loss_name}",
                     torch.tensor(grad_norm, device=self.config.train_device),
@@ -662,6 +650,11 @@ class Experiment(CallbackNotifier):
         self.replay_buffers[group].update_tensordict_priority(subdata)
         if self.target_updaters[group] is not None:
             self.target_updaters[group].step()
+
+        callback_loss = self._on_train_step(subdata, group)
+        if callback_loss is not None:
+            training_td.update(callback_loss)
+
         return training_td
 
     def _grad_clip(self, optimizer: torch.optim.Optimizer) -> float:
@@ -686,10 +679,9 @@ class Experiment(CallbackNotifier):
                 video_frames = []
 
                 def callback(env, td):
-                    try:
-                        video_frames.append(env.render(mode="rgb_array"))
-                    except TypeError:
-                        video_frames.append(env.render())
+                    video_frames.append(
+                        self.task.__class__.render_callback(self, env, td)
+                    )
 
             else:
                 video_frames = None
@@ -728,11 +720,11 @@ class Experiment(CallbackNotifier):
             total_frames=self.total_frames,
         )
         # Callback
-        self.on_evaluation_end(rollouts)
+        self._on_evaluation_end(rollouts)
 
     # Saving experiment state
     def state_dict(self) -> OrderedDict:
-        """Get the state_dict for the experiment"""
+        """Get the state_dict for the experiment."""
         state = OrderedDict(
             total_time=self.total_time,
             total_frames=self.total_frames,
@@ -751,7 +743,12 @@ class Experiment(CallbackNotifier):
         return state_dict
 
     def load_state_dict(self, state_dict: Dict) -> None:
-        """Load the state_dict for the experiment"""
+        """Load the state_dict for the experiment.
+
+        Args:
+            state_dict (dict): the state dict
+
+        """
         for group in self.group_map.keys():
             self.losses[group].load_state_dict(state_dict[f"loss_{group}"])
             self.replay_buffers[group].load_state_dict(state_dict[f"buffer_{group}"])

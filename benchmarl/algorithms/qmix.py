@@ -18,6 +18,16 @@ from benchmarl.models.common import ModelConfig
 
 
 class Qmix(Algorithm):
+    """QMIX (from `https://arxiv.org/abs/1803.11485 <https://arxiv.org/abs/1803.11485>`__).
+
+    Args:
+        mixing_embed_dim (int): hidden dimension of the mixing network
+        loss_function (str): loss function for the value discrepancy. Can be one of "l1", "l2" or "smooth_l1".
+        delay_value (bool): whether to separate the target value networks from the value networks used for
+            data collection.
+
+    """
+
     def __init__(
         self, mixing_embed_dim: int, delay_value: bool, loss_function: str, **kwargs
     ):
@@ -67,7 +77,6 @@ class Qmix(Algorithm):
     def _get_policy_for_loss(
         self, group: str, model_config: ModelConfig, continuous: bool
     ) -> TensorDictModule:
-
         n_agents = len(self.group_map[group])
         logits_shape = [
             *self.action_spec[group, "action"].shape,
@@ -104,6 +113,7 @@ class Qmix(Algorithm):
             centralised=False,
             share_params=self.experiment_config.share_policy_params,
             device=self.device,
+            action_spec=self.action_spec,
         )
         if self.action_mask_spec is not None:
             action_mask_key = (group, "action_mask")
@@ -175,7 +185,6 @@ class Qmix(Algorithm):
     #####################
 
     def get_mixer(self, group: str) -> TensorDictModule:
-
         n_agents = len(self.group_map[group])
 
         if self.state_spec is not None:
@@ -201,6 +210,7 @@ class Qmix(Algorithm):
 
 @dataclass
 class QmixConfig(AlgorithmConfig):
+    """Configuration dataclass for :class:`~benchmarl.algorithms.Qmix`."""
 
     mixing_embed_dim: int = MISSING
     delay_value: bool = MISSING

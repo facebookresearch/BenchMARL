@@ -7,4 +7,6 @@
 from .gnn import GnnConfig
 from .mlp import MlpConfig
 
+classes = ["Mlp", "MlpConfig", "Gnn", "GnnConfig"]
+
 model_config_registry = {"mlp": MlpConfig, "gnn": GnnConfig}

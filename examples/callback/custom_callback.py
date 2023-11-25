@@ -11,14 +11,18 @@ from benchmarl.environments import VmasTask
 from benchmarl.experiment import Experiment, ExperimentConfig
 from benchmarl.experiment.callback import Callback
 from benchmarl.models.mlp import MlpConfig
-from tensordict import TensorDictBase
+from tensordict import TensorDict, TensorDictBase
 
 
 class MyCallbackA(Callback):
     def on_batch_collected(self, batch: TensorDictBase):
         print(f"Callback A is doing something with the sampling batch {batch}")
 
-    def on_train_end(self, training_td: TensorDictBase):
+    def on_train_step(self, batch: TensorDictBase, group: str) -> TensorDictBase:
+        print(f"Callback A is computing a loss with the training tensordict {batch}")
+        return TensorDict({}, [])
+
+    def on_train_end(self, training_td: TensorDictBase, group: str):
         print(
             f"Callback A is doing something with the training tensordict {training_td}"
         )
@@ -37,7 +41,6 @@ class MyCallbackB(Callback):
 
 
 if __name__ == "__main__":
-
     experiment_config = ExperimentConfig.get_from_yaml()
     task = VmasTask.BALANCE.get_from_yaml()
     algorithm_config = MappoConfig.get_from_yaml()

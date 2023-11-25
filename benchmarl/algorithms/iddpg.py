@@ -19,6 +19,16 @@ from benchmarl.models.common import ModelConfig
 
 
 class Iddpg(Algorithm):
+    """Same as :class:`~benchmarkl.algorithms.Maddpg` (from `https://arxiv.org/abs/1706.02275 <https://arxiv.org/abs/1706.02275>`__) but with decentralized critics.
+
+    Args:
+        share_param_critic (bool): Whether to share the parameters of the critics withing agent groups
+        loss_function (str): loss function for the value discrepancy. Can be one of "l1", "l2" or "smooth_l1".
+        delay_value (bool): whether to separate the target value networks from the value networks used for
+            data collection.
+
+    """
+
     def __init__(
         self, share_param_critic: bool, loss_function: str, delay_value: bool, **kwargs
     ):
@@ -101,6 +111,7 @@ class Iddpg(Algorithm):
                 centralised=False,
                 share_params=self.experiment_config.share_policy_params,
                 device=self.device,
+                action_spec=self.action_spec,
             )
 
             policy = ProbabilisticActor(
@@ -217,6 +228,7 @@ class Iddpg(Algorithm):
                 agent_group=group,
                 share_params=self.share_param_critic,
                 device=self.device,
+                action_spec=self.action_spec,
             )
         )
 
@@ -225,6 +237,8 @@ class Iddpg(Algorithm):
 
 @dataclass
 class IddpgConfig(AlgorithmConfig):
+    """Configuration dataclass for :class:`~benchmarl.algorithms.Iddpg`."""
+
     share_param_critic: bool = MISSING
     loss_function: str = MISSING
     delay_value: bool = MISSING

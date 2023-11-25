@@ -18,6 +18,15 @@ from benchmarl.models.common import ModelConfig
 
 
 class Iql(Algorithm):
+    """Independent Q Learning (from `https://www.semanticscholar.org/paper/Multi-Agent-Reinforcement-Learning%3A-Independent-Tan/59de874c1e547399b695337bcff23070664fa66e <https://www.semanticscholar.org/paper/Multi-Agent-Reinforcement-Learning%3A-Independent-Tan/59de874c1e547399b695337bcff23070664fa66e>`__).
+
+    Args:
+        loss_function (str): loss function for the value discrepancy. Can be one of "l1", "l2" or "smooth_l1".
+        delay_value (bool): whether to separate the target value networks from the value networks used for
+            data collection.
+
+    """
+
     def __init__(self, delay_value: bool, loss_function: str, **kwargs):
         super().__init__(**kwargs)
 
@@ -62,7 +71,6 @@ class Iql(Algorithm):
     def _get_policy_for_loss(
         self, group: str, model_config: ModelConfig, continuous: bool
     ) -> TensorDictModule:
-
         n_agents = len(self.group_map[group])
         logits_shape = [
             *self.action_spec[group, "action"].shape,
@@ -99,6 +107,7 @@ class Iql(Algorithm):
             centralised=False,
             share_params=self.experiment_config.share_policy_params,
             device=self.device,
+            action_spec=self.action_spec,
         )
         if self.action_mask_spec is not None:
             action_mask_key = (group, "action_mask")
@@ -175,6 +184,7 @@ class Iql(Algorithm):
 
 @dataclass
 class IqlConfig(AlgorithmConfig):
+    """Configuration dataclass for :class:`~benchmarl.algorithms.Iql`."""
 
     delay_value: bool = MISSING
     loss_function: str = MISSING

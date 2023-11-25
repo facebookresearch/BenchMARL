@@ -13,7 +13,7 @@ import yaml
 DEVICE_TYPING = Union[torch.device, str, int]
 
 
-def read_yaml_config(config_file: str) -> Dict[str, Any]:
+def _read_yaml_config(config_file: str) -> Dict[str, Any]:
     with open(config_file) as config:
         yaml_string = config.read()
     config_dict = yaml.safe_load(yaml_string)
@@ -22,7 +22,7 @@ def read_yaml_config(config_file: str) -> Dict[str, Any]:
     return config_dict
 
 
-def class_from_name(name: str):
+def _class_from_name(name: str):
     name_split = name.split(".")
     module_name = ".".join(name_split[:-1])
     class_name = name_split[-1]
