@@ -4,4 +4,5 @@
 #  LICENSE file in the root directory of this source tree.
 #
 
+from .callback import Callback
 from .experiment import Experiment, ExperimentConfig

@@ -18,6 +18,20 @@ from benchmarl.models.common import Model, ModelConfig
 
 
 class Mlp(Model):
+    """Multi layer perceptron model.
+
+    Args:
+        num_cells (int or Sequence[int], optional): number of cells of every layer in between the input and output. If
+            an integer is provided, every layer will have the same number of cells. If an iterable is provided,
+            the linear layers out_features will match the content of num_cells.
+        layer_class (Type[nn.Module]): class to be used for the linear layers;
+        activation_class (Type[nn.Module]): activation class to be used.
+        activation_kwargs (dict, optional): kwargs to be used with the activation class;
+        norm_class (Type, optional): normalization class, if any.
+        norm_kwargs (dict, optional): kwargs to be used with the normalization layers;
+
+    """
+
     def __init__(
         self,
         **kwargs,
@@ -106,6 +120,8 @@ class Mlp(Model):
 
 @dataclass
 class MlpConfig(ModelConfig):
+    """Dataclass config for a :class:`~benchmarl.models.Mlp`."""
+
     num_cells: Sequence[int] = MISSING
     layer_class: Type[nn.Module] = MISSING
 

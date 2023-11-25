@@ -15,6 +15,8 @@ from benchmarl.utils import DEVICE_TYPING
 
 
 class PettingZooTask(Task):
+    """Enum for PettingZoo tasks."""
+
     MULTIWALKER = None
     WATERWORLD = None
     SIMPLE_ADVERSARY = None

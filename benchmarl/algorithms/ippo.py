@@ -22,6 +22,21 @@ from benchmarl.models.common import ModelConfig
 
 
 class Ippo(Algorithm):
+    """Independent PPO (from `https://arxiv.org/abs/2011.09533 <https://arxiv.org/abs/2011.09533>`__).
+
+    Args:
+        share_param_critic (bool): Whether to share the parameters of the critics withing agent groups
+        clip_epsilon (scalar): weight clipping threshold in the clipped PPO loss equation.
+        entropy_coef (scalar): entropy multiplier when computing the total loss.
+        critic_coef (scalar): critic loss multiplier when computing the total
+        loss_critic_type (str): loss function for the value discrepancy.
+            Can be one of "l1", "l2" or "smooth_l1".
+        lmbda (float): The GAE lambda
+        scale_mapping (str): positive mapping function to be used with the std.
+            choices: "softplus", "exp", "relu", "biased_softplus_1";
+
+    """
+
     def __init__(
         self,
         share_param_critic: bool,
@@ -270,6 +285,8 @@ class Ippo(Algorithm):
 
 @dataclass
 class IppoConfig(AlgorithmConfig):
+    """Configuration dataclass for :class:`~benchmarl.algorithms.Ippo`."""
+
     share_param_critic: bool = MISSING
     clip_epsilon: float = MISSING
     entropy_coef: float = MISSING
