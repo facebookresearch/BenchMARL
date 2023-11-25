@@ -32,7 +32,7 @@ class Algorithm(ABC):
     This should be overridden by implemented algorithms
     and all abstract methods should be implemented.
 
-     Args:
+    Args:
         experiment (Experiment): the experiment class
     """
 
@@ -104,14 +104,13 @@ class Algorithm(ABC):
     def get_loss_and_updater(self, group: str) -> Tuple[LossModule, TargetNetUpdater]:
         """
         Get the LossModule and TargetNetUpdater for a specific group.
-        This function calls the abstract self._get_loss() which needs to be implemented.
+        This function calls the abstract :class:`~benchmarl.algorithms.Algorithm._get_loss()` which needs to be implemented.
         The function will cache the output at the first call and return the cached values in future calls.
 
         Args:
             group (str): agent group of the loss and updater
 
         Returns: LossModule and TargetNetUpdater for the group
-
         """
         if group not in self._losses_and_updaters.keys():
             action_space = self.action_spec[group, "action"]
@@ -144,7 +143,7 @@ class Algorithm(ABC):
     ) -> ReplayBuffer:
         """
         Get the ReplayBuffer for a specific group.
-        This function will check self.on_policy and create the buffer accordingly
+        This function will check ``self.on_policy`` and create the buffer accordingly
 
         Args:
             group (str): agent group of the loss and updater
@@ -165,7 +164,7 @@ class Algorithm(ABC):
     def get_policy_for_loss(self, group: str) -> TensorDictModule:
         """
         Get the non-explorative policy for a specific group loss.
-        This function calls the abstract self._get_policy_for_loss() which needs to be implemented.
+        This function calls the abstract :class:`~benchmarl.algorithms.Algorithm._get_policy_for_loss()` which needs to be implemented.
         The function will cache the output at the first call and return the cached values in future calls.
 
         Args:
@@ -192,7 +191,7 @@ class Algorithm(ABC):
     def get_policy_for_collection(self) -> TensorDictSequential:
         """
         Get the explorative policy for all groups together.
-        This function calls the abstract self._get_policy_for_collection() which needs to be implemented.
+        This function calls the abstract :class:`~benchmarl.algorithms.Algorithm._get_policy_for_collection()` which needs to be implemented.
         The function will cache the output at the first call and return the cached values in future calls.
 
         Returns: TensorDictSequential representing all explorative policies
@@ -217,7 +216,7 @@ class Algorithm(ABC):
     def get_parameters(self, group: str) -> Dict[str, Iterable]:
         """
         Get the dictionary mapping loss names to the relative parameters to optimize for a given group.
-        This function calls the abstract self._get_parameters() which needs to be implemented.
+        This function calls the abstract :class:`~benchmarl.algorithms.Algorithm._get_parameters()` which needs to be implemented.
 
         Returns: a dictionary mapping loss names to a parameters' list
         """
@@ -332,6 +331,7 @@ class AlgorithmConfig:
     def get_algorithm(self, experiment) -> Algorithm:
         """
         Main function to turn the config into the associated algorithm
+
         Args:
             experiment (Experiment): the experiment class
 
@@ -361,7 +361,7 @@ class AlgorithmConfig:
         Args:
             path (str, optional): The full path of the yaml file to load from.
                 If None, it will default to
-                benchmarl/conf/algorithm/self.associated_class().__name__
+                ``benchmarl/conf/algorithm/self.associated_class().__name__``
 
         Returns: the loaded AlgorithmConfig
         """

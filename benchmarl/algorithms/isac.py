@@ -26,6 +26,24 @@ from benchmarl.models.common import ModelConfig
 
 
 class Isac(Algorithm):
+    """Independent Soft Actor Critic.
+
+    Args:
+        share_param_critic (bool): Whether to share the parameters of the critics withing agent groups
+        num_qvalue_nets (integer): number of Q-Value networks used.
+        loss_function (str): loss function to be used with
+            the value function loss.
+        delay_qvalue ():
+        target_entropy ():
+        discrete_target_entropy_weight ():
+        alpha_init ():
+        min_alpha ():
+        max_alpha ():
+        fixed_alpha ():
+        scale_mapping ():
+
+    """
+
     def __init__(
         self,
         share_param_critic: bool,

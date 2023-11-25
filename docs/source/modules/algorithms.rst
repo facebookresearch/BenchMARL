@@ -15,7 +15,7 @@ Common
 .. autosummary::
    :nosignatures:
    :toctree: ../generated
-   :template: autosummary/class.rst
+   :template: autosummary/class_private.rst
 
    Algorithm
    AlgorithmConfig
@@ -26,7 +26,7 @@ Algorithms
 .. autosummary::
    :nosignatures:
    :toctree: ../generated
-   :template: autosummary/class.rst
+   :template: autosummary/class_private.rst
 
    {% for name in benchmarl.algorithms.classes %}
      {{ name }}
