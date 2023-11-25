@@ -15,7 +15,7 @@ from tensordict.nn import TensorDictModuleBase, TensorDictSequential
 from torchrl.data import CompositeSpec, UnboundedContinuousTensorSpec
 from torchrl.envs import EnvBase
 
-from benchmarl.utils import class_from_name, DEVICE_TYPING, read_yaml_config
+from benchmarl.utils import _class_from_name, _read_yaml_config, DEVICE_TYPING
 
 
 def _check_spec(tensordict, spec):
@@ -28,7 +28,7 @@ def parse_model_config(cfg: Dict[str, Any]) -> Dict[str, Any]:
     kwargs = {}
     for key, value in cfg.items():
         if key.endswith("class") and value is not None:
-            value = class_from_name(cfg[key])
+            value = _class_from_name(cfg[key])
         kwargs.update({key: value})
     return kwargs
 
@@ -282,7 +282,7 @@ class ModelConfig(ABC):
             / "layers"
             / f"{name.lower()}.yaml"
         )
-        cfg = read_yaml_config(str(yaml_path.resolve()))
+        cfg = _read_yaml_config(str(yaml_path.resolve()))
         return parse_model_config(cfg)
 
     @classmethod
@@ -304,7 +304,7 @@ class ModelConfig(ABC):
                 )
             )
         else:
-            return cls(**parse_model_config(read_yaml_config(path)))
+            return cls(**parse_model_config(_read_yaml_config(path)))
 
 
 @dataclass

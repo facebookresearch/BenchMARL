@@ -30,7 +30,7 @@ from benchmarl.environments import Task
 from benchmarl.experiment.callback import Callback, CallbackNotifier
 from benchmarl.experiment.logger import Logger
 from benchmarl.models.common import ModelConfig
-from benchmarl.utils import read_yaml_config
+from benchmarl.utils import _read_yaml_config
 
 _has_hydra = importlib.util.find_spec("hydra") is not None
 if _has_hydra:
@@ -244,9 +244,9 @@ class ExperimentConfig:
                 / "experiment"
                 / "base_experiment.yaml"
             )
-            return ExperimentConfig(**read_yaml_config(str(yaml_path.resolve())))
+            return ExperimentConfig(**_read_yaml_config(str(yaml_path.resolve())))
         else:
-            return ExperimentConfig(**read_yaml_config(path))
+            return ExperimentConfig(**_read_yaml_config(path))
 
     def validate(self, on_policy: bool):
         """

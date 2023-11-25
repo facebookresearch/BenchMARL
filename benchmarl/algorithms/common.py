@@ -23,7 +23,7 @@ from torchrl.objectives import LossModule
 from torchrl.objectives.utils import HardUpdate, SoftUpdate, TargetNetUpdater
 
 from benchmarl.models.common import ModelConfig
-from benchmarl.utils import DEVICE_TYPING, read_yaml_config
+from benchmarl.utils import _read_yaml_config, DEVICE_TYPING
 
 
 class Algorithm(ABC):
@@ -351,7 +351,7 @@ class AlgorithmConfig:
             / "algorithm"
             / f"{name.lower()}.yaml"
         )
-        return read_yaml_config(str(yaml_path.resolve()))
+        return _read_yaml_config(str(yaml_path.resolve()))
 
     @classmethod
     def get_from_yaml(cls, path: Optional[str] = None):
@@ -372,7 +372,7 @@ class AlgorithmConfig:
                 )
             )
         else:
-            return cls(**read_yaml_config(path))
+            return cls(**_read_yaml_config(path))
 
     @staticmethod
     @abstractmethod
