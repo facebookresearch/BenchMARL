@@ -76,11 +76,11 @@ class CallbackNotifier:
         for callback in self.callbacks:
             callback.experiment = experiment
 
-    def on_batch_collected(self, batch: TensorDictBase):
+    def _on_batch_collected(self, batch: TensorDictBase):
         for callback in self.callbacks:
             callback.on_batch_collected(batch)
 
-    def on_train_step(self, batch: TensorDictBase, group: str) -> TensorDictBase:
+    def _on_train_step(self, batch: TensorDictBase, group: str) -> TensorDictBase:
         train_td = None
         for callback in self.callbacks:
             td = callback.on_train_step(batch, group)
@@ -91,10 +91,10 @@ class CallbackNotifier:
                     train_td.update(td)
         return train_td
 
-    def on_train_end(self, training_td: TensorDictBase, group: str):
+    def _on_train_end(self, training_td: TensorDictBase, group: str):
         for callback in self.callbacks:
             callback.on_train_end(training_td, group)
 
-    def on_evaluation_end(self, rollouts: List[TensorDictBase]):
+    def _on_evaluation_end(self, rollouts: List[TensorDictBase]):
         for callback in self.callbacks:
             callback.on_evaluation_end(rollouts)
