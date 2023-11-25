@@ -12,9 +12,6 @@ benchmarl.benchmark
 Benchmark
 ---------
 
-.. autosummary::
-   :nosignatures:
-   :toctree: ../generated
-   :template: autosummary/class.rst
-
-   Benchmark
+.. automodule:: benchmarl.benchmark.benchmark
+    :members:
+    :undoc-members:
