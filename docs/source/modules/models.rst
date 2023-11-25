@@ -15,7 +15,7 @@ Common
 .. autosummary::
    :nosignatures:
    :toctree: ../generated
-   :template: autosummary/class.rst
+   :template: autosummary/class_private_no_undoc.rst
 
    Model
    ModelConfig
@@ -28,7 +28,7 @@ Models
 .. autosummary::
    :nosignatures:
    :toctree: ../generated
-   :template: autosummary/class.rst
+   :template: autosummary/class_private_no_undoc.rst
 
    {% for name in benchmarl.models.classes %}
      {{ name }}
