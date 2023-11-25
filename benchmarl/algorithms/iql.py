@@ -184,7 +184,7 @@ class Iql(Algorithm):
 
 @dataclass
 class IqlConfig(AlgorithmConfig):
-    """Configuration dataclass for :class:`~benchmarkl.algorithms.Iql`."""
+    """Configuration dataclass for :class:`~benchmarl.algorithms.Iql`."""
 
     delay_value: bool = MISSING
     loss_function: str = MISSING

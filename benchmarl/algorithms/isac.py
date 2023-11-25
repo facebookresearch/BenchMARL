@@ -33,14 +33,20 @@ class Isac(Algorithm):
         num_qvalue_nets (integer): number of Q-Value networks used.
         loss_function (str): loss function to be used with
             the value function loss.
-        delay_qvalue ():
-        target_entropy ():
-        discrete_target_entropy_weight ():
-        alpha_init ():
-        min_alpha ():
-        max_alpha ():
-        fixed_alpha ():
-        scale_mapping ():
+        delay_qvalue (bool): Whether to separate the target Q value
+            networks from the Q value networks used for data collection.
+        target_entropy (float or str, optional): Target entropy for the
+            stochastic policy. Default is "auto", where target entropy is
+            computed as :obj:`-prod(n_actions)`.
+        discrete_target_entropy_weight (float): weight for the target entropy term when actions are discrete
+        alpha_init (float): initial entropy multiplier.
+        min_alpha (float): min value of alpha.
+        max_alpha (float): max value of alpha.
+        fixed_alpha (bool): if ``True``, alpha will be fixed to its
+            initial value. Otherwise, alpha will be optimized to
+            match the 'target_entropy' value.
+        scale_mapping (str): positive mapping function to be used with the std.
+            choices: "softplus", "exp", "relu", "biased_softplus_1";
 
     """
 
@@ -376,6 +382,8 @@ class Isac(Algorithm):
 
 @dataclass
 class IsacConfig(AlgorithmConfig):
+    """Configuration dataclass for :class:`~benchmarl.algorithms.Isac`."""
+
     share_param_critic: bool = MISSING
 
     num_qvalue_nets: int = MISSING

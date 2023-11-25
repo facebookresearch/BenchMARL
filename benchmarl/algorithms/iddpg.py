@@ -237,7 +237,7 @@ class Iddpg(Algorithm):
 
 @dataclass
 class IddpgConfig(AlgorithmConfig):
-    """Configuration dataclass for :class:`~benchmarkl.algorithms.Iddpg`."""
+    """Configuration dataclass for :class:`~benchmarl.algorithms.Iddpg`."""
 
     share_param_critic: bool = MISSING
     loss_function: str = MISSING

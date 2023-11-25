@@ -285,7 +285,7 @@ class Ippo(Algorithm):
 
 @dataclass
 class IppoConfig(AlgorithmConfig):
-    """Configuration dataclass for :class:`~benchmarkl.algorithms.Ippo`."""
+    """Configuration dataclass for :class:`~benchmarl.algorithms.Ippo`."""
 
     share_param_critic: bool = MISSING
     clip_epsilon: float = MISSING

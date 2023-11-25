@@ -18,6 +18,16 @@ from benchmarl.models.common import ModelConfig
 
 
 class Qmix(Algorithm):
+    """QMIX (from `https://arxiv.org/abs/1803.11485 <https://arxiv.org/abs/1803.11485>`__).
+
+    Args:
+        mixing_embed_dim (int): hidden dimension of the mixing network
+        loss_function (str): loss function for the value discrepancy. Can be one of "l1", "l2" or "smooth_l1".
+        delay_value (bool): whether to separate the target value networks from the value networks used for
+            data collection.
+
+    """
+
     def __init__(
         self, mixing_embed_dim: int, delay_value: bool, loss_function: str, **kwargs
     ):
@@ -200,6 +210,8 @@ class Qmix(Algorithm):
 
 @dataclass
 class QmixConfig(AlgorithmConfig):
+    """Configuration dataclass for :class:`~benchmarl.algorithms.Qmix`."""
+
     mixing_embed_dim: int = MISSING
     delay_value: bool = MISSING
     loss_function: str = MISSING
