@@ -1,18 +1,23 @@
 benchmarl
 =========
 
-
-.. automodule:: benchmarl.benchmark
-    :members:
-
-.. automodule:: benchmarl.eval_results
-    :members:
-
-.. automodule:: benchmarl.hydra_config
-    :members:
+benchmarl.run
+-------------
 
 .. automodule:: benchmarl.run
     :members:
+    :undoc-members:
 
-.. automodule:: benchmarl.utils
+benchmarl.hydra_config
+----------------------
+
+.. automodule:: benchmarl.hydra_config
     :members:
+    :undoc-members:
+
+benchmarl.eval_results
+----------------------
+
+.. automodule:: benchmarl.eval_results
+    :members:
+    :undoc-members:

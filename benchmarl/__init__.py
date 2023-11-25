@@ -9,6 +9,12 @@ __version__ = "0.0.4"
 
 import importlib
 
+import benchmarl.algorithms
+import benchmarl.benchmark
+import benchmarl.environments
+import benchmarl.experiment
+import benchmarl.models
+
 _has_hydra = importlib.util.find_spec("hydra") is not None
 
 if _has_hydra:
