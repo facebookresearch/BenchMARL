@@ -10,7 +10,7 @@ from tensordict import TensorDictBase
 from torch import nn, Tensor
 
 from benchmarl.models.common import Model, ModelConfig, parse_model_config
-from benchmarl.utils import read_yaml_config
+from benchmarl.utils import _read_yaml_config
 
 _has_torch_geometric = importlib.util.find_spec("torch_geometric") is not None
 if _has_torch_geometric:
@@ -97,6 +97,7 @@ class Gnn(Model):
             ).view(*batch_size, self.n_agents, self.output_features)
 
         tensordict.set(self.out_key, res)
+
         return tensordict
 
 
@@ -150,7 +151,6 @@ def batch_from_dense_to_ptg(
     x: Tensor,
     edge_index: Tensor,
 ) -> torch_geometric.data.Batch:
-
     batch_size = prod(x.shape[:-2])
     n_agents = x.shape[-2]
     x = x.view(-1, x.shape[-1])
@@ -193,4 +193,4 @@ class GnnConfig(ModelConfig):
                 )
             )
         else:
-            return GnnConfig(**parse_model_config(read_yaml_config(path)))
+            return GnnConfig(**parse_model_config(_read_yaml_config(path)))
