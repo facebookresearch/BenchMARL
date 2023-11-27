@@ -3,10 +3,7 @@
 #  This source code is licensed under the license found in the
 #  LICENSE file in the root directory of this source tree.
 #
-#
-#  This source code is licensed under the license found in the
-#  LICENSE file in the root directory of this source tree.
-#
+
 import importlib
 
 _has_vmas = importlib.util.find_spec("vmas") is not None
