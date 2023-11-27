@@ -4,8 +4,9 @@
 #  LICENSE file in the root directory of this source tree.
 #
 
-from .gnn import GnnConfig
-from .mlp import MlpConfig
+from .common import Model, ModelConfig, SequenceModel, SequenceModelConfig
+from .gnn import Gnn, GnnConfig
+from .mlp import Mlp, MlpConfig
 
 classes = ["Mlp", "MlpConfig", "Gnn", "GnnConfig"]
 
