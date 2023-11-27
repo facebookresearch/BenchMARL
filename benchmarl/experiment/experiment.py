@@ -506,6 +506,7 @@ class Experiment(CallbackNotifier):
     def run(self):
         """Run the experiment until completion."""
         try:
+            torch.cuda.empty_cache()
             self._collection_loop()
         except KeyboardInterrupt as interrupt:
             print("\n\nExperiment was closed gracefully\n\n")
