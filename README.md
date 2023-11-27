@@ -67,6 +67,7 @@ the domain and want to easily take a picture of the landscape.
     + [Logging](#logging)
     + [Checkpointing](#checkpointing)
     + [Callbacks](#callbacks)
+  * [Citing BenchMARL](#citing-benchmarl)
 
 
 ## How to use
@@ -472,5 +473,20 @@ as `on_batch_collected`, `on_train_end`, and `on_evaluation_end`.
 
 [![Example](https://img.shields.io/badge/Example-blue.svg)](examples/callback/custom_callback.py)
 
-# License
+
+## Citing BenchMARL
+
+If you use BenchMARL in your research please use the following BibTeX entry:
+
+```BibTeX
+@software{bettini2023benchmarl,
+  author =       {Bettini, Matteo and Prorok, Amanda and and Moens, Vincent},
+  title =        {BenchMARL: Benchmarking Multi-Agent Reinforcement Learning},
+  howpublished = {Github},
+  year =         {2023},
+  url =          {https://github.com/facebookresearch/BenchMARL}
+}
+```
+
+## License
 BenchMARL is licensed under the MIT License. See [LICENSE](LICENSE) for details.

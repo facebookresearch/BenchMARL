@@ -3,7 +3,7 @@ Installation
 
 
 Install TorchRL
--------------------------------
+---------------
 
 You can install :torchrl:`null` `TorchRL <https://github.com/pytorch/rl>`__ from PyPi.
 
@@ -62,3 +62,22 @@ Follow the instructions on the environment `repository <https://github.com/oxwhi
 
 `Here <https://github.com/facebookresearch/BenchMARL/blob/main/.github/unittest/install_smacv2.sh>`_
 is how we install it on linux.
+
+Install models
+--------------
+
+Some models in BenchMARL require extra dependencies that can be installed separately
+
+
+GNN
+^^^
+
+GNN models require :pyg:`null` `pytorch_geometric <https://pytorch-geometric.readthedocs.io/>`__.
+
+To install it, you can run:
+
+.. code-block:: console
+
+   pip install torch_geometric
+
+For more information, see the `installation <https://pytorch-geometric.readthedocs.io/en/latest/install/installation.html>`__ instructions of the library.

@@ -42,6 +42,7 @@ Well, you can BenchMARL to compare different algorithms, environments, models,
 to check how your new research compares to existing ones, or if you just want to approach
 the domain and want to easily take a picture of the landscape.
 
+
 .. discord_button::
    https://discord.gg/jEEWCn6T3p
 
@@ -52,6 +53,7 @@ the domain and want to easily take a picture of the landscape.
    usage/notebooks
    usage/installation
    usage/running
+   usage/citing
 
 .. toctree::
    :maxdepth: 1
