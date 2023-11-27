@@ -4,13 +4,13 @@
 #  LICENSE file in the root directory of this source tree.
 #
 
-import importlib
 
 import pytest
 
 from benchmarl.algorithms import (
     algorithm_config_registry,
     IppoConfig,
+    IsacConfig,
     MaddpgConfig,
     MasacConfig,
     QmixConfig,
@@ -19,9 +19,9 @@ from benchmarl.algorithms import (
 from benchmarl.algorithms.common import AlgorithmConfig
 from benchmarl.environments import PettingZooTask, Task
 from benchmarl.experiment import Experiment
-from utils_experiment import ExperimentUtils
 
-_has_pettingzoo = importlib.util.find_spec("pettingzoo") is not None
+from utils import _has_pettingzoo
+from utils_experiment import ExperimentUtils
 
 
 @pytest.mark.skipif(not _has_pettingzoo, reason="PettingZoo not found")
@@ -75,11 +75,30 @@ class TestPettingzoo:
         experiment_config,
         mlp_sequence_config,
     ):
-
         task = task.get_from_yaml()
         experiment = Experiment(
             algorithm_config=algo_config.get_from_yaml(),
             model_config=mlp_sequence_config,
+            seed=0,
+            config=experiment_config,
+            task=task,
+        )
+        experiment.run()
+
+    @pytest.mark.parametrize("algo_config", [IppoConfig, QmixConfig, IsacConfig])
+    @pytest.mark.parametrize("task", [PettingZooTask.SIMPLE_TAG])
+    def test_gnn(
+        self,
+        algo_config: AlgorithmConfig,
+        task: Task,
+        experiment_config,
+        mlp_gnn_sequence_config,
+    ):
+        task = task.get_from_yaml()
+        experiment = Experiment(
+            algorithm_config=algo_config.get_from_yaml(),
+            model_config=mlp_gnn_sequence_config,
+            critic_model_config=mlp_gnn_sequence_config,
             seed=0,
             config=experiment_config,
             task=task,

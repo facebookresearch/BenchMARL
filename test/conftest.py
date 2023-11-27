@@ -5,9 +5,10 @@
 #
 
 import pytest
+import torch_geometric.nn.conv
 
 from benchmarl.experiment import ExperimentConfig
-from benchmarl.models import MlpConfig
+from benchmarl.models import GnnConfig, MlpConfig
 from benchmarl.models.common import ModelConfig, SequenceModelConfig
 from torch import nn
 
@@ -50,4 +51,21 @@ def mlp_sequence_config() -> ModelConfig:
             MlpConfig(num_cells=[4], activation_class=nn.Tanh, layer_class=nn.Linear),
         ],
         intermediate_sizes=[5],
+    )
+
+
+@pytest.fixture
+def mlp_gnn_sequence_config() -> ModelConfig:
+    return SequenceModelConfig(
+        model_configs=[
+            MlpConfig(num_cells=[8], activation_class=nn.Tanh, layer_class=nn.Linear),
+            GnnConfig(
+                topology="full",
+                self_loops=False,
+                gnn_class=torch_geometric.nn.conv.GATv2Conv,
+                gnn_kwargs={},
+            ),
+            MlpConfig(num_cells=[4], activation_class=nn.Tanh, layer_class=nn.Linear),
+        ],
+        intermediate_sizes=[5, 3],
     )

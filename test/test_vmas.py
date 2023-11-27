@@ -4,13 +4,14 @@
 #  LICENSE file in the root directory of this source tree.
 #
 
-import importlib
 
 import pytest
 
 from benchmarl.algorithms import (
     algorithm_config_registry,
+    IddpgConfig,
     IppoConfig,
+    IsacConfig,
     MaddpgConfig,
     MappoConfig,
     MasacConfig,
@@ -22,9 +23,8 @@ from benchmarl.environments import Task, VmasTask
 from benchmarl.experiment import Experiment
 from benchmarl.models import MlpConfig
 from torch import nn
+from utils import _has_vmas
 from utils_experiment import ExperimentUtils
-
-_has_vmas = importlib.util.find_spec("vmas") is not None
 
 
 @pytest.mark.skipif(not _has_vmas, reason="VMAS not found")
@@ -66,11 +66,32 @@ class TestVmas:
         experiment_config,
         mlp_sequence_config,
     ):
-
         task = task.get_from_yaml()
         experiment = Experiment(
             algorithm_config=algo_config.get_from_yaml(),
             model_config=mlp_sequence_config,
+            seed=0,
+            config=experiment_config,
+            task=task,
+        )
+        experiment.run()
+
+    @pytest.mark.parametrize(
+        "algo_config", [IppoConfig, QmixConfig, IsacConfig, IddpgConfig]
+    )
+    @pytest.mark.parametrize("task", [VmasTask.NAVIGATION])
+    def test_gnn(
+        self,
+        algo_config: AlgorithmConfig,
+        task: Task,
+        experiment_config,
+        mlp_gnn_sequence_config,
+    ):
+        task = task.get_from_yaml()
+        experiment = Experiment(
+            algorithm_config=algo_config.get_from_yaml(),
+            model_config=mlp_gnn_sequence_config,
+            critic_model_config=mlp_gnn_sequence_config,
             seed=0,
             config=experiment_config,
             task=task,
