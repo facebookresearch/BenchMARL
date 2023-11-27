@@ -214,6 +214,10 @@ class Logger:
                 evaluation_step=total_frames
                 // self.experiment_config.evaluation_interval,
             )
+            for logger in self.loggers:
+                if isinstance(logger, WandbLogger):
+                    logger.experiment.save(str(self.json_writer.path))
+
         self.log(to_log, step=step)
         if video_frames is not None:
             vid = torch.tensor(
