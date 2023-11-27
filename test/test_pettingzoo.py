@@ -86,7 +86,7 @@ class TestPettingzoo:
         experiment.run()
 
     @pytest.mark.parametrize("algo_config", [IppoConfig, QmixConfig, IsacConfig])
-    @pytest.mark.parametrize("task", [PettingZooTask.MULTIWALKER])
+    @pytest.mark.parametrize("task", [PettingZooTask.SIMPLE_TAG])
     def test_gnn(
         self,
         algo_config: AlgorithmConfig,
