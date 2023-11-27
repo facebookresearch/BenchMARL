@@ -159,6 +159,7 @@ class Algorithm(ABC):
             storage=LazyTensorStorage(memory_size, device=storing_device),
             sampler=sampler,
             batch_size=sampling_size,
+            priority_key=(group, "td_error"),
         )
 
     def get_policy_for_loss(self, group: str) -> TensorDictModule:
