@@ -1,21 +1,24 @@
-![BenchMARL](https://github.com/matteobettini/vmas-media/blob/main/media/benchmarl.png?raw=true)
+![BenchMARL](https://raw.githubusercontent.com/matteobettini/benchmarl_sphinx_theme/master/benchmarl_sphinx_theme/static/img/benchmarl.png?raw=true)
 
 
 # BenchMARL
 [![tests](https://github.com/facebookresearch/BenchMARL/actions/workflows/unit_tests.yml/badge.svg)](test)
 [![codecov](https://codecov.io/github/facebookresearch/BenchMARL/coverage.svg?branch=main)](https://codecov.io/gh/facebookresearch/BenchMARL)
+[![Documentation Status](https://readthedocs.org/projects/benchmarl/badge/?version=latest)](https://benchmarl.readthedocs.io/en/latest/?badge=latest)
 [![Python](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10-blue.svg)](https://www.python.org/downloads/)
 <a href="https://pypi.org/project/benchmarl"><img src="https://img.shields.io/pypi/v/benchmarl" alt="pypi version"></a>
 [![Downloads](https://static.pepy.tech/personalized-badge/benchmarl?period=total&units=international_system&left_color=grey&right_color=blue&left_text=Downloads)](https://pepy.tech/project/benchmarl)
+[![Discord Shield](https://dcbadge.vercel.app/api/server/jEEWCn6T3p?style=flat)](https://discord.gg/jEEWCn6T3p)
 
 ```bash
 python benchmarl/run.py algorithm=mappo task=vmas/balance
 ```
 
 
-
 [![Examples](https://img.shields.io/badge/Examples-blue.svg)](examples) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/facebookresearch/BenchMARL/blob/main/notebooks/run.ipynb)
 [![Static Badge](https://img.shields.io/badge/Benchmarks-Wandb-yellow)](https://wandb.ai/matteobettini/benchmarl-public/reportlist)
+
+Watch the [talk on multi-agent simulation and learning in BenchMARL and TorchRL](https://www.youtube.com/watch?v=1tOIMgJf_VQ).
 
 ### What is BenchMARL 🧐?
 
@@ -56,6 +59,7 @@ the domain and want to easily take a picture of the landscape.
   * [Reporting and plotting](#reporting-and-plotting)
   * [Extending](#extending)
   * [Configuring](#configuring)
+    + [Experiment](#experiment)
     + [Algorithm](#algorithm)
     + [Task](#task)
     + [Model](#model)
@@ -63,6 +67,7 @@ the domain and want to easily take a picture of the landscape.
     + [Logging](#logging)
     + [Checkpointing](#checkpointing)
     + [Callbacks](#callbacks)
+  * [Citing BenchMARL](#citing-benchmarl)
 
 
 ## How to use
@@ -250,14 +255,16 @@ agent group. Here is a table of the models implemented in BenchMARL
 
 | Name                           | Decentralized | Centralized with local inputs | Centralized with global input | 
 |--------------------------------|:-------------:|:-----------------------------:|:-----------------------------:|
-| [MLP](benchmarl/models/mlp.py) |      Yes      |              Yes              |              Yes              | 
+| [MLP](benchmarl/models/mlp.py) |      Yes      |              Yes              |              Yes              |
+| [GNN](benchmarl/models/gnn.py) |      Yes      |              No               |              No               |
 
 And the ones that are _work in progress_
 
-| Name                                                         | Decentralized | Centralized with local inputs | Centralized with global input | 
-|--------------------------------------------------------------|:-------------:|:-----------------------------:|:-----------------------------:|
-| [GNN](https://github.com/facebookresearch/BenchMARL/pull/18) |      Yes      |              Yes              |              No               | 
-| CNN                                                          |      Yes      |              Yes              |              Yes              | 
+| Name               | Decentralized | Centralized with local inputs | Centralized with global input | 
+|--------------------|:-------------:|:-----------------------------:|:-----------------------------:|
+| CNN                |      Yes      |              Yes              |              Yes              | 
+| RNN (GRU and LSTM) |      Yes      |              Yes              |              Yes              | 
+
 
 ## Fine-tuned public benchmarks
 > [!WARNING]  
@@ -278,10 +285,9 @@ Currently available ones are:
 
 In the following, we report a table of the results:
 
-| **<p align="center">Environment</p>** | **<p align="center">Sample efficiency curves (all tasks)</p>**                            | **<p align="center">Performance profile</p>**                                             | **<p align="center">Aggregate scores</p>**                                                |
-|---------------------------------------|-------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|
-| VMAS                                  | <img src="https://drive.google.com/uc?export=view&id=1fzfFn0q54gsALRAwmqD1hRTqQIadGPoE"/> | <img src="https://drive.google.com/uc?export=view&id=151pSR2sBluSpWiYxtq3jNX0tfE0vgAuR"/> | <img src="https://drive.google.com/uc?export=view&id=1q2So9V6sL8NHMtj6vL-S3KyzZi11Vfia"/> |
-
+| **<p align="center">Environment</p>** | **<p align="center">Sample efficiency curves (all tasks)</p>**                                                                                                                        | **<p align="center">Performance profile</p>**                                                                                                                               | **<p align="center">Aggregate scores</p>**                                                                                                                        |
+|---------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| VMAS                                  | <img src="https://raw.githubusercontent.com/matteobettini/benchmarl_sphinx_theme/master/benchmarl_sphinx_theme/static/img/benchmarks/vmas/environemnt_sample_efficiency_curves.png"/> | <img src="https://raw.githubusercontent.com/matteobettini/benchmarl_sphinx_theme/master/benchmarl_sphinx_theme/static/img/benchmarks/vmas/performance_profile_figure.png"/> | <img src="https://raw.githubusercontent.com/matteobettini/benchmarl_sphinx_theme/master/benchmarl_sphinx_theme/static/img/benchmarks/vmas/aggregate_scores.png"/> |
 
 ## Reporting and plotting
 
@@ -293,9 +299,9 @@ your benchmarks.  No more struggling with matplotlib and latex!
 
 [![Example](https://img.shields.io/badge/Example-blue.svg)](examples/plotting)
 
-![aggregate_scores](https://drive.google.com/uc?export=view&id=1q2So9V6sL8NHMtj6vL-S3KyzZi11Vfia)
-![sample_efficiancy](https://drive.google.com/uc?export=view&id=1fzfFn0q54gsALRAwmqD1hRTqQIadGPoE)
-![performace_profile](https://drive.google.com/uc?export=view&id=151pSR2sBluSpWiYxtq3jNX0tfE0vgAuR)
+![aggregate_scores](https://raw.githubusercontent.com/matteobettini/benchmarl_sphinx_theme/master/benchmarl_sphinx_theme/static/img/benchmarks/vmas/aggregate_scores.png)
+![sample_efficiancy](https://raw.githubusercontent.com/matteobettini/benchmarl_sphinx_theme/master/benchmarl_sphinx_theme/static/img/benchmarks/vmas/environemnt_sample_efficiency_curves.png)
+![performace_profile](https://raw.githubusercontent.com/matteobettini/benchmarl_sphinx_theme/master/benchmarl_sphinx_theme/static/img/benchmarks/vmas/performance_profile_figure.png)
 
 
 ## Extending
@@ -320,7 +326,6 @@ in the script itself or via [hydra](https://hydra.cc/docs/intro/).
 We suggest to read the hydra documentation
 to get familiar with all its functionalities. 
 
-The project can be configured either the script itself or via hydra. 
 Each component in the project has a corresponding yaml configuration in the BenchMARL 
 [conf tree](benchmarl/conf). 
 Components' configurations are loaded from these files into python dataclasses that act 
@@ -331,8 +336,7 @@ You can also directly load and validate configuration yaml files without using h
 
 ### Experiment
 
-Experiment configurations are in [`benchmarl/conf/config.yaml`](benchmarl/conf/config.yaml),
-with the experiment hyperparameters in [`benchmarl/conf/experiment`](benchmarl/conf/experiment).
+Experiment configurations are in [`benchmarl/conf/config.yaml`](benchmarl/conf/config.yaml).
 Running custom experiments is extremely simplified by the [Hydra](https://hydra.cc/) configurations.
 The default configuration for the library is contained in the [`benchmarl/conf`](benchmarl/conf) folder.
 
@@ -469,5 +473,20 @@ as `on_batch_collected`, `on_train_end`, and `on_evaluation_end`.
 
 [![Example](https://img.shields.io/badge/Example-blue.svg)](examples/callback/custom_callback.py)
 
-# License
+
+## Citing BenchMARL
+
+If you use BenchMARL in your research please use the following BibTeX entry:
+
+```BibTeX
+@software{bettini2023benchmarl,
+  author =       {Bettini, Matteo and Prorok, Amanda and and Moens, Vincent},
+  title =        {BenchMARL: Benchmarking Multi-Agent Reinforcement Learning},
+  howpublished = {Github},
+  year =         {2023},
+  url =          {https://github.com/facebookresearch/BenchMARL}
+}
+```
+
+## License
 BenchMARL is licensed under the MIT License. See [LICENSE](LICENSE) for details.

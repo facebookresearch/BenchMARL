@@ -13,6 +13,20 @@ from benchmarl.models.common import ModelConfig
 
 
 class Benchmark:
+    """A benchmark.
+
+    Benchmarks are collections of experiments to compare.
+
+    Args:
+        algorithm_configs (list of AlgorithmConfig): the algorithms to benchmark
+        model_config (ModelConfig): the config of the policy model
+        tasks (list of Task):  the tasks to benchmark
+        seeds (set of int): the seeds for the benchmark
+        experiment_config (ExperimentConfig): the experiment config
+        critic_model_config (ModelConfig, optional): the config of the critic model. Defaults to model_config
+
+    """
+
     def __init__(
         self,
         algorithm_configs: Sequence[AlgorithmConfig],
@@ -36,9 +50,11 @@ class Benchmark:
 
     @property
     def n_experiments(self):
+        """The number of experiments in the benchmark."""
         return len(self.algorithm_configs) * len(self.tasks) * len(self.seeds)
 
     def get_experiments(self) -> Iterator[Experiment]:
+        """Yields one experiment at a time"""
         for algorithm_config in self.algorithm_configs:
             for task in self.tasks:
                 for seed in self.seeds:
@@ -52,6 +68,7 @@ class Benchmark:
                     )
 
     def run_sequential(self):
+        """Run all the experiments in the benchmark in a sequence."""
         for i, experiment in enumerate(self.get_experiments()):
             print(f"\nRunning experiment {i+1}/{self.n_experiments}.\n")
             try:

@@ -13,6 +13,19 @@ from benchmarl.hydra_config import load_experiment_from_hydra
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def hydra_experiment(cfg: DictConfig) -> None:
+    """Runs an experiment loading its config from hydra.
+
+    This function is decorated as ``@hydra.main`` and is called by running
+
+    .. code-block:: console
+
+       python benchmarl/run.py algorithm=mappo task=vmas/balance
+
+
+    Args:
+        cfg (DictConfig): the hydra config dictionary
+
+    """
     hydra_choices = HydraConfig.get().runtime.choices
     task_name = hydra_choices.task
     algorithm_name = hydra_choices.algorithm

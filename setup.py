@@ -27,7 +27,7 @@ extra_files = package_files(
 
 setup(
     name="benchmarl",
-    version="0.0.4",
+    version="1.0.0",
     description="BenchMARL",
     url="https://github.com/facebookresearch/BenchMARL",
     author="Matteo Bettini",
@@ -36,6 +36,7 @@ setup(
     extras_require={
         "vmas": ["vmas>=1.2.10"],
         "pettingzoo": ["pettingzoo[all]>=1.24.1"],
+        "gnn": ["torch_geometric"],
     },
     packages=find_packages(),
     include_package_data=True,

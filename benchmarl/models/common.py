@@ -15,7 +15,7 @@ from tensordict.nn import TensorDictModuleBase, TensorDictSequential
 from torchrl.data import CompositeSpec, UnboundedContinuousTensorSpec
 from torchrl.envs import EnvBase
 
-from benchmarl.utils import class_from_name, DEVICE_TYPING, read_yaml_config
+from benchmarl.utils import _class_from_name, _read_yaml_config, DEVICE_TYPING
 
 
 def _check_spec(tensordict, spec):
@@ -28,7 +28,7 @@ def parse_model_config(cfg: Dict[str, Any]) -> Dict[str, Any]:
     kwargs = {}
     for key, value in cfg.items():
         if key.endswith("class") and value is not None:
-            value = class_from_name(cfg[key])
+            value = _class_from_name(cfg[key])
         kwargs.update({key: value})
     return kwargs
 
@@ -60,12 +60,12 @@ class Model(TensorDictModuleBase, ABC):
         output_spec (CompositeSpec): the output spec of the model
         agent_group (str): the name of the agent group the model is for
         n_agents (int): the number of agents this module is for
-        device (str): the mdoel's device
+        device (str): the model's device
         input_has_agent_dim (bool): This tells the model if the input will have a multi-agent dimension or not.
             For example, the input of policies will always have this set to true,
             but critics that use a global state have this set to false as the state is shared by all agents
         centralised (bool): This tells the model if it has full observability.
-            This will always be true when self.input_has_agent_dim==False,
+            This will always be true when ``self.input_has_agent_dim==False``,
             but in cases where the input has the agent dimension, this parameter is
             used to distinguish between a decentralised model (where each agent's data
             is processed separately) and a centralized model, where the model pools all data together
@@ -114,8 +114,8 @@ class Model(TensorDictModuleBase, ABC):
     def output_has_agent_dim(self) -> bool:
         """
         This is a dynamically computed attribute that indicates if the output will have the agent dimension.
-        This will be false when share_params==True and centralised==True, and true in all other cases.
-        When output_has_agent_dim is true, your model's output should contain the multiagent dimension,
+        This will be false when ``share_params==True and centralised==True``, and true in all other cases.
+        When output_has_agent_dim is true, your model's output should contain the multi-agent dimension,
         and the dimension should be absent otherwise
         """
         return output_has_agent_dim(self.share_params, self.centralised)
@@ -170,6 +170,12 @@ class Model(TensorDictModuleBase, ABC):
 
 
 class SequenceModel(Model):
+    """A sequence of :class:`~benchmarl.models.Model`
+
+    Args:
+       models (list of Model): the models in the sequence
+    """
+
     def __init__(
         self,
         models: List[Model],
@@ -194,11 +200,13 @@ class SequenceModel(Model):
 @dataclass
 class ModelConfig(ABC):
     """
-    Dataclass representing an model configuration.
+    Dataclass representing a :class:`~benchmarl.models.Model` configuration.
     This should be overridden by implemented models.
     Implementors should:
-     1. add configuration parameters for their algorithm
-     2. implement all abstract methods
+
+        1. add configuration parameters for their algorithm
+        2. implement all abstract methods
+
     """
 
     def get_model(
@@ -280,7 +288,7 @@ class ModelConfig(ABC):
             / "layers"
             / f"{name.lower()}.yaml"
         )
-        cfg = read_yaml_config(str(yaml_path.resolve()))
+        cfg = _read_yaml_config(str(yaml_path.resolve()))
         return parse_model_config(cfg)
 
     @classmethod
@@ -302,11 +310,47 @@ class ModelConfig(ABC):
                 )
             )
         else:
-            return cls(**parse_model_config(read_yaml_config(path)))
+            return cls(**parse_model_config(_read_yaml_config(path)))
 
 
 @dataclass
 class SequenceModelConfig(ModelConfig):
+    """Dataclass for a :class:`~benchmarl.models.SequenceModel`.
+
+
+    Examples:
+
+          .. code-block:: python
+
+            import torch_geometric
+            from torch import nn
+            from benchmarl.algorithms import IppoConfig
+            from benchmarl.environments import VmasTask
+            from benchmarl.experiment import Experiment, ExperimentConfig
+            from benchmarl.models import SequenceModelConfig, GnnConfig, MlpConfig
+
+            experiment = Experiment(
+                algorithm_config=IppoConfig.get_from_yaml(),
+                model_config=SequenceModelConfig(
+                    model_configs=[
+                        MlpConfig(num_cells=[8], activation_class=nn.Tanh, layer_class=nn.Linear),
+                        GnnConfig(
+                            topology="full",
+                            self_loops=False,
+                            gnn_class=torch_geometric.nn.conv.GraphConv,
+                        ),
+                        MlpConfig(num_cells=[6], activation_class=nn.Tanh, layer_class=nn.Linear),
+                    ],
+                    intermediate_sizes=[5, 3],
+                ),
+                seed=0,
+                config=ExperimentConfig.get_from_yaml(),
+                task=VmasTask.NAVIGATION.get_from_yaml(),
+            )
+            experiment.run()
+
+    """
+
     model_configs: Sequence[ModelConfig]
     intermediate_sizes: Sequence[int]
 

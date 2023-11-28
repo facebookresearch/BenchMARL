@@ -17,7 +17,7 @@ from tensordict import TensorDictBase
 from torchrl.data import CompositeSpec
 from torchrl.envs import EnvBase, RewardSum, Transform
 
-from benchmarl.utils import DEVICE_TYPING, read_yaml_config
+from benchmarl.utils import _read_yaml_config, DEVICE_TYPING
 
 
 def _load_config(name: str, config: Dict[str, Any]):
@@ -238,6 +238,13 @@ class Task(Enum):
         """
         return RewardSum(reset_keys=env.reset_keys)
 
+    @staticmethod
+    def render_callback(experiment, env: EnvBase, data: TensorDictBase):
+        try:
+            return env.render(mode="rgb_array")
+        except TypeError:
+            return env.render()
+
     def __repr__(self):
         cls_name = self.__class__.__name__
         return f"{cls_name}.{self.name}: (config={self.config})"
@@ -248,7 +255,7 @@ class Task(Enum):
     @staticmethod
     def _load_from_yaml(name: str) -> Dict[str, Any]:
         yaml_path = Path(__file__).parent.parent / "conf" / "task" / f"{name}.yaml"
-        return read_yaml_config(str(yaml_path.resolve()))
+        return _read_yaml_config(str(yaml_path.resolve()))
 
     def get_from_yaml(self, path: Optional[str] = None) -> Task:
         """
@@ -266,4 +273,4 @@ class Task(Enum):
                 Task._load_from_yaml(str(Path(self.env_name()) / Path(task_name)))
             )
         else:
-            return self.update_config(**read_yaml_config(path))
+            return self.update_config(**_read_yaml_config(path))
