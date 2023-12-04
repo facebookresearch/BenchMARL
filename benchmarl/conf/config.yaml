@@ -43,4 +43,3 @@ hydra:
       - "module unload cuda/8.0"
       - "module load cuda/12.1 cudnn/8.9_cuda-12.1"
       - "conda activate torchrl"
-#    srun_args: null
