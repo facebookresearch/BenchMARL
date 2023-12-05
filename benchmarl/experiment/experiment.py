@@ -30,7 +30,7 @@ from benchmarl.environments import Task
 from benchmarl.experiment.callback import Callback, CallbackNotifier
 from benchmarl.experiment.logger import Logger
 from benchmarl.models.common import ModelConfig
-from benchmarl.utils import _read_yaml_config
+from benchmarl.utils import _read_yaml_config, seed_everything
 
 _has_hydra = importlib.util.find_spec("hydra") is not None
 if _has_hydra:
@@ -335,6 +335,7 @@ class Experiment(CallbackNotifier):
 
     def _setup(self):
         self.config.validate(self.on_policy)
+        seed_everything(self.seed)
         self._set_action_type()
         self._setup_task()
         self._setup_algorithm()
