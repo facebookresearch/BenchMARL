@@ -479,12 +479,11 @@ as `on_batch_collected`, `on_train_end`, and `on_evaluation_end`.
 If you use BenchMARL in your research please use the following BibTeX entry:
 
 ```BibTeX
-@software{bettini2023benchmarl,
-  author =       {Bettini, Matteo and Prorok, Amanda and and Moens, Vincent},
-  title =        {BenchMARL: Benchmarking Multi-Agent Reinforcement Learning},
-  howpublished = {Github},
-  year =         {2023},
-  url =          {https://github.com/facebookresearch/BenchMARL}
+@article{bettini2023benchmarl,
+      title={BenchMARL: Benchmarking Multi-Agent Reinforcement Learning},
+      author={Matteo Bettini and Amanda Prorok and Vincent Moens},
+      year={2023},
+      journal={arXiv preprint arXiv:2312.01472},
 }
 ```
 
