@@ -53,6 +53,8 @@ class VmasTask(Task):
         return self.config["max_steps"]
 
     def group_map(self, env: EnvBase) -> Dict[str, List[str]]:
+        if hasattr(env, "group_map"):
+            return env.group_map
         return {"agents": [agent.name for agent in env.agents]}
 
     def state_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
@@ -63,15 +65,18 @@ class VmasTask(Task):
 
     def observation_spec(self, env: EnvBase) -> CompositeSpec:
         observation_spec = env.unbatched_observation_spec.clone()
-        if "info" in observation_spec["agents"]:
-            del observation_spec[("agents", "info")]
+        for group in self.group_map(env):
+            if "info" in observation_spec[group]:
+                del observation_spec[(group, "info")]
         return observation_spec
 
     def info_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
         info_spec = env.unbatched_observation_spec.clone()
-        del info_spec[("agents", "observation")]
-        if "info" in info_spec["agents"]:
-            return info_spec
+        for group in self.group_map(env):
+            del info_spec[(group, "observation")]
+        for group in self.group_map(env):
+            if "info" in info_spec[group]:
+                return info_spec
         else:
             return None
 
