@@ -67,6 +67,8 @@ off_policy_n_optimizer_steps: 1000
 off_policy_train_batch_size: 128
 # Maximum number of frames to keep in replay buffer memory for off-policy algorithms
 off_policy_memory_size: 1_000_000
+# Number of random action frames to prefill the replay buffer with
+off_policy_init_random_frames: 0
 
 
 evaluation: True

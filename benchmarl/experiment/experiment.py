@@ -80,6 +80,7 @@ class ExperimentConfig:
     off_policy_n_optimizer_steps: int = MISSING
     off_policy_train_batch_size: int = MISSING
     off_policy_memory_size: int = MISSING
+    off_policy_init_random_frames: int = MISSING
 
     evaluation: bool = MISSING
     render: bool = MISSING
@@ -447,6 +448,9 @@ class Experiment(CallbackNotifier):
             storing_device=self.config.train_device,
             frames_per_batch=self.config.collected_frames_per_batch(self.on_policy),
             total_frames=self.config.get_max_n_frames(self.on_policy),
+            init_random_frames=self.config.off_policy_init_random_frames
+            if not self.on_policy
+            else 0,
         )
 
     def _setup_name(self):
