@@ -16,3 +16,4 @@ class TaskConfig:
     lidar_range: float = MISSING
     cov: float = MISSING
     collisions: bool = MISSING
+    spawn_same_pos: bool = MISSING
