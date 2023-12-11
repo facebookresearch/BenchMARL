@@ -17,3 +17,5 @@ class TaskConfig:
     shape_adversary_rew: bool = MISSING
     agents_share_rew: bool = MISSING
     adversaries_share_rew: bool = MISSING
+    observe_same_team: bool = MISSING
+    observe_pos: bool = MISSING

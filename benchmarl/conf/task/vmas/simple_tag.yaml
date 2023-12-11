@@ -10,3 +10,5 @@ shape_agent_rew: False
 shape_adversary_rew: False
 agents_share_rew: False
 adversaries_share_rew: True
+observe_same_team: True
+observe_pos: True
