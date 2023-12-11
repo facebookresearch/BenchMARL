@@ -344,6 +344,7 @@ class Experiment(CallbackNotifier):
         self._setup_collector()
         self._setup_name()
         self._setup_logger()
+        self._on_setup()
 
     def _set_action_type(self):
         if (

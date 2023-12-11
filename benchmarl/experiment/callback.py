@@ -24,6 +24,9 @@ class Callback:
     def __init__(self):
         self.experiment = None
 
+    def on_setup(self):
+        pass
+
     def on_batch_collected(self, batch: TensorDictBase):
         """
         A callback called at the end of every collection step.
@@ -75,6 +78,10 @@ class CallbackNotifier:
         self.callbacks = callbacks
         for callback in self.callbacks:
             callback.experiment = experiment
+
+    def _on_setup(self):
+        for callback in self.callbacks:
+            callback.on_setup()
 
     def _on_batch_collected(self, batch: TensorDictBase):
         for callback in self.callbacks:
