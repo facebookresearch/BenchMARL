@@ -24,6 +24,7 @@ class VmasTask(Task):
     WHEEL = None
     DISPERSION = None
     GIVE_WAY = None
+    SIMPLE_REFERENCE = None
 
     def get_env_fun(
         self,

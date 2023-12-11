@@ -36,6 +36,7 @@ from .vmas.dispersion import TaskConfig as DispersionConfig
 from .vmas.give_way import TaskConfig as GiveWayConfig
 from .vmas.navigation import TaskConfig as NavigationConfig
 from .vmas.sampling import TaskConfig as SamplingConfig
+from .vmas.simple_reference import TaskConfig as VmasSimpleReferenceConfig
 from .vmas.transport import TaskConfig as TransportConfig
 from .vmas.wheel import TaskConfig as WheelConfig
 
@@ -51,6 +52,7 @@ _task_class_registry = {
     "vmas_wheel_config": WheelConfig,
     "vmas_dispersion_config": DispersionConfig,
     "vmas_give_way_config": GiveWayConfig,
+    "vmas_simple_reference_config": VmasSimpleReferenceConfig,
     "pettingzoo_multiwalker_config": MultiwalkerConfig,
     "pettingzoo_waterworld_config": WaterworldConfig,
     "pettingzoo_simple_adversary_config": SimpleAdversaryConfig,
