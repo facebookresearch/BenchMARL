@@ -25,6 +25,7 @@ class VmasTask(Task):
     DISPERSION = None
     GIVE_WAY = None
     SIMPLE_REFERENCE = None
+    SIMPLE_TAG = None
 
     def get_env_fun(
         self,
