@@ -19,3 +19,4 @@ class TaskConfig:
     adversaries_share_rew: bool = MISSING
     observe_same_team: bool = MISSING
     observe_pos: bool = MISSING
+    bound: float = MISSING

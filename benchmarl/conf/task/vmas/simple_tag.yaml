@@ -12,3 +12,4 @@ agents_share_rew: False
 adversaries_share_rew: True
 observe_same_team: True
 observe_pos: True
+bound: 1.0

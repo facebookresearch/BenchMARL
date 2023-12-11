@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import copy
 import importlib
 
 import os
@@ -391,6 +392,7 @@ class Experiment(CallbackNotifier):
         self.action_mask_spec = self.task.action_mask_spec(test_env)
         self.action_spec = self.task.action_spec(test_env)
         self.group_map = self.task.group_map(test_env)
+        self.train_group_map = copy.deepcopy(self.group_map)
         self.max_steps = self.task.max_steps(test_env)
 
         transforms = [self.task.get_reward_sum_transform(test_env)]
@@ -548,7 +550,7 @@ class Experiment(CallbackNotifier):
 
             # Loop over groups
             training_start = time.time()
-            for group in self.group_map.keys():
+            for group in self.train_group_map.keys():
                 group_batch = batch.exclude(*self._get_excluded_keys(group))
                 group_batch = self.algorithm.process_batch(group, group_batch)
                 group_batch = group_batch.reshape(-1)
