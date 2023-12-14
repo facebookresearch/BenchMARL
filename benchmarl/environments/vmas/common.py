@@ -24,6 +24,7 @@ class VmasTask(Task):
     WHEEL = None
     DISPERSION = None
     GIVE_WAY = None
+    WIND_FLOCKING = None
     SIMPLE_REFERENCE = None
     SIMPLE_TAG = None
 
@@ -41,6 +42,7 @@ class VmasTask(Task):
             seed=seed,
             device=device,
             categorical_actions=True,
+            clamp_actions=True,
             **self.config,
         )
 

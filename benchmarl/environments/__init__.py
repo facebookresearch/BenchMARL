@@ -40,6 +40,7 @@ from .vmas.simple_reference import TaskConfig as VmasSimpleReferenceConfig
 from .vmas.simple_tag import TaskConfig as VmasSimpleTagConfig
 from .vmas.transport import TaskConfig as TransportConfig
 from .vmas.wheel import TaskConfig as WheelConfig
+from .vmas.wind_flocking import TaskConfig as WindFlockingConfig
 
 # This is a registry mapping task config schemas names to their python dataclass
 # It is used by hydra to validate loaded configs.
@@ -53,6 +54,7 @@ _task_class_registry = {
     "vmas_wheel_config": WheelConfig,
     "vmas_dispersion_config": DispersionConfig,
     "vmas_give_way_config": GiveWayConfig,
+    "vmas_wind_flocking_config": WindFlockingConfig,
     "vmas_simple_reference_config": VmasSimpleReferenceConfig,
     "vmas_simple_tag_config": VmasSimpleTagConfig,
     "pettingzoo_multiwalker_config": MultiwalkerConfig,

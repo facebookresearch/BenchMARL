@@ -13,7 +13,7 @@ from tensordict.nn import TensorDictModule, TensorDictSequential
 from tensordict.nn.distributions import NormalParamExtractor
 from torch.distributions import Categorical
 from torchrl.data import CompositeSpec, UnboundedContinuousTensorSpec
-from torchrl.modules import ProbabilisticActor, TanhNormal
+from torchrl.modules import IndependentNormal, ProbabilisticActor
 from torchrl.modules.distributions import MaskedCategorical
 from torchrl.objectives import ClipPPOLoss, LossModule, ValueEstimators
 
@@ -153,14 +153,13 @@ class Ippo(Algorithm):
                 spec=self.action_spec[group, "action"],
                 in_keys=[(group, "loc"), (group, "scale")],
                 out_keys=[(group, "action")],
-                distribution_class=TanhNormal,
-                distribution_kwargs={
-                    "min": self.action_spec[(group, "action")].space.low,
-                    "max": self.action_spec[(group, "action")].space.high,
-                },
+                distribution_class=IndependentNormal,
+                # distribution_kwargs={
+                #     "min": self.action_spec[(group, "action")].space.low,
+                #     "max": self.action_spec[(group, "action")].space.high,
+                # },
                 return_log_prob=True,
                 log_prob_key=(group, "log_prob"),
-                safe=False,
             )
 
         else:
