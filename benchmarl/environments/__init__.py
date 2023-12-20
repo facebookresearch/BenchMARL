@@ -35,6 +35,7 @@ from .vmas.balance import TaskConfig as BalanceConfig
 from .vmas.dispersion import TaskConfig as DispersionConfig
 from .vmas.give_way import TaskConfig as GiveWayConfig
 from .vmas.navigation import TaskConfig as NavigationConfig
+from .vmas.plinko import TaskConfig as PlinkoConfig
 from .vmas.sampling import TaskConfig as SamplingConfig
 from .vmas.simple_reference import TaskConfig as VmasSimpleReferenceConfig
 from .vmas.simple_tag import TaskConfig as VmasSimpleTagConfig
@@ -55,6 +56,7 @@ _task_class_registry = {
     "vmas_dispersion_config": DispersionConfig,
     "vmas_give_way_config": GiveWayConfig,
     "vmas_wind_flocking_config": WindFlockingConfig,
+    "vmas_plinko_config": PlinkoConfig,
     "vmas_simple_reference_config": VmasSimpleReferenceConfig,
     "vmas_simple_tag_config": VmasSimpleTagConfig,
     "pettingzoo_multiwalker_config": MultiwalkerConfig,

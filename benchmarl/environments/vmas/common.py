@@ -25,6 +25,7 @@ class VmasTask(Task):
     DISPERSION = None
     GIVE_WAY = None
     WIND_FLOCKING = None
+    PLINKO = None
     SIMPLE_REFERENCE = None
     SIMPLE_TAG = None
 

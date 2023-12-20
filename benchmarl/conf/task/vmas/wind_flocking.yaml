@@ -15,3 +15,4 @@ cover_angle_tolerance: 1
 observe_rel_pos: True
 observe_rel_vel: True
 observe_pos: False
+desired_vel: 0.4

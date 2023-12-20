@@ -22,3 +22,4 @@ class TaskConfig:
     observe_rel_pos: bool = MISSING
     observe_rel_vel: bool = MISSING
     observe_pos: bool = MISSING
+    desired_vel: float = MISSING
