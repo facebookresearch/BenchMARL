@@ -36,6 +36,7 @@ from .vmas.dispersion import TaskConfig as DispersionConfig
 from .vmas.give_way import TaskConfig as GiveWayConfig
 from .vmas.navigation import TaskConfig as NavigationConfig
 from .vmas.plinko import TaskConfig as PlinkoConfig
+from .vmas.reverse_transport import TaskConfig as ReverseTransportConfig
 from .vmas.sampling import TaskConfig as SamplingConfig
 from .vmas.simple_reference import TaskConfig as VmasSimpleReferenceConfig
 from .vmas.simple_tag import TaskConfig as VmasSimpleTagConfig
@@ -52,6 +53,7 @@ _task_class_registry = {
     "vmas_sampling_config": SamplingConfig,
     "vmas_navigation_config": NavigationConfig,
     "vmas_transport_config": TransportConfig,
+    "vmas_reverse_transport_config": ReverseTransportConfig,
     "vmas_wheel_config": WheelConfig,
     "vmas_dispersion_config": DispersionConfig,
     "vmas_give_way_config": GiveWayConfig,

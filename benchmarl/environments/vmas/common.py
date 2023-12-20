@@ -21,6 +21,7 @@ class VmasTask(Task):
     SAMPLING = None
     NAVIGATION = None
     TRANSPORT = None
+    REVERSE_TRANSPORT = None
     WHEEL = None
     DISPERSION = None
     GIVE_WAY = None
