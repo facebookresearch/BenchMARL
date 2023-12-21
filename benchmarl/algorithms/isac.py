@@ -234,6 +234,7 @@ class Isac(Algorithm):
                         "logits": (group, "logits"),
                         "mask": (group, "action_mask"),
                     },
+                    distribution_kwargs={"neg_inf": -18.0},
                     out_keys=[(group, "action")],
                     distribution_class=MaskedCategorical,
                     return_log_prob=True,
