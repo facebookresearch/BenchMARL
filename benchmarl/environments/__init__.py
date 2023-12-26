@@ -33,6 +33,7 @@ from .pettingzoo.simple_world_comm import TaskConfig as SimpleWorldComm
 from .pettingzoo.waterworld import TaskConfig as WaterworldConfig
 from .vmas.balance import TaskConfig as BalanceConfig
 from .vmas.dispersion import TaskConfig as DispersionConfig
+from .vmas.dropout import TaskConfig as DropoutConfig
 from .vmas.give_way import TaskConfig as GiveWayConfig
 from .vmas.navigation import TaskConfig as NavigationConfig
 from .vmas.plinko import TaskConfig as PlinkoConfig
@@ -59,6 +60,7 @@ _task_class_registry = {
     "vmas_give_way_config": GiveWayConfig,
     "vmas_wind_flocking_config": WindFlockingConfig,
     "vmas_plinko_config": PlinkoConfig,
+    "vmas_dropout_config": DropoutConfig,
     "vmas_simple_reference_config": VmasSimpleReferenceConfig,
     "vmas_simple_tag_config": VmasSimpleTagConfig,
     "pettingzoo_multiwalker_config": MultiwalkerConfig,
