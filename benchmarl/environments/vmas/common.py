@@ -28,8 +28,14 @@ class VmasTask(Task):
     GIVE_WAY = None
     WIND_FLOCKING = None
     PLINKO = None
+    SIMPLE_ADVERSARY = None
+    SIMPLE_CRYPTO = None
+    SIMPLE_PUSH = None
     SIMPLE_REFERENCE = None
+    SIMPLE_SPEAKER_LISTENER = None
+    SIMPLE_SPREAD = None
     SIMPLE_TAG = None
+    SIMPLE_WORLD_COMM = None
 
     def get_env_fun(
         self,

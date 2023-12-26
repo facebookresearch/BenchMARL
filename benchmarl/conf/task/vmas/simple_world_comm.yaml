@@ -1,0 +1,10 @@
+defaults:
+  - _self_
+  - vmas_simple_world_comm_config
+
+max_steps: 100
+num_good_agents: 2
+num_adversaries: 4
+num_landmarks: 1
+num_food: 2
+num_forests: 2
