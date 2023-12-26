@@ -13,7 +13,6 @@ from benchmarl.algorithms import (
     IppoConfig,
     IsacConfig,
     MaddpgConfig,
-    MappoConfig,
     MasacConfig,
     QmixConfig,
     VdnConfig,
@@ -57,7 +56,7 @@ class TestVmas:
         )
         experiment.run()
 
-    @pytest.mark.parametrize("algo_config", [MappoConfig, QmixConfig])
+    @pytest.mark.parametrize("algo_config", [IppoConfig, MasacConfig])
     @pytest.mark.parametrize("task", list(VmasTask))
     def test_all_tasks(
         self,

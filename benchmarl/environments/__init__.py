@@ -34,9 +34,18 @@ from .pettingzoo.waterworld import TaskConfig as WaterworldConfig
 from .vmas.balance import TaskConfig as BalanceConfig
 from .vmas.navigation import TaskConfig as NavigationConfig
 from .vmas.sampling import TaskConfig as SamplingConfig
+
+from .vmas.simple_adverasary import TaskConfig as VmasSimpleAdversaryConfig
+from .vmas.simple_crypto import TaskConfig as VmasSimpleCryptoConfig
+from .vmas.simple_push import TaskConfig as VmasSimplePushConfig
 from .vmas.simple_reference import TaskConfig as VmasSimpleReferenceConfig
+from .vmas.simple_speaker_listener import TaskConfig as VmasSimpleSpeakerListenerConfig
+from .vmas.simple_spread import TaskConfig as VmasSimpleSpreadConfig
+from .vmas.simple_tag import TaskConfig as VmasSimpleTagConfig
+from .vmas.simple_world_comm import TaskConfig as VmasSimpleWorldComm
 from .vmas.transport import TaskConfig as TransportConfig
 from .vmas.wheel import TaskConfig as WheelConfig
+
 
 # This is a registry mapping task config schemas names to their python dataclass
 # It is used by hydra to validate loaded configs.
@@ -48,7 +57,14 @@ _task_class_registry = {
     "vmas_navigation_config": NavigationConfig,
     "vmas_transport_config": TransportConfig,
     "vmas_wheel_config": WheelConfig,
+    "vmas_simple_adversary_config": VmasSimpleAdversaryConfig,
+    "vmas_simple_crypto_config": VmasSimpleCryptoConfig,
+    "vmas_simple_push_config": VmasSimplePushConfig,
     "vmas_simple_reference_config": VmasSimpleReferenceConfig,
+    "vmas_simple_speaker_listener_config": VmasSimpleSpeakerListenerConfig,
+    "vmas_simple_spread_config": VmasSimpleSpreadConfig,
+    "vmas_simple_tag_config": VmasSimpleTagConfig,
+    "vmas_simple_world_comm_config": VmasSimpleWorldComm,
     "pettingzoo_multiwalker_config": MultiwalkerConfig,
     "pettingzoo_waterworld_config": WaterworldConfig,
     "pettingzoo_simple_adversary_config": SimpleAdversaryConfig,
