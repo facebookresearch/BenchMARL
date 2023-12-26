@@ -229,6 +229,7 @@ class Masac(Algorithm):
                         "mask": (group, "action_mask"),
                     },
                     out_keys=[(group, "action")],
+                    distribution_kwargs={"neg_inf": -18.0},
                     distribution_class=MaskedCategorical,
                     return_log_prob=True,
                     log_prob_key=(group, "log_prob"),

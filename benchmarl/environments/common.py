@@ -236,7 +236,11 @@ class Task(Enum):
         Args:
             env (EnvBase): An environment created via self.get_env_fun
         """
-        return RewardSum(reset_keys=env.reset_keys)
+        if "_reset" in env.reset_keys:
+            reset_keys = ["_reset"] * len(self.group_map(env).keys())
+        else:
+            reset_keys = env.reset_keys
+        return RewardSum(reset_keys=reset_keys)
 
     @staticmethod
     def render_callback(experiment, env: EnvBase, data: TensorDictBase):

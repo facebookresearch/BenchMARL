@@ -5,10 +5,14 @@
 #
 
 import importlib
+import random
 from typing import Any, Dict, Union
 
 import torch
 import yaml
+
+_has_numpy = importlib.util.find_spec("numpy") is not None
+
 
 DEVICE_TYPING = Union[torch.device, str, int]
 
@@ -31,3 +35,19 @@ def _class_from_name(name: str):
     # get the class, will raise AttributeError if class cannot be found
     c = getattr(m, class_name)
     return c
+
+
+def seed_everything(seed: int):
+    r"""Sets the seed for generating random numbers in :pytorch:`PyTorch`,
+    :obj:`numpy` and :python:`Python`.
+
+    Args:
+        seed (int): The desired seed.
+    """
+    random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    if _has_numpy:
+        import numpy
+
+        numpy.random.seed(seed)

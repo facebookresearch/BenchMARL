@@ -9,6 +9,7 @@
 <a href="https://pypi.org/project/benchmarl"><img src="https://img.shields.io/pypi/v/benchmarl" alt="pypi version"></a>
 [![Downloads](https://static.pepy.tech/personalized-badge/benchmarl?period=total&units=international_system&left_color=grey&right_color=blue&left_text=Downloads)](https://pepy.tech/project/benchmarl)
 [![Discord Shield](https://dcbadge.vercel.app/api/server/jEEWCn6T3p?style=flat)](https://discord.gg/jEEWCn6T3p)
+[![arXiv](https://img.shields.io/badge/arXiv-2312.01472-b31b1b.svg)](https://arxiv.org/abs/2312.01472)
 
 ```bash
 python benchmarl/run.py algorithm=mappo task=vmas/balance
@@ -479,12 +480,11 @@ as `on_batch_collected`, `on_train_end`, and `on_evaluation_end`.
 If you use BenchMARL in your research please use the following BibTeX entry:
 
 ```BibTeX
-@software{bettini2023benchmarl,
-  author =       {Bettini, Matteo and Prorok, Amanda and and Moens, Vincent},
-  title =        {BenchMARL: Benchmarking Multi-Agent Reinforcement Learning},
-  howpublished = {Github},
-  year =         {2023},
-  url =          {https://github.com/facebookresearch/BenchMARL}
+@article{bettini2023benchmarl,
+      title={BenchMARL: Benchmarking Multi-Agent Reinforcement Learning},
+      author={Matteo Bettini and Amanda Prorok and Vincent Moens},
+      year={2023},
+      journal={arXiv preprint arXiv:2312.01472},
 }
 ```
 

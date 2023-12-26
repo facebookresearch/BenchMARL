@@ -5,6 +5,7 @@
 #
 
 import json
+import os
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -214,12 +215,15 @@ class Logger:
                 evaluation_step=total_frames
                 // self.experiment_config.evaluation_interval,
             )
+            json_file = str(self.json_writer.path)
             for logger in self.loggers:
                 if isinstance(logger, WandbLogger):
-                    logger.experiment.save(str(self.json_writer.path))
+                    logger.experiment.save(
+                        json_file, base_path=os.path.dirname(json_file)
+                    )
 
         self.log(to_log, step=step)
-        if video_frames is not None:
+        if video_frames is not None and rollouts[0].batch_size[0] > 1:
             vid = torch.tensor(
                 np.transpose(
                     video_frames[: rollouts[0].batch_size[0] - 1], (0, 3, 1, 2)

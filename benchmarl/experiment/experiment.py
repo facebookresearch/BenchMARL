@@ -30,7 +30,7 @@ from benchmarl.environments import Task
 from benchmarl.experiment.callback import Callback, CallbackNotifier
 from benchmarl.experiment.logger import Logger
 from benchmarl.models.common import ModelConfig
-from benchmarl.utils import _read_yaml_config
+from benchmarl.utils import _read_yaml_config, seed_everything
 
 _has_hydra = importlib.util.find_spec("hydra") is not None
 if _has_hydra:
@@ -80,6 +80,7 @@ class ExperimentConfig:
     off_policy_n_optimizer_steps: int = MISSING
     off_policy_train_batch_size: int = MISSING
     off_policy_memory_size: int = MISSING
+    off_policy_init_random_frames: int = MISSING
 
     evaluation: bool = MISSING
     render: bool = MISSING
@@ -335,6 +336,7 @@ class Experiment(CallbackNotifier):
 
     def _setup(self):
         self.config.validate(self.on_policy)
+        seed_everything(self.seed)
         self._set_action_type()
         self._setup_task()
         self._setup_algorithm()
@@ -446,6 +448,9 @@ class Experiment(CallbackNotifier):
             storing_device=self.config.train_device,
             frames_per_batch=self.config.collected_frames_per_batch(self.on_policy),
             total_frames=self.config.get_max_n_frames(self.on_policy),
+            init_random_frames=self.config.off_policy_init_random_frames
+            if not self.on_policy
+            else 0,
         )
 
     def _setup_name(self):
