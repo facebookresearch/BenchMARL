@@ -669,13 +669,21 @@ class Experiment(CallbackNotifier):
             params += param_group["params"]
 
         if self.config.clip_grad_norm and self.config.clip_grad_val is not None:
-            gn = torch.nn.utils.clip_grad_norm_(params, self.config.clip_grad_val)
+            total_norm = torch.nn.utils.clip_grad_norm_(
+                params, self.config.clip_grad_val
+            )
         else:
-            gn = sum(p.grad.pow(2).sum() for p in params if p.grad is not None).sqrt()
+            norm_type = 2.0
+            norms = [
+                torch.linalg.vector_norm(p.grad, norm_type)
+                for p in params
+                if p.grad is not None
+            ]
+            total_norm = torch.linalg.vector_norm(torch.stack(norms), norm_type)
             if self.config.clip_grad_val is not None:
                 torch.nn.utils.clip_grad_value_(params, self.config.clip_grad_val)
 
-        return float(gn)
+        return float(total_norm)
 
     @torch.no_grad()
     def _evaluation_loop(self):
