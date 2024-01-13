@@ -32,6 +32,9 @@ class MyCallbackA(Callback):
 
 
 class MyCallbackB(Callback):
+    def on_setup(self):
+        print("Callback B is being called during setup")
+
     def on_evaluation_end(self, rollouts: List[TensorDictBase]):
         print(
             "Callback B just reminds you that you fo not need to implement all methods and"
