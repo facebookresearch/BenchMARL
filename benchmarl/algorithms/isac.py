@@ -52,6 +52,8 @@ class Isac(Algorithm):
             match the 'target_entropy' value.
         scale_mapping (str): positive mapping function to be used with the std.
             choices: "softplus", "exp", "relu", "biased_softplus_1";
+        use_tanh_normal (bool): if ``True``, use TanhNormal as the continuyous action distribution with support bound
+            to the action domain. Otherwise, an IndependentNormal is used.
 
     """
 

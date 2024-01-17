@@ -31,6 +31,8 @@ class Maddpg(Algorithm):
         loss_function (str): loss function for the value discrepancy. Can be one of "l1", "l2" or "smooth_l1".
         delay_value (bool): whether to separate the target value networks from the value networks used for
             data collection.
+        use_tanh_mapping (bool): if ``True``, use squash actions (output by the policy) into the action range, otherwise
+            clip them.
     """
 
     def __init__(
