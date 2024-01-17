@@ -21,7 +21,13 @@ class VmasTask(Task):
     SAMPLING = None
     NAVIGATION = None
     TRANSPORT = None
+    REVERSE_TRANSPORT = None
     WHEEL = None
+    DISPERSION = None
+    DROPOUT = None
+    GIVE_WAY = None
+    WIND_FLOCKING = None
+    PLINKO = None
     SIMPLE_ADVERSARY = None
     SIMPLE_CRYPTO = None
     SIMPLE_PUSH = None
@@ -45,6 +51,7 @@ class VmasTask(Task):
             seed=seed,
             device=device,
             categorical_actions=True,
+            clamp_actions=True,
             **self.config,
         )
 

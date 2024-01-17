@@ -32,7 +32,11 @@ from .pettingzoo.simple_tag import TaskConfig as SimpleTagConfig
 from .pettingzoo.simple_world_comm import TaskConfig as SimpleWorldComm
 from .pettingzoo.waterworld import TaskConfig as WaterworldConfig
 from .vmas.balance import TaskConfig as BalanceConfig
+from .vmas.dispersion import TaskConfig as DispersionConfig
+from .vmas.dropout import TaskConfig as DropoutConfig
+from .vmas.give_way import TaskConfig as GiveWayConfig
 from .vmas.navigation import TaskConfig as NavigationConfig
+from .vmas.reverse_transport import TaskConfig as ReverseTransportConfig
 from .vmas.sampling import TaskConfig as SamplingConfig
 
 from .vmas.simple_adverasary import TaskConfig as VmasSimpleAdversaryConfig
@@ -45,6 +49,7 @@ from .vmas.simple_tag import TaskConfig as VmasSimpleTagConfig
 from .vmas.simple_world_comm import TaskConfig as VmasSimpleWorldComm
 from .vmas.transport import TaskConfig as TransportConfig
 from .vmas.wheel import TaskConfig as WheelConfig
+from .vmas.wind_flocking import TaskConfig as WindFlockingConfig
 
 
 # This is a registry mapping task config schemas names to their python dataclass
@@ -56,7 +61,12 @@ _task_class_registry = {
     "vmas_sampling_config": SamplingConfig,
     "vmas_navigation_config": NavigationConfig,
     "vmas_transport_config": TransportConfig,
+    "vmas_reverse_transport_config": ReverseTransportConfig,
     "vmas_wheel_config": WheelConfig,
+    "vmas_dispersion_config": DispersionConfig,
+    "vmas_give_way_config": GiveWayConfig,
+    "vmas_wind_flocking_config": WindFlockingConfig,
+    "vmas_dropout_config": DropoutConfig,
     "vmas_simple_adversary_config": VmasSimpleAdversaryConfig,
     "vmas_simple_crypto_config": VmasSimpleCryptoConfig,
     "vmas_simple_push_config": VmasSimplePushConfig,

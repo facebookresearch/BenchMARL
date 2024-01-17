@@ -1,0 +1,18 @@
+defaults:
+  - _self_
+  - vmas_wind_flocking_config
+
+max_steps: 100
+horizon: 100
+dist_shaping_factor: 1
+vel_shaping_factor: 1
+wind_shaping_factor: 1
+rot_shaping_factor: 0
+pos_shaping_factor: 0
+energy_shaping_factor: 0
+wind: 0
+cover_angle_tolerance: 1
+observe_rel_pos: True
+observe_rel_vel: True
+observe_pos: False
+desired_vel: 0.4

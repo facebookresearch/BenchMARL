@@ -1,0 +1,11 @@
+defaults:
+  - _self_
+  - vmas_dispersion_config
+
+
+max_steps: 100
+n_agents: 4
+n_food: 4
+share_rew: True
+food_radius: 0.02
+penalise_by_time: False
