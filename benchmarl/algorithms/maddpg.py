@@ -11,7 +11,12 @@ import torch
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModule, TensorDictSequential
 from torchrl.data import CompositeSpec, UnboundedContinuousTensorSpec
-from torchrl.modules import AdditiveGaussianWrapper, ProbabilisticActor, TanhDelta
+from torchrl.modules import (
+    AdditiveGaussianWrapper,
+    Delta,
+    ProbabilisticActor,
+    TanhDelta,
+)
 from torchrl.objectives import DDPGLoss, LossModule, ValueEstimators
 
 from benchmarl.algorithms.common import Algorithm, AlgorithmConfig
@@ -26,16 +31,24 @@ class Maddpg(Algorithm):
         loss_function (str): loss function for the value discrepancy. Can be one of "l1", "l2" or "smooth_l1".
         delay_value (bool): whether to separate the target value networks from the value networks used for
             data collection.
+        use_tanh_mapping (bool): if ``True``, use squash actions (output by the policy) into the action range, otherwise
+            clip them.
     """
 
     def __init__(
-        self, share_param_critic: bool, loss_function: str, delay_value: bool, **kwargs
+        self,
+        share_param_critic: bool,
+        loss_function: str,
+        delay_value: bool,
+        use_tanh_mapping: bool,
+        **kwargs
     ):
         super().__init__(**kwargs)
 
         self.share_param_critic = share_param_critic
         self.delay_value = delay_value
         self.loss_function = loss_function
+        self.use_tanh_mapping = use_tanh_mapping
 
     #############################
     # Overridden abstract methods
@@ -119,12 +132,15 @@ class Maddpg(Algorithm):
                 spec=self.action_spec[group, "action"],
                 in_keys=[(group, "param")],
                 out_keys=[(group, "action")],
-                distribution_class=TanhDelta,
+                distribution_class=TanhDelta if self.use_tanh_mapping else Delta,
                 distribution_kwargs={
                     "min": self.action_spec[(group, "action")].space.low,
                     "max": self.action_spec[(group, "action")].space.high,
-                },
+                }
+                if self.use_tanh_mapping
+                else {},
                 return_log_prob=False,
+                safe=not self.use_tanh_mapping,
             )
             return policy
         else:
@@ -298,6 +314,7 @@ class MaddpgConfig(AlgorithmConfig):
 
     loss_function: str = MISSING
     delay_value: bool = MISSING
+    use_tanh_mapping: bool = MISSING
 
     @staticmethod
     def associated_class() -> Type[Algorithm]:

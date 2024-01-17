@@ -4,6 +4,6 @@ defaults:
 
 
 share_param_critic: True
-
 loss_function: "l2"
 delay_value: True
+use_tanh_mapping: True

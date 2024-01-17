@@ -12,7 +12,12 @@ from tensordict import TensorDictBase
 from tensordict.nn import NormalParamExtractor, TensorDictModule, TensorDictSequential
 from torch.distributions import Categorical
 from torchrl.data import CompositeSpec, UnboundedContinuousTensorSpec
-from torchrl.modules import MaskedCategorical, ProbabilisticActor, TanhNormal
+from torchrl.modules import (
+    IndependentNormal,
+    MaskedCategorical,
+    ProbabilisticActor,
+    TanhNormal,
+)
 from torchrl.objectives import DiscreteSACLoss, LossModule, SACLoss, ValueEstimators
 
 from benchmarl.algorithms.common import Algorithm, AlgorithmConfig
@@ -41,6 +46,8 @@ class Masac(Algorithm):
             match the 'target_entropy' value.
         scale_mapping (str): positive mapping function to be used with the std.
             choices: "softplus", "exp", "relu", "biased_softplus_1";
+        use_tanh_normal (bool): if ``True``, use TanhNormal as the continuyous action distribution with support bound
+            to the action domain. Otherwise, an IndependentNormal is used.
     """
 
     def __init__(
@@ -56,6 +63,7 @@ class Masac(Algorithm):
         max_alpha: Optional[float],
         fixed_alpha: bool,
         scale_mapping: str,
+        use_tanh_normal: bool,
         **kwargs
     ):
         super().__init__(**kwargs)
@@ -71,6 +79,7 @@ class Masac(Algorithm):
         self.max_alpha = max_alpha
         self.fixed_alpha = fixed_alpha
         self.scale_mapping = scale_mapping
+        self.use_tanh_normal = use_tanh_normal
 
     #############################
     # Overridden abstract methods
@@ -200,11 +209,15 @@ class Masac(Algorithm):
                 spec=self.action_spec[group, "action"],
                 in_keys=[(group, "loc"), (group, "scale")],
                 out_keys=[(group, "action")],
-                distribution_class=TanhNormal,
+                distribution_class=IndependentNormal
+                if not self.use_tanh_normal
+                else TanhNormal,
                 distribution_kwargs={
                     "min": self.action_spec[(group, "action")].space.low,
                     "max": self.action_spec[(group, "action")].space.high,
-                },
+                }
+                if self.use_tanh_normal
+                else {},
                 return_log_prob=True,
                 log_prob_key=(group, "log_prob"),
             )
@@ -461,18 +474,17 @@ class MasacConfig(AlgorithmConfig):
     """Configuration dataclass for :class:`~benchmarl.algorithms.Masac`."""
 
     share_param_critic: bool = MISSING
-
     num_qvalue_nets: int = MISSING
     loss_function: str = MISSING
     delay_qvalue: bool = MISSING
     target_entropy: Union[float, str] = MISSING
     discrete_target_entropy_weight: float = MISSING
-
     alpha_init: float = MISSING
     min_alpha: Optional[float] = MISSING
     max_alpha: Optional[float] = MISSING
     fixed_alpha: bool = MISSING
     scale_mapping: str = MISSING
+    use_tanh_normal: bool = MISSING
 
     @staticmethod
     def associated_class() -> Type[Algorithm]:
