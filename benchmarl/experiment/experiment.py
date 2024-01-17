@@ -87,7 +87,7 @@ class ExperimentConfig:
     render: bool = MISSING
     evaluation_interval: int = MISSING
     evaluation_episodes: int = MISSING
-    evaluation_deterministic: bool = MISSING
+    evaluation_deterministic_actions: bool = MISSING
 
     loggers: List[str] = MISSING
     create_json: bool = MISSING
@@ -694,7 +694,7 @@ class Experiment(CallbackNotifier):
         evaluation_start = time.time()
         with set_exploration_type(
             ExplorationType.MODE
-            if self.config.evaluation_deterministic
+            if self.config.evaluation_deterministic_actions
             else ExplorationType.RANDOM
         ):
             if self.task.has_render(self.test_env) and self.config.render:
