@@ -27,7 +27,6 @@ class VmasTask(Task):
     DROPOUT = None
     GIVE_WAY = None
     WIND_FLOCKING = None
-    PLINKO = None
     SIMPLE_ADVERSARY = None
     SIMPLE_CRYPTO = None
     SIMPLE_PUSH = None
