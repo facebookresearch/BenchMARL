@@ -2,18 +2,15 @@ defaults:
   - masac_config
   - _self_
 
-
-
 share_param_critic: True
-
 num_qvalue_nets: 2
 loss_function: "l2"
 delay_qvalue: True
 target_entropy: "auto"
 discrete_target_entropy_weight: 0.2
-
 alpha_init: 1.0
 min_alpha: null
 max_alpha: null
 fixed_alpha: False
 scale_mapping: "biased_softplus_1.0"
+use_tanh_normal: True

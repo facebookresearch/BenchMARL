@@ -13,7 +13,7 @@ from tensordict.nn import TensorDictModule, TensorDictSequential
 from tensordict.nn.distributions import NormalParamExtractor
 from torch.distributions import Categorical
 from torchrl.data import CompositeSpec, UnboundedContinuousTensorSpec
-from torchrl.modules import ProbabilisticActor, TanhNormal
+from torchrl.modules import IndependentNormal, ProbabilisticActor, TanhNormal
 from torchrl.modules.distributions import MaskedCategorical
 from torchrl.objectives import ClipPPOLoss, LossModule, ValueEstimators
 
@@ -46,6 +46,7 @@ class Ippo(Algorithm):
         loss_critic_type: str,
         lmbda: float,
         scale_mapping: str,
+        use_tanh_normal: bool,
         **kwargs
     ):
         super().__init__(**kwargs)
@@ -57,6 +58,7 @@ class Ippo(Algorithm):
         self.loss_critic_type = loss_critic_type
         self.lmbda = lmbda
         self.scale_mapping = scale_mapping
+        self.use_tanh_normal = use_tanh_normal
 
     #############################
     # Overridden abstract methods
@@ -153,11 +155,15 @@ class Ippo(Algorithm):
                 spec=self.action_spec[group, "action"],
                 in_keys=[(group, "loc"), (group, "scale")],
                 out_keys=[(group, "action")],
-                distribution_class=TanhNormal,
+                distribution_class=IndependentNormal
+                if not self.use_tanh_normal
+                else TanhNormal,
                 distribution_kwargs={
                     "min": self.action_spec[(group, "action")].space.low,
                     "max": self.action_spec[(group, "action")].space.high,
-                },
+                }
+                if self.use_tanh_normal
+                else {},
                 return_log_prob=True,
                 log_prob_key=(group, "log_prob"),
             )
@@ -294,6 +300,7 @@ class IppoConfig(AlgorithmConfig):
     loss_critic_type: str = MISSING
     lmbda: float = MISSING
     scale_mapping: str = MISSING
+    use_tanh_normal: bool = MISSING
 
     @staticmethod
     def associated_class() -> Type[Algorithm]:
