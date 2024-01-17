@@ -9,6 +9,9 @@ docs/output/
 docs/source/generated/
 docs/build/
 
+# MacOS
+.DS_store
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
