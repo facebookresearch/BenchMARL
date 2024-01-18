@@ -55,8 +55,14 @@ Callbacks
 ---------
 
 Experiments optionally take a list of :class:`~benchmarl.experiment.Callback` which have several methods
-that you can implement to see what's going on during training such
-as :py:func:`~benchmarl.experiment.Callback.on_batch_collected`, :py:func:`~benchmarl.experiment.Callback.on_train_end`, and :py:func:`~benchmarl.experiment.Callback.on_evaluation_end`.
+that you can implement to see what's going on during training, such
+as:
+
+- :py:func:`~benchmarl.experiment.Callback.on_setup`
+- :py:func:`~benchmarl.experiment.Callback.on_batch_collected`
+- :py:func:`~benchmarl.experiment.Callback.on_train_step`
+- :py:func:`~benchmarl.experiment.Callback.on_train_end`
+- :py:func:`~benchmarl.experiment.Callback.on_evaluation_end`
 
 
 .. python_example_button::
