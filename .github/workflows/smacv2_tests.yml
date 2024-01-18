@@ -15,7 +15,7 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  tests:
     if: ${{ github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'smacv2') }}
     runs-on: ubuntu-latest
     strategy:
@@ -53,6 +53,8 @@ jobs:
 
   upload-coverage:
     runs-on: ubuntu-latest
+    needs:
+      - tests
     steps:
       - uses: actions/checkout@v4
       - name: Fetch code coverage artifact

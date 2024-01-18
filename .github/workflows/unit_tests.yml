@@ -15,7 +15,7 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  tests:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -45,6 +45,8 @@ jobs:
 
   upload-coverage:
     runs-on: ubuntu-latest
+    needs:
+      - tests
     steps:
       - uses: actions/checkout@v4
       - name: Fetch code coverage artifact
