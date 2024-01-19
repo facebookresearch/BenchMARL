@@ -34,7 +34,7 @@ setup(
     author_email="mb2389@cl.cam.ac.uk",
     install_requires=["torchrl>=0.2.0", "tqdm", "hydra-core"],
     extras_require={
-        "vmas": ["vmas>=1.2.10"],
+        "vmas": ["vmas>=1.3.4"],
         "pettingzoo": ["pettingzoo[all]>=1.24.1"],
         "gnn": ["torch_geometric"],
     },

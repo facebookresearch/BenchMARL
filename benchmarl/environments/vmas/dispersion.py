@@ -11,9 +11,7 @@ from dataclasses import dataclass, MISSING
 class TaskConfig:
     max_steps: int = MISSING
     n_agents: int = MISSING
-    shared_rew: bool = MISSING
-    n_gaussians: int = MISSING
-    lidar_range: float = MISSING
-    cov: float = MISSING
-    collisions: bool = MISSING
-    spawn_same_pos: bool = MISSING
+    n_food: int = MISSING
+    share_rew: bool = MISSING
+    food_radius: float = MISSING
+    penalise_by_time: bool = MISSING
