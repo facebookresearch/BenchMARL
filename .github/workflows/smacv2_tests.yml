@@ -15,7 +15,7 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  tests:
     if: ${{ github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'smacv2') }}
     runs-on: ubuntu-latest
     strategy:
@@ -43,5 +43,9 @@ jobs:
         echo 'SC2PATH is set to ' "$SC2PATH"
 
         pytest test/test_smacv2.py --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml --cov-report=html
-    - name: Upload test coverage
-      uses: codecov/codecov-action@v2
+
+    - if: matrix.python-version == '3.10'
+      name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        fail_ci_if_error: false

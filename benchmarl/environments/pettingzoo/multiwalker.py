@@ -20,4 +20,4 @@ class TaskConfig:
     terminate_reward: float = MISSING
     terminate_on_fall: bool = MISSING
     remove_on_fall: bool = MISSING
-    terrain_length: float = MISSING
+    terrain_length: int = MISSING
