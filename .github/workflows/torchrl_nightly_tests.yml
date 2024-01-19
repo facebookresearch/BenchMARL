@@ -3,7 +3,7 @@
 # https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
 
-name: vmas_tests
+name: torchrl_nightly_tests
 
 on:
   push:
