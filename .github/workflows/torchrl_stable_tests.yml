@@ -3,7 +3,7 @@
 # https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
 
-name: torchrl_nightly_tests
+name: torchrl_stable_tests
 
 on:
   push:
@@ -29,7 +29,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-       bash .github/unittest/install_dependencies_nightly.sh
+       bash .github/unittest/install_dependencies.sh
     - name: Install vmas
       run: |
        bash .github/unittest/install_vmas.sh
@@ -47,11 +47,11 @@ jobs:
 
     - name: Vmas tests
       run: |
-        xvfb-run -s "-screen 0 1024x768x24" pytest test/test_vmas.py --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml --cov-report=html
+        xvfb-run -s "-screen 0 1024x768x24" pytest test/test_vmas.py -k 'not gnn' --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml --cov-report=html
 
     - name: PettingZoo tests
       run: |
-        xvfb-run -s "-screen 0 1024x768x24" pytest test/test_pettingzoo.py --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml --cov-report=html
+        xvfb-run -s "-screen 0 1024x768x24" pytest test/test_pettingzoo.py -k 'not gnn' --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml --cov-report=html
 
     - if: ${{ github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'smacv2') }}
       name: SMACv2 tests
@@ -60,4 +60,4 @@ jobs:
         export SC2PATH="${root_dir}/StarCraftII"
         echo 'SC2PATH is set to ' "$SC2PATH"
         
-        pytest test/test_smacv2.py --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml --cov-report=html
+        pytest test/test_smacv2.py -k 'not gnn' --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml --cov-report=html
