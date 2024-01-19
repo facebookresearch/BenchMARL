@@ -47,4 +47,4 @@ jobs:
         export SC2PATH="${root_dir}/StarCraftII"
         echo 'SC2PATH is set to ' "$SC2PATH"
         
-        xvfb-run -s "-screen 0 1024x768x24" pytest test/ -k 'not gnn' --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml --cov-report=html
+        xvfb-run -s "-screen 0 1024x768x24" pytest test/ --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml --cov-report=html
