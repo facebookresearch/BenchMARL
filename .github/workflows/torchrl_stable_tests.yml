@@ -43,21 +43,8 @@ jobs:
 
     - name: Unit tests
       run: |
-        pytest test/ --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml --cov-report=html
-
-    - name: Vmas tests
-      run: |
-        xvfb-run -s "-screen 0 1024x768x24" pytest test/test_vmas.py -k 'not gnn' --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml --cov-report=html
-
-    - name: PettingZoo tests
-      run: |
-        xvfb-run -s "-screen 0 1024x768x24" pytest test/test_pettingzoo.py -k 'not gnn' --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml --cov-report=html
-
-    - if: ${{ github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'smacv2') }}
-      name: SMACv2 tests
-      run: |
         root_dir="$(git rev-parse --show-toplevel)"
         export SC2PATH="${root_dir}/StarCraftII"
         echo 'SC2PATH is set to ' "$SC2PATH"
         
-        pytest test/test_smacv2.py -k 'not gnn' --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml --cov-report=html
+        xvfb-run -s "-screen 0 1024x768x24 pytest test/ --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml --cov-report=html
