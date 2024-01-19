@@ -1,0 +1,63 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see:
+# https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+
+name: vmas_tests
+
+on:
+  push:
+    branches: [ $default-branch , "main" ]
+  pull_request:
+    branches: [ $default-branch , "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10"]
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+       bash .github/unittest/install_dependencies_nightly.sh
+    - name: Install vmas
+      run: |
+       bash .github/unittest/install_vmas.sh
+    - name: Install pettingzoo
+      run: |
+        bash .github/unittest/install_pettingzoo.sh
+    - if: ${{ github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'smacv2') }}
+      name: Install smacv2
+      run: |
+        bash .github/unittest/install_smacv2.sh
+
+    - name: Unit tests
+      run: |
+        pytest test/ --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml --cov-report=html
+
+    - name: Vmas tests
+      run: |
+        xvfb-run -s "-screen 0 1024x768x24" pytest test/test_vmas.py --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml --cov-report=html
+
+    - name: PettingZoo tests
+      run: |
+        xvfb-run -s "-screen 0 1024x768x24" pytest test/test_pettingzoo.py --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml --cov-report=html
+
+    - if: ${{ github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'smacv2') }}
+      name: Test with pytest
+      run: |
+        root_dir="$(git rev-parse --show-toplevel)"
+        export SC2PATH="${root_dir}/StarCraftII"
+        echo 'SC2PATH is set to ' "$SC2PATH"
+        
+        pytest test/test_smacv2.py --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml --cov-report=html
