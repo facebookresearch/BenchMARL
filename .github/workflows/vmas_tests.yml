@@ -39,24 +39,7 @@ jobs:
         xvfb-run -s "-screen 0 1024x768x24" pytest test/test_vmas.py --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml --cov-report=html
 
     - if: matrix.python-version == '3.10'
-      name: Save code coverage to artifact
-      uses: actions/upload-artifact@v3
+      name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
       with:
-        name: code-coverage
-        path: "coverage.xml"
-        retention-days: 5
-
-  upload-coverage:
-    runs-on: ubuntu-latest
-    needs:
-      - tests
-    steps:
-      - uses: actions/checkout@v4
-      - name: Fetch code coverage artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: code-coverage
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          fail_ci_if_error: false
+        fail_ci_if_error: false
