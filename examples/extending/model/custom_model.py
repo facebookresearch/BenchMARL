@@ -21,7 +21,7 @@ class CustomModel(Model):
     def __init__(
         self,
         custom_param: int,
-        activation_function: Type[nn.Module],
+        activation_class: Type[nn.Module],
         **kwargs,
     ):
         # Models in BenchMARL are instantiated per agent group.
@@ -34,7 +34,7 @@ class CustomModel(Model):
 
         # You can create your custom attributes
         self.custom_param = custom_param
-        self.activation_function = activation_function
+        self.activation_function = activation_class
 
         # And access some of the ones already available to your module
         _ = self.input_spec  # Like its input_spec
@@ -166,7 +166,7 @@ class CustomModel(Model):
 class CustomModelConfig(ModelConfig):
     # The config parameters for this class, these will be loaded from yaml
     custom_param: int = MISSING
-    activation_function: Type[nn.Module] = MISSING
+    activation_class: Type[nn.Module] = MISSING
 
     @staticmethod
     def associated_class():
