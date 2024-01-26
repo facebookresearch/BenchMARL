@@ -104,7 +104,7 @@ You can change it like so:
 
 .. code-block:: console
 
-   python benchmarl/run.py task=vmas/balance algorithm=mappo model=layers/mlp model=layers/mlp model.layer_class="torch.nn.Linear" "model.num_cells=[32,32]" model.activation_class="torch.nn.ReLU"
+   python benchmarl/run.py task=vmas/balance algorithm=mappo model=layers/mlp model.layer_class="torch.nn.Linear" "model.num_cells=[32,32]" model.activation_class="torch.nn.ReLU"
 
 
 Available models and their configs can be found at `benchmarl/conf/model/layers <https://github.com/facebookresearch/BenchMARL/blob/main/benchmarl/conf/model/layers>`__.
