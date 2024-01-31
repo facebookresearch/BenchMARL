@@ -15,7 +15,7 @@ for an example.
 3. Place your algorithm script in [`benchmarl/algorithms`](../../../benchmarl/algorithms) and 
 your config in [`benchmarl/conf/algorithm`](../../../benchmarl/conf/algorithm) (or any other place you want to 
 override from)
-4. Add `{"custom_agorithm": CustomAlgorithmConfig}` to the [`benchmarl.algorithm.algorithm_config_registry`](../../../benchmarl/algorithms/__init__.py)
+4. Add `{"custom_agorithm": CustomAlgorithmConfig}` to the [`benchmarl.algorithms.algorithm_config_registry`](../../../benchmarl/algorithms/__init__.py)
 5. Load it with
 ```bash
 python benchmarl/run.py algorithm=customalgorithm task=...
