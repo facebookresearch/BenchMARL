@@ -96,7 +96,7 @@ class Ippo(Algorithm):
 
     def _get_parameters(self, group: str, loss: ClipPPOLoss) -> Dict[str, Iterable]:
         return {
-            "loss_objective": list(loss.actor_params.flatten_keys().values()),
+            "loss_objective": list(loss.actor_network_params.flatten_keys().values()),
             "loss_critic": list(loss.critic_params.flatten_keys().values()),
         }
 
