@@ -1,7 +1,7 @@
 defaults:
   - experiment: base_experiment
-  - algorithm: ???
-  - task: ???
+  - algorithm: mappo
+  - task: vmas/diff_drive
   - model: layers/mlp
   - model@critic_model: layers/mlp
   - _self_
@@ -15,8 +15,8 @@ seed: 0
 
 experiment:
 
-  sampling_device: "cuda"
-  train_device: "cuda"
+  sampling_device: "cpu"
+  train_device: "cpu"
 
   share_policy_params: True
   prefer_continuous_actions: True
