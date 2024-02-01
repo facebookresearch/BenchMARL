@@ -1,4 +1,4 @@
 
-python -m pip install git+https://github.com/proroklab/VectorizedMultiAgentSimulator.git
+python -m pip install vmas
 sudo apt-get update
 sudo apt-get install python3-opengl xvfb
