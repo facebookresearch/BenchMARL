@@ -14,7 +14,6 @@ from benchmarl.algorithms import (
     MaddpgConfig,
     MasacConfig,
     QmixConfig,
-    VdnConfig,
 )
 from benchmarl.algorithms.common import AlgorithmConfig
 from benchmarl.environments import PettingZooTask, Task
@@ -43,7 +42,7 @@ class TestPettingzoo:
         if (prefer_continuous and not algo_config.supports_continuous_actions()) or (
             not prefer_continuous and not algo_config.supports_discrete_actions()
         ):
-            return
+            pytest.skip()
 
         # To not run unsupported algo-task pairs
         if (
@@ -53,7 +52,7 @@ class TestPettingzoo:
             not task.supports_discrete_actions()
             and not algo_config.supports_continuous_actions()
         ):
-            return
+            pytest.skip()
 
         task = task.get_from_yaml()
         experiment_config.prefer_continuous_actions = prefer_continuous
@@ -118,9 +117,7 @@ class TestPettingzoo:
     ):
         experiment_config.prefer_continuous_actions = prefer_continuous
         algo_config = algo_config.get_from_yaml()
-        if isinstance(algo_config, VdnConfig):
-            # There are some bugs currently in TorchRL
-            return
+
         ExperimentUtils.check_experiment_loading(
             algo_config=algo_config,
             model_config=mlp_sequence_config,
