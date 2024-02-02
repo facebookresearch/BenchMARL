@@ -234,8 +234,8 @@ class Ippo(Algorithm):
             loss = self.get_loss_and_updater(group)[0]
             loss.value_estimator(
                 batch,
-                params=loss.critic_params,
-                target_params=loss.target_critic_params,
+                params=loss.critic_network_params,
+                target_params=loss.target_critic_network_params,
             )
 
         return batch
