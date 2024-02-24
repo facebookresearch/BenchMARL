@@ -383,7 +383,7 @@ class Masac(Algorithm):
             modules.append(
                 TensorDictModule(
                     lambda state, action: torch.cat(
-                        [state, action.view(*action.shape[:-2], -1)], dim=-1
+                        [state, action.reshape(*action.shape[:-2], -1)], dim=-1
                     ),
                     in_keys=["state", (group, "action")],
                     out_keys=["state_action"],

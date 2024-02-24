@@ -5,7 +5,9 @@ python -m pip install flake8 pytest pytest-cov hydra-core tqdm torch_geometric
 
 if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-python -m pip install --pre torch --extra-index-url https://download.pytorch.org/whl/nightly/cpu --force-reinstall
+python -m pip install torch
+# Not using nightly torch
+# python -m pip install --pre torch --extra-index-url https://download.pytorch.org/whl/nightly/cpu --force-reinstall
 
 cd ..
 python -m pip install git+https://github.com/pytorch-labs/tensordict.git
