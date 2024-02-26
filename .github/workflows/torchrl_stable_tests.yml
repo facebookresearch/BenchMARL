@@ -36,15 +36,10 @@ jobs:
     - name: Install pettingzoo
       run: |
         bash .github/unittest/install_pettingzoo.sh
-    - if: ${{ github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'smacv2') }}
-      name: Install smacv2
-      run: |
-        bash .github/unittest/install_smacv2.sh
 
-    - name: Unit tests
+    - name: Test VMAS
       run: |
-        root_dir="$(git rev-parse --show-toplevel)"
-        export SC2PATH="${root_dir}/StarCraftII"
-        echo 'SC2PATH is set to ' "$SC2PATH"
-        
-        xvfb-run -s "-screen 0 1024x768x24" pytest test/ --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml --cov-report=html
+        xvfb-run -s "-screen 0 1024x768x24" pytest test/test_vmas.py --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml --cov-report=html
+    - name: Test PettingZoo
+      run: |
+        xvfb-run -s "-screen 0 1024x768x24" pytest test/test_pettingzoo.py --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml --cov-report=html
