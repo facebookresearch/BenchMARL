@@ -24,7 +24,7 @@ from benchmarl.models.common import ModelConfig
 
 
 class Iddpg(Algorithm):
-    """Same as :class:`~benchmarkl.algorithms.Maddpg` (from `https://arxiv.org/abs/1706.02275 <https://arxiv.org/abs/1706.02275>`__) but with decentralized critics.
+    """Same as :class:`~benchmarl.algorithms.Maddpg` (from `https://arxiv.org/abs/1706.02275 <https://arxiv.org/abs/1706.02275>`__) but with decentralized critics.
 
     Args:
         share_param_critic (bool): Whether to share the parameters of the critics withing agent groups
