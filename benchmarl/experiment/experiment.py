@@ -789,6 +789,8 @@ class Experiment(CallbackNotifier):
 
     def _load_experiment(self) -> Experiment:
         """Load trainer from checkpoint"""
-        loaded_dict: OrderedDict = torch.load(self.config.restore_file)
+        loaded_dict: OrderedDict = torch.load(
+            self.config.restore_file, map_location=torch.device("cpu")
+        )
         self.load_state_dict(loaded_dict)
         return self
