@@ -39,9 +39,12 @@ def run_policy(policy):
     n_agents = 2
 
     # These are he input args
-    pos = torch.rand((1, n_agents, 2), dtype=torch.float)
-    vel = torch.rand((1, n_agents, 2), dtype=torch.float)
-    goal = torch.rand((1, n_agents, 2), dtype=torch.float)
+    pos = torch.zeros((1, n_agents, 2), dtype=torch.float)
+    pos[:, 1, 0] += 2
+
+    vel = torch.zeros((1, n_agents, 2), dtype=torch.float)
+
+    goal = pos.clone()
 
     rel_goal_pos = pos - goal
 
@@ -58,4 +61,4 @@ def run_policy(policy):
 
 if __name__ == "__main__":
     policy = get_policy()
-    run_policy(policy)
+    print(run_policy(policy))
