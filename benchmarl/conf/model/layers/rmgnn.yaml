@@ -1,0 +1,7 @@
+name: rmgnn
+
+topology: full
+self_loops: False
+
+num_cells: [256, 256]
+activation_class: torch.nn.Tanh

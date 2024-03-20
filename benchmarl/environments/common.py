@@ -277,4 +277,4 @@ class Task(Enum):
                 Task._load_from_yaml(str(Path(self.env_name()) / Path(task_name)))
             )
         else:
-            return self.update_config(**_read_yaml_config(path))
+            return self.update_config(_read_yaml_config(path))

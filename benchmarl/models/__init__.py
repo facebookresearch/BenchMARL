@@ -7,7 +7,8 @@
 from .common import Model, ModelConfig, SequenceModel, SequenceModelConfig
 from .gnn import Gnn, GnnConfig
 from .mlp import Mlp, MlpConfig
+from .robomaster_model import RmGnn, RmGnnConfig
 
-classes = ["Mlp", "MlpConfig", "Gnn", "GnnConfig"]
+classes = ["Mlp", "MlpConfig", "Gnn", "GnnConfig", "RmGnn"]
 
-model_config_registry = {"mlp": MlpConfig, "gnn": GnnConfig}
+model_config_registry = {"mlp": MlpConfig, "gnn": GnnConfig, "rmgnn": RmGnnConfig}
