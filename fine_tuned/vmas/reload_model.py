@@ -25,7 +25,7 @@ def get_policy():
         ),
         algorithm_config=MappoConfig.get_from_yaml(str(config_folder / "mappo.yaml")),
         model_config=RmGnnConfig.get_from_yaml(str(config_folder / "rmgnn.yaml")),
-        config=ExperimentConfig.get_from_yaml(str(config_folder / "experiment.yaml")),
+        config=config,
         critic_model_config=MlpConfig(
             num_cells=[256, 256], activation_class=nn.Tanh, layer_class=nn.Linear
         ),
