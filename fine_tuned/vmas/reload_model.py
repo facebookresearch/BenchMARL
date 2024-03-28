@@ -3,12 +3,12 @@ from pathlib import Path
 
 import torch
 
-from benchmarl.algorithms import MappoConfig
+from benchmarl.algorithms import IppoConfig
 from benchmarl.environments import VmasTask
 from benchmarl.experiment import Experiment, ExperimentConfig
-from benchmarl.models import MlpConfig, RmGnnConfig
+from benchmarl.models import RmGnnConfig
 from tensordict import TensorDict
-from torch import nn
+
 from torchrl.envs.utils import ExplorationType, set_exploration_type
 
 
@@ -20,14 +20,14 @@ def get_policy():
     config.restore_file = str(current_folder / "checkpoint.pt")
 
     experiment = Experiment(
+        config=config,
         task=VmasTask.RM_NAVIGATION.get_from_yaml(
             str(config_folder / "rm_navigation.yaml")
         ),
-        algorithm_config=MappoConfig.get_from_yaml(str(config_folder / "mappo.yaml")),
+        algorithm_config=IppoConfig.get_from_yaml(str(config_folder / "ippo.yaml")),
         model_config=RmGnnConfig.get_from_yaml(str(config_folder / "rmgnn.yaml")),
-        config=config,
-        critic_model_config=MlpConfig(
-            num_cells=[256, 256], activation_class=nn.Tanh, layer_class=nn.Linear
+        critic_model_config=RmGnnConfig.get_from_yaml(
+            str(config_folder / "rmgnn.yaml")
         ),
         seed=0,
     )
@@ -36,12 +36,10 @@ def get_policy():
 
 
 def run_policy(policy):
-    n_agents = 2
+    n_agents = 4
 
     # These are he input args
     pos = torch.zeros((1, n_agents, 2), dtype=torch.float)
-    pos[:, 1, 0] += 2
-
     vel = torch.zeros((1, n_agents, 2), dtype=torch.float)
 
     goal = pos.clone()

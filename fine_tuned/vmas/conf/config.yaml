@@ -1,9 +1,9 @@
 defaults:
   - experiment: base_experiment
-  - algorithm: mappo
+  - algorithm: ippo
   - task: vmas/rm_navigation
   - model: layers/rmgnn
-  - model@critic_model: layers/mlp
+  - model@critic_model: layers/rmgnn
   - _self_
 
 hydra:
@@ -12,6 +12,17 @@ hydra:
     - pkg://benchmarl/conf
 
 seed: 0
+
+task:
+  n_agents: 4
+  pos_shaping_factor: 1
+  final_reward: 0.005
+  agent_collision_penalty: -1
+  v_range: 2
+  a_range: 2
+
+algorithm:
+  entropy_coef: 0.001
 
 experiment:
 
@@ -39,7 +50,7 @@ experiment:
 
   on_policy_collected_frames_per_batch: 60_000
   on_policy_n_envs_per_worker: 300
-  on_policy_n_minibatch_iters: 45
+  on_policy_n_minibatch_iters: 40
   on_policy_minibatch_size: 4096
 
   off_policy_collected_frames_per_batch: 6000

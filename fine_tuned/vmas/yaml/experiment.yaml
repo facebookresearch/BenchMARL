@@ -50,7 +50,7 @@ on_policy_collected_frames_per_batch: 6000
 # Otherwise batching will be simulated and each env will be run sequentially.
 on_policy_n_envs_per_worker: 10
 # This is the number of times collected_frames_per_batch will be split into minibatches and trained
-on_policy_n_minibatch_iters: 45
+on_policy_n_minibatch_iters: 40
 # In on-policy algorithms the train_batch_size will be equal to the on_policy_collected_frames_per_batch
 # and it will be split into minibatches with this number of frames for training
 on_policy_minibatch_size: 400

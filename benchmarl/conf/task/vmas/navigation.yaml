@@ -12,3 +12,6 @@ observe_all_goals: False
 shared_rew: False
 lidar_range: 0.35
 agent_radius: 0.1
+pos_shaping_factor: 1
+final_reward: 0.01
+agent_collision_penalty: -1

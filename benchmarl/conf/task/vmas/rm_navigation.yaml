@@ -5,3 +5,8 @@ defaults:
 
 max_steps: 200
 n_agents: 2
+pos_shaping_factor: 1
+final_reward: 0.01
+agent_collision_penalty: -1
+v_range: 2
+a_range: 2

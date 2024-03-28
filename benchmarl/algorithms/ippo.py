@@ -287,6 +287,7 @@ class Ippo(Algorithm):
             device=self.device,
             action_spec=self.action_spec,
         )
+        value_module.ciao = True
 
         return value_module
 

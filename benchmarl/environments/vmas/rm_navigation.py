@@ -11,3 +11,8 @@ from dataclasses import dataclass, MISSING
 class TaskConfig:
     max_steps: int = MISSING
     n_agents: int = MISSING
+    pos_shaping_factor: float = MISSING
+    final_reward: float = MISSING
+    agent_collision_penalty: float = MISSING
+    v_range: float = MISSING
+    a_range: float = MISSING
