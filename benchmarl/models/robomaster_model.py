@@ -16,6 +16,7 @@ from tensordict import TensorDictBase
 from torch import nn, Tensor
 from torch_geometric.nn import MessagePassing
 from torch_geometric.transforms import BaseTransform
+from torch_geometric.utils import scatter
 from torchrl.modules import MultiAgentMLP
 
 from benchmarl.models.common import Model, ModelConfig
@@ -81,6 +82,7 @@ class RmGnn(Model):
 
         super().__init__(**kwargs)
 
+        self.hidden_size = 128
         self.input_features = self.input_leaf_spec.shape[-1]
         self.output_features = self.output_leaf_spec.shape[-1]
 
@@ -88,28 +90,17 @@ class RmGnn(Model):
             [
                 MatPosConv(
                     in_dim=self.input_features - 2,  # input - pos,
-                    out_dim=self.output_features // 2,  # half the output is comms
+                    out_dim=self.hidden_size,
                     edge_features=5,  # rel vel, rel pos and distance
                     aggr="sum",
-                    activation_fn="tanh",
+                    activation_fn=activation_class,
                 ).to(self.device)
                 for _ in range(self.n_agents if not self.share_params else 1)
             ]
         )
-        self.mlp_local = MultiAgentMLP(
-            n_agent_inputs=self.input_features - 2,  # input - pos
-            n_agent_outputs=self.output_features
-            // 2,  # half the output is proprioceptive
-            n_agents=self.n_agents,
-            centralised=self.centralised,
-            share_params=self.share_params,
-            device=self.device,
-            num_cells=num_cells,
-            activation_class=activation_class,
-        )
 
         self.mlp_local_and_comms = MultiAgentMLP(
-            n_agent_inputs=self.output_features,
+            n_agent_inputs=self.hidden_size + self.input_features - 2,
             n_agent_outputs=self.output_features,
             n_agents=self.n_agents,
             centralised=self.centralised,
@@ -165,18 +156,22 @@ class RmGnn(Model):
         vel = input[..., 2:4]
         input = input[..., 2:]  # exclude pos
 
+        if hasattr(self, "ciao"):
+            pass
+        else:
+            pass
+
         graph = batch_from_dense_to_ptg(
             x=input, edge_index=self.edge_index, pos=pos, vel=vel
         )
 
-        mlp_out = self.mlp_local.forward(input)
         if not self.share_params:
             gnn_out = torch.stack(
                 [
                     gnn(graph.x, graph.edge_index, graph.edge_attr).view(
                         *batch_size,
                         self.n_agents,
-                        self.output_features // 2,
+                        self.hidden_size,
                     )[..., i, :]
                     for i, gnn in enumerate(self.gnns)
                 ],
@@ -187,58 +182,14 @@ class RmGnn(Model):
                 graph.x,
                 graph.edge_index,
                 graph.edge_attr,
-            ).view(*batch_size, self.n_agents, self.output_features // 2)
+            ).view(*batch_size, self.n_agents, self.hidden_size)
 
-        res = self.mlp_local_and_comms(torch.cat([mlp_out, gnn_out], dim=-1))
+        res = self.mlp_local_and_comms(torch.cat([input, gnn_out], dim=-1))
 
         tensordict.set(self.out_key, res)
         return tensordict
 
 
-# class GnnKernel(nn.Module):
-#     def __init__(self, in_dim, out_dim, **cfg):
-#         super().__init__()
-#
-#         gnn_types = {"GraphConv", "GATv2Conv", "GINEConv"}
-#         aggr_types = {"add", "mean", "max"}
-#
-#         self.aggr = "add"
-#         self.gnn_type = "GraphConv"
-#
-#         self.in_dim = in_dim
-#         self.out_dim = out_dim
-#         self.activation_fn = nn.Tanh
-#
-#         if self.gnn_type == "GraphConv":
-#             self.gnn = GraphConv(
-#                 self.in_dim,
-#                 self.out_dim,
-#                 aggr=self.aggr,
-#             )
-#         elif self.gnn_type == "GATv2Conv":
-#             # Default adds self loops
-#             self.gnn = GATv2Conv(
-#                 self.in_dim,
-#                 self.out_dim,
-#                 edge_dim=self.edge_features,
-#                 fill_value=0.0,
-#                 share_weights=True,
-#                 add_self_loops=True,
-#                 aggr=self.aggr,
-#             )
-#         elif self.gnn_type == "GINEConv":
-#             self.gnn = GINEConv(
-#                 nn=nn.Sequential(
-#                     torch.nn.Linear(self.in_dim, self.out_dim),
-#                     self.activation_fn(),
-#                 ),
-#                 edge_dim=self.edge_features,
-#                 aggr=self.aggr,
-#             )
-#
-#     def forward(self, x, edge_index):
-#         out = self.gnn(x, edge_index)
-#         return out
 class MatPosConv(MessagePassing):
     propagate_type = {"x": Tensor, "edge_attr": Tensor}
 
@@ -248,7 +199,7 @@ class MatPosConv(MessagePassing):
         self.in_dim = in_dim
         self.out_dim = out_dim
         self.edge_features = edge_features
-        self.activation_fn = get_activation_fn(cfg["activation_fn"])
+        self.activation_fn = cfg["activation_fn"]
 
         self.message_encoder = nn.Sequential(
             torch.nn.Linear(self.in_dim + self.edge_features, self.out_dim),
@@ -270,37 +221,6 @@ class MatPosConv(MessagePassing):
 
     def update(self, inputs: Tensor, x) -> Tensor:
         return inputs
-
-
-def get_activation_fn(name: Optional[str] = None):
-    """Returns a framework specific activation function, given a name string.
-
-    Args:
-        name (Optional[str]): One of "relu" (default), "tanh", "elu",
-            "swish", or "linear" (same as None)..
-
-    Returns:
-        A framework-specific activtion function. e.g.
-        torch.nn.ReLU. None if name in ["linear", None].
-
-    Raises:
-        ValueError: If name is an unknown activation function.
-    """
-    # Already a callable, return as-is.
-    if callable(name):
-        return name
-
-    # Infer the correct activation function from the string specifier.
-    if name in ["linear", None]:
-        return None
-    if name == "relu":
-        return nn.ReLU
-    elif name == "tanh":
-        return nn.Tanh
-    elif name == "elu":
-        return nn.ELU
-
-    raise ValueError("Unknown activation ({}) for framework=!".format(name))
 
 
 class RelVel(BaseTransform):
