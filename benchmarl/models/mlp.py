@@ -89,7 +89,7 @@ class Mlp(Model):
                         f"MLP inputs should all have the same shape up to the last dimension, got {self.input_spec}"
                     )
         if self.input_has_agent_dim:
-            if input_shape.shape[-1] != self.n_agents:
+            if input_shape[-1] != self.n_agents:
                 raise ValueError(
                     "If the MLP input has the agent dimension,"
                     " the second to last spec dimension should be the number of agents, got {self.input_spec}"

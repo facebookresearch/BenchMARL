@@ -7,7 +7,6 @@
 from dataclasses import dataclass, MISSING
 from typing import Dict, Iterable, Tuple, Type
 
-import torch
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModule, TensorDictSequential
 from torchrl.data import CompositeSpec, UnboundedContinuousTensorSpec
@@ -218,21 +217,22 @@ class Maddpg(Algorithm):
 
         if self.state_spec is not None:
             modules.append(
-                TensorDictModule(
-                    lambda state, action: torch.cat(
-                        [state, action.reshape(*action.shape[:-2], -1)], dim=-1
-                    ),
-                    in_keys=["state", (group, "action")],
-                    out_keys=["state_action"],
-                )
+                TensorDictModule(lambda action: action.reshape(*action.shape[:-2], -1)),
+                in_keys=[(group, "action")],
+                out_keys=[(group, "global_action")],
             )
+
             critic_input_spec = CompositeSpec(
                 {
-                    "state_action": UnboundedContinuousTensorSpec(
-                        shape=(
-                            self.state_spec["state"].shape[-1]
-                            + self.action_spec[group, "action"].shape[-1] * n_agents,
-                        )
+                    self.state_spec.clone().update(
+                        {
+                            "global_action": UnboundedContinuousTensorSpec(
+                                shape=(
+                                    self.action_spec[group, "action"].shape[-1]
+                                    * n_agents,
+                                )
+                            )
+                        }
                     )
                 }
             )
@@ -252,29 +252,11 @@ class Maddpg(Algorithm):
             )
 
         else:
-            modules.append(
-                TensorDictModule(
-                    lambda obs, action: torch.cat([obs, action], dim=-1),
-                    in_keys=[(group, "observation"), (group, "action")],
-                    out_keys=[(group, "obs_action")],
-                )
-            )
             critic_input_spec = CompositeSpec(
                 {
-                    group: CompositeSpec(
-                        {
-                            "obs_action": UnboundedContinuousTensorSpec(
-                                shape=(
-                                    n_agents,
-                                    self.observation_spec[group, "observation"].shape[
-                                        -1
-                                    ]
-                                    + self.action_spec[group, "action"].shape[-1],
-                                )
-                            )
-                        },
-                        shape=(n_agents,),
-                    )
+                    group: self.observation_spec[group]
+                    .clone()
+                    .update(self.action_spec[group])
                 }
             )
 
