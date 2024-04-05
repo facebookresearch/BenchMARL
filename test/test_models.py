@@ -102,6 +102,9 @@ def test_models_forward_shape(
         multi_agent_tensor = torch.rand((*batch_size, n_agents, channels))
         single_agent_tensor = torch.rand((*batch_size, channels))
 
+    other_multi_agent_tensor = torch.rand((*batch_size, n_agents, channels))
+    other_single_agent_tensor = torch.rand((*batch_size, channels))
+
     if input_has_agent_dim:
         input_spec = CompositeSpec(
             {
@@ -109,7 +112,10 @@ def test_models_forward_shape(
                     {
                         "observation": UnboundedContinuousTensorSpec(
                             shape=multi_agent_tensor.shape[len(batch_size) :]
-                        )
+                        ),
+                        "other": UnboundedContinuousTensorSpec(
+                            shape=other_multi_agent_tensor.shape[len(batch_size) :]
+                        ),
                     },
                     shape=(n_agents,),
                 )
@@ -120,7 +126,10 @@ def test_models_forward_shape(
             {
                 "observation": UnboundedContinuousTensorSpec(
                     shape=single_agent_tensor.shape[len(batch_size) :]
-                )
+                ),
+                "other": UnboundedContinuousTensorSpec(
+                    shape=other_single_agent_tensor.shape[len(batch_size) :]
+                ),
             },
         )
 

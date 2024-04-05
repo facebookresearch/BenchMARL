@@ -145,14 +145,21 @@ class Gnn(Model):
             )
 
         input_shape = None
-        for input_spec in self.input_spec.values(True, True):
-            if input_shape is None:
-                input_shape = input_spec.shape[:-1]
+        for input_key, input_spec in self.input_spec.items(True, True):
+            if (self.input_has_agent_dim and len(input_spec.shape) == 2) or (
+                not self.input_has_agent_dim and len(input_spec.shape) == 1
+            ):
+                if input_shape is None:
+                    input_shape = input_spec.shape[:-1]
+                else:
+                    if input_spec.shape[:-1] != input_shape:
+                        raise ValueError(
+                            f"GNN inputs should all have the same shape up to the last dimension, got {self.input_spec}"
+                        )
             else:
-                if input_spec.shape[:-1] != input_shape:
-                    raise ValueError(
-                        f"GNN inputs should all have the same shape up to the last dimension, got {self.input_spec}"
-                    )
+                raise ValueError(
+                    f"GNN input value {input_key} from {self.input_spec} has an invalid shape"
+                )
 
         if input_shape[-1] != self.n_agents:
             raise ValueError(
