@@ -21,7 +21,7 @@ def number_conv_outputs(
     paddings: List[Union[int, Tuple[int, int]]],
     kernel_sizes: List[Union[int, Tuple[int, int]]],
     strides: List[Union[int, Tuple[int, int]]],
-) -> int:
+) -> Tuple[int, int]:
     if not isinstance(n_conv_inputs, int):
         n_conv_inputs_x, n_conv_inputs_y = n_conv_inputs
     else:
@@ -88,14 +88,14 @@ class Cnn(Model):
 
         if self.input_has_agent_dim:
             self.cnn = MultiAgentConvNet(
-                n_agent_inputs=self.input_features,
+                in_features=self.input_features,
                 n_agents=self.n_agents,
                 centralised=self.centralised,
                 share_params=self.share_params,
                 device=self.device,
                 **cnn_net_kwargs,
             )
-            self.example_net = self.cnn._empty_net
+            example_net = self.cnn._empty_net
         else:
             self.cnn = nn.ModuleList(
                 [
@@ -107,20 +107,20 @@ class Cnn(Model):
                     for _ in range(self.n_agents if not self.share_params else 1)
                 ]
             )
-            self.example_net = self.cnn[0]
+            example_net = self.cnn[0]
 
-        out_features = self.example_net.out_features
+        out_features = example_net.out_features
         out_x, out_y = number_conv_outputs(
             n_conv_inputs=(self.x, self.y),
-            kernel_sizes=self.example_net.kernel_sizes,
-            paddings=self.example_net.paddings,
-            strides=self.example_net.strides,
+            kernel_sizes=example_net.kernel_sizes,
+            paddings=example_net.paddings,
+            strides=example_net.strides,
         )
-        self.cnn_output_size = out_features * out_x * out_y
+        cnn_output_size = out_features * out_x * out_y
 
         if self.output_has_agent_dim:
             self.mlp = MultiAgentMLP(
-                n_agent_inputs=self.input_features,
+                n_agent_inputs=cnn_output_size,
                 n_agent_outputs=self.output_features,
                 n_agents=self.n_agents,
                 centralised=self.centralised,
@@ -132,7 +132,7 @@ class Cnn(Model):
             self.mlp = nn.ModuleList(
                 [
                     MLP(
-                        in_features=self.input_features,
+                        in_features=cnn_output_size,
                         out_features=self.output_features,
                         device=self.device,
                         **mlp_net_kwargs,
@@ -147,6 +147,7 @@ class Cnn(Model):
     def _forward(self, tensordict: TensorDictBase) -> TensorDictBase:
         # Gather in_key
         input = tensordict.get(self.in_key)
+        input = input.transpose(-3, -1).transpose(-2, -1)
 
         # Has multi-agent input dimension
         if self.input_has_agent_dim:

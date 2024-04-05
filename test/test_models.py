@@ -6,23 +6,14 @@
 
 import pytest
 import torch
-from tensordict import TensorDict as td
 
-from benchmarl.hydra_config import (
-    load_algorithm_config_from_hydra,
-    load_experiment_from_hydra,
-    load_model_config_from_hydra,
-)
+from benchmarl.hydra_config import load_model_config_from_hydra
 from benchmarl.models import model_config_registry
 
-from benchmarl.models.common import SequenceModelConfig
+from benchmarl.models.common import output_has_agent_dim, SequenceModelConfig
 from hydra import compose, initialize
 
-from torchrl.data.tensor_specs import (
-    BoundedTensorSpec,
-    CompositeSpec,
-    UnboundedContinuousTensorSpec,
-)
+from torchrl.data.tensor_specs import CompositeSpec, UnboundedContinuousTensorSpec
 
 
 @pytest.mark.parametrize("model_name", model_config_registry.keys())
@@ -64,141 +55,82 @@ def test_loading_sequence_models(model_name, intermediate_size=10):
         assert hydra_model_config == yaml_config
 
 
-@pytest.mark.parametrize("input_has_agent_dim", [True, False])
+@pytest.mark.parametrize("input_has_agent_dim", [False, True])
 @pytest.mark.parametrize("centralised", [True, False])
-@pytest.mark.parametrize("share_params", [True, False])
+@pytest.mark.parametrize("share_params", [False, True])
 @pytest.mark.parametrize("model_name", model_config_registry.keys())
-def test_mlp_forward_pass(model_name, share_params, centralised, input_has_agent_dim):
-    task_name = "vmas/balance"
-    algorithm = "mappo"
-    with initialize(version_base=None, config_path="../benchmarl/conf"):
+def test_cnn(share_params, centralised, input_has_agent_dim, model_name):
+    if not input_has_agent_dim and not centralised:
+        pytest.skip()  # this combination should never happen
+    if model_name == "gnn" and centralised:
+        pytest.skip()  # gnn model is always decentralized
 
-        if input_has_agent_dim == False and centralised == False:
-            return  # this combination should never happen
-        if model_name == "gnn" and centralised == True:
-            return  # gnn model is always decentralised
+    torch.manual_seed(0)
+    cnn_config = model_config_registry[model_name].get_from_yaml()
+    n_agents = 3
+    x = 12
+    y = 12
+    channels = 3
+    out_features = 4
 
-        cfg = compose(
-            config_name="config",
-            overrides=[
-                f"algorithm={algorithm}",
-                f"task={task_name}",
-                f"model=layers/{model_name}",
-                "experiment.loggers=[csv]",
-                f"experiment.share_policy_params={share_params}",
-                f"algorithm.share_param_critic={share_params}",
-            ],
-        )
-        model_config = load_model_config_from_hydra(cfg.model)
+    if model_name == "cnn":
+        multi_agent_tensor = torch.rand((n_agents, x, y, channels))
+        single_agent_tensor = multi_agent_tensor[0].clone()
+    else:
+        multi_agent_tensor = torch.rand((n_agents, channels))
+        single_agent_tensor = multi_agent_tensor[0].clone()
 
-        group = "agents"
-        n_agents = 4
-        out_dim = 8
-        obs_dim = 16
-
-        def test_model(model, expected_shape):
-            print("Centralised: ", model.centralised)
-            print("Share params: ", model.share_params)
-            print("Input has agent dim: ", model.input_has_agent_dim)
-
-            if input_has_agent_dim:
-                inputs = td(
-                    {"agents": {"observation": torch.randn((1, n_agents, 16))}}
-                )  # batch, num_agents, obs_dim
-            else:
-                inputs = td(
-                    {"agents": {"observation": torch.randn((1, 16))}}
-                )  # batch, obs_dim
-            if model_name == "cnn":
-                inputs = td(
-                    {
-                        "agents": {
-                            "observation": torch.randn(
-                                [1, n_agents, model_config.in_features, 84, 84]
-                            )
-                        }
-                    }
-                )  # batch, obs_dim
-
-            out = model(inputs)
-
-            assert out[model.out_key].shape == expected_shape
-            # TODO assert values are different as well to make sure share_params are working properly
-
-        if share_params and centralised:
-            expected_out = (
-                1,
-                out_dim,
-            )  # (lost a dimension to centralised. output_has_agent_dim is true when both centralised and share_params is true)
-        else:
-            expected_out = (1, n_agents, out_dim)
-
-        if input_has_agent_dim:
-            output_spec = CompositeSpec(
-                {
-                    "out": UnboundedContinuousTensorSpec(
-                        shape=(
-                            n_agents,
-                            out_dim,
-                        )
-                    )
-                }
-            )
-        else:
-            output_spec = CompositeSpec(
-                {
-                    group: CompositeSpec(
-                        {
-                            "out": UnboundedContinuousTensorSpec(
-                                shape=(n_agents, out_dim)
-                            )
-                        },
-                        shape=(n_agents,),
-                    )
-                }
-            )
-
-        obs_dim = (
-            n_agents if centralised and model_name == "cnn" else obs_dim
-        )  # if centralised and cnn, obs_dim is n_agents as input_features because number of agents rather than actual observation_dim
+    if input_has_agent_dim:
         input_spec = CompositeSpec(
             {
-                group: CompositeSpec(
+                "agents": CompositeSpec(
                     {
                         "observation": UnboundedContinuousTensorSpec(
-                            shape=(n_agents, obs_dim)
-                        ).clone()
+                            shape=multi_agent_tensor.shape
+                        )
                     },
                     shape=(n_agents,),
                 )
             }
         )
-
-        action_spec = CompositeSpec(
+    else:
+        input_spec = CompositeSpec(
             {
-                group: CompositeSpec(
+                "observation": UnboundedContinuousTensorSpec(
+                    shape=single_agent_tensor.shape
+                )
+            },
+        )
+
+    if output_has_agent_dim(centralised=centralised, share_params=share_params):
+        output_spec = CompositeSpec(
+            {
+                "agents": CompositeSpec(
                     {
-                        "action": BoundedTensorSpec(
-                            shape=torch.Size([4, 2]),
-                            low=torch.full((4, 2), -1.0),
-                            high=torch.full((4, 2), 1.0),
+                        "out": UnboundedContinuousTensorSpec(
+                            shape=(n_agents, out_features)
                         )
                     },
-                    shape=torch.Size([4]),
+                    shape=(n_agents,),
                 )
             }
         )
-
-        model = model_config.get_model(
-            input_spec=input_spec,
-            output_spec=output_spec,
-            n_agents=n_agents,
-            centralised=centralised,
-            input_has_agent_dim=input_has_agent_dim,
-            agent_group="agents",
-            share_params=share_params,
-            device="cpu",
-            action_spec=action_spec,
+    else:
+        output_spec = CompositeSpec(
+            {"out": UnboundedContinuousTensorSpec(shape=(out_features,))},
         )
 
-        test_model(model, expected_out)
+    cnn_model = cnn_config.get_model(
+        input_spec=input_spec,
+        output_spec=output_spec,
+        share_params=share_params,
+        centralised=centralised,
+        input_has_agent_dim=input_has_agent_dim,
+        n_agents=n_agents,
+        device="cpu",
+        agent_group="agents",
+        action_spec=None,
+    )
+    input_td = input_spec.rand()
+    out_td = cnn_model(input_td)
+    assert output_spec.is_in(out_td)
