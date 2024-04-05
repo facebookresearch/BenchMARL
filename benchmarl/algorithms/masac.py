@@ -166,16 +166,7 @@ class Masac(Algorithm):
             ]
 
         actor_input_spec = CompositeSpec(
-            {
-                group: CompositeSpec(
-                    {
-                        "observation": self.observation_spec[group]["observation"]
-                        .clone()
-                        .to(self.device)
-                    },
-                    shape=(n_agents,),
-                )
-            }
+            {group: self.observation_spec[group].clone().to(self.device)}
         )
 
         actor_output_spec = CompositeSpec(
@@ -323,16 +314,7 @@ class Masac(Algorithm):
 
         else:
             critic_input_spec = CompositeSpec(
-                {
-                    group: CompositeSpec(
-                        {
-                            "observation": self.observation_spec[group]["observation"]
-                            .clone()
-                            .to(self.device)
-                        },
-                        shape=(n_agents,),
-                    )
-                }
+                {group: self.observation_spec[group].clone().to(self.device)}
             )
             value_module = self.critic_model_config.get_model(
                 input_spec=critic_input_spec,
@@ -360,6 +342,7 @@ class Masac(Algorithm):
     def get_continuous_value_module(self, group: str) -> TensorDictModule:
         n_agents = len(self.group_map[group])
         modules = []
+        group_observation_key = list(self.observation_spec[group].keys())[0]
 
         if self.share_param_critic:
             critic_output_spec = CompositeSpec(
@@ -380,12 +363,13 @@ class Masac(Algorithm):
             )
 
         if self.state_spec is not None:
+            global_state_key = list(self.state_spec.keys())[0]
             modules.append(
                 TensorDictModule(
                     lambda state, action: torch.cat(
                         [state, action.reshape(*action.shape[:-2], -1)], dim=-1
                     ),
-                    in_keys=["state", (group, "action")],
+                    in_keys=[global_state_key, (group, "action")],
                     out_keys=["state_action"],
                 )
             )
@@ -393,7 +377,7 @@ class Masac(Algorithm):
                 {
                     "state_action": UnboundedContinuousTensorSpec(
                         shape=(
-                            self.state_spec["state"].shape[-1]
+                            self.state_spec[global_state_key].shape[-1]
                             + self.action_spec[group, "action"].shape[-1] * n_agents,
                         )
                     )
@@ -418,7 +402,7 @@ class Masac(Algorithm):
             modules.append(
                 TensorDictModule(
                     lambda obs, action: torch.cat([obs, action], dim=-1),
-                    in_keys=[(group, "observation"), (group, "action")],
+                    in_keys=[(group, group_observation_key), (group, "action")],
                     out_keys=[(group, "obs_action")],
                 )
             )
@@ -429,9 +413,9 @@ class Masac(Algorithm):
                             "obs_action": UnboundedContinuousTensorSpec(
                                 shape=(
                                     n_agents,
-                                    self.observation_spec[group, "observation"].shape[
-                                        -1
-                                    ]
+                                    self.observation_spec[
+                                        group, group_observation_key
+                                    ].shape[-1]
                                     + self.action_spec[group, "action"].shape[-1],
                                 )
                             )

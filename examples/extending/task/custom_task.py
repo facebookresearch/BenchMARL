@@ -62,7 +62,7 @@ class CustomEnvTask(Task):
 
     def observation_spec(self, env: EnvBase) -> CompositeSpec:
         # A spec for the observation.
-        # Must be a CompositeSpec with one (group_name, "observation") entry per group.
+        # Must be a CompositeSpec with one (group_name, observation_key) entry per group.
         return env.full_observation_spec
 
     def action_spec(self, env: EnvBase) -> CompositeSpec:

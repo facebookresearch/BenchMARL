@@ -84,16 +84,7 @@ class Qmix(Algorithm):
         ]
 
         actor_input_spec = CompositeSpec(
-            {
-                group: CompositeSpec(
-                    {
-                        "observation": self.observation_spec[group]["observation"]
-                        .clone()
-                        .to(self.device)
-                    },
-                    shape=(n_agents,),
-                )
-            }
+            {group: self.observation_spec[group].clone().to(self.device)}
         )
 
         actor_output_spec = CompositeSpec(
@@ -186,13 +177,15 @@ class Qmix(Algorithm):
 
     def get_mixer(self, group: str) -> TensorDictModule:
         n_agents = len(self.group_map[group])
+        group_observation_key = list(self.observation_spec[group].keys())[0]
 
         if self.state_spec is not None:
-            state_shape = self.state_spec["state"].shape
-            in_keys = [(group, "chosen_action_value"), "state"]
+            global_state_key = list(self.state_spec.keys())[0]
+            state_shape = self.state_spec[global_state_key].shape
+            in_keys = [(group, "chosen_action_value"), global_state_key]
         else:
-            state_shape = self.observation_spec[group, "observation"].shape
-            in_keys = [(group, "chosen_action_value"), (group, "observation")]
+            state_shape = self.observation_spec[group, group_observation_key].shape
+            in_keys = [(group, "chosen_action_value"), (group, group_observation_key)]
 
         mixer = TensorDictModule(
             module=QMixer(
