@@ -3,6 +3,7 @@
 #  This source code is licensed under the license found in the
 #  LICENSE file in the root directory of this source tree.
 #
+from typing import List
 
 import pytest
 import torch
@@ -55,28 +56,46 @@ def test_loading_sequence_models(model_name, intermediate_size=10):
         assert hydra_model_config == yaml_config
 
 
-@pytest.mark.parametrize("input_has_agent_dim", [False, True])
+@pytest.mark.parametrize("input_has_agent_dim", [True, False])
 @pytest.mark.parametrize("centralised", [True, False])
-@pytest.mark.parametrize("share_params", [False, True])
+@pytest.mark.parametrize("share_params", [True, False])
 @pytest.mark.parametrize("batch_size", [(), (2,), (3, 2)])
-@pytest.mark.parametrize("model_name", model_config_registry.keys())
+@pytest.mark.parametrize(
+    "model_name",
+    [
+        *model_config_registry.keys(),
+        ["cnn", "gnn", "mlp"],
+        ["cnn", "mlp", "gnn"],
+        ["cnn", "mlp"],
+    ],
+)
 def test_models_forward_shape(
     share_params, centralised, input_has_agent_dim, model_name, batch_size
 ):
     if not input_has_agent_dim and not centralised:
         pytest.skip()  # this combination should never happen
-    if model_name == "gnn" and centralised:
+    if ("gnn" in model_name) and centralised:
         pytest.skip()  # gnn model is always decentralized
 
     torch.manual_seed(0)
-    cnn_config = model_config_registry[model_name].get_from_yaml()
-    n_agents = 3
+
+    if isinstance(model_name, List):
+        config = SequenceModelConfig(
+            model_configs=[
+                model_config_registry[config].get_from_yaml() for config in model_name
+            ],
+            intermediate_sizes=[4] * (len(model_name) - 1),
+        )
+    else:
+        config = model_config_registry[model_name].get_from_yaml()
+
+    n_agents = 2
     x = 12
     y = 12
     channels = 3
     out_features = 4
 
-    if model_name == "cnn":
+    if "cnn" in model_name:
         multi_agent_tensor = torch.rand((*batch_size, n_agents, x, y, channels))
         single_agent_tensor = torch.rand((*batch_size, x, y, channels))
     else:
@@ -123,7 +142,7 @@ def test_models_forward_shape(
             {"out": UnboundedContinuousTensorSpec(shape=(out_features,))},
         )
 
-    cnn_model = cnn_config.get_model(
+    cnn_model = config.get_model(
         input_spec=input_spec,
         output_spec=output_spec,
         share_params=share_params,
