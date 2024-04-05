@@ -142,7 +142,7 @@ def test_models_forward_shape(
             {"out": UnboundedContinuousTensorSpec(shape=(out_features,))},
         )
 
-    cnn_model = config.get_model(
+    model = config.get_model(
         input_spec=input_spec,
         output_spec=output_spec,
         share_params=share_params,
@@ -154,5 +154,5 @@ def test_models_forward_shape(
         action_spec=None,
     )
     input_td = input_spec.rand()
-    out_td = cnn_model(input_td)
+    out_td = model(input_td)
     assert output_spec.expand(batch_size).is_in(out_td)
