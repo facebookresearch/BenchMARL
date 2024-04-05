@@ -137,10 +137,8 @@ class Cnn(Model):
                 device=self.device,
                 **cnn_net_kwargs,
             )
-            if "_empty_net" in self.cnn.__dict__:
-                example_net = self.cnn._empty_net
-            else:
-                example_net = self.cnn.agent_networks[0]
+            example_net = self.cnn._empty_net
+
         else:
             self.cnn = nn.ModuleList(
                 [
