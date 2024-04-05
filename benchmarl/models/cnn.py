@@ -16,7 +16,7 @@ from torchrl.modules import ConvNet, MLP, MultiAgentConvNet, MultiAgentMLP
 from benchmarl.models.common import Model, ModelConfig
 
 
-def number_conv_outputs(
+def _number_conv_outputs(
     n_conv_inputs: Union[int, Tuple[int, int]],
     paddings: List[Union[int, Tuple[int, int]]],
     kernel_sizes: List[Union[int, Tuple[int, int]]],
@@ -110,7 +110,7 @@ class Cnn(Model):
             example_net = self.cnn[0]
 
         out_features = example_net.out_features
-        out_x, out_y = number_conv_outputs(
+        out_x, out_y = _number_conv_outputs(
             n_conv_inputs=(self.x, self.y),
             kernel_sizes=example_net.kernel_sizes,
             paddings=example_net.paddings,
@@ -143,6 +143,20 @@ class Cnn(Model):
 
     def _perform_checks(self):
         super()._perform_checks()
+
+        if self.input_has_agent_dim and self.input_leaf_spec.shape[-4] != self.n_agents:
+            raise ValueError(
+                "If the CNN input has the agent dimension,"
+                " the forth to last spec dimension should be the number of agents"
+            )
+        if (
+            self.output_has_agent_dim
+            and self.output_leaf_spec.shape[-2] != self.n_agents
+        ):
+            raise ValueError(
+                "If the CNN output has the agent dimension,"
+                " the second to last spec dimension should be the number of agents"
+            )
 
     def _forward(self, tensordict: TensorDictBase) -> TensorDictBase:
         # Gather in_key
