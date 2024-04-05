@@ -11,7 +11,8 @@ python -m pip install torch
 
 cd ../BenchMARL
 pip install -e .
-pip uninstall --yes torchrl tensordict
+pip uninstall --yes torchrl
+pip uninstall --yes tensordict
 
 cd ..
 python -m pip install git+https://github.com/pytorch-labs/tensordict.git
