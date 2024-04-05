@@ -177,7 +177,7 @@ class Qmix(Algorithm):
 
     def get_mixer(self, group: str) -> TensorDictModule:
         n_agents = len(self.group_map[group])
-        group_observation_key = self.observation_spec[group].keys()[0]
+        group_observation_key = list(self.observation_spec[group].keys())[0]
 
         if self.state_spec is not None:
             global_state_key = self.state_spec.keys()[0]

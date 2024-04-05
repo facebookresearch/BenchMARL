@@ -342,7 +342,7 @@ class Masac(Algorithm):
     def get_continuous_value_module(self, group: str) -> TensorDictModule:
         n_agents = len(self.group_map[group])
         modules = []
-        group_observation_key = self.observation_spec[group].keys()[0]
+        group_observation_key = list(self.observation_spec[group].keys())[0]
 
         if self.share_param_critic:
             critic_output_spec = CompositeSpec(
