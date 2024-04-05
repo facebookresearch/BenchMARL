@@ -182,7 +182,7 @@ class Gnn(Model):
                         *batch_size,
                         self.n_agents,
                         self.output_features,
-                    )[:, i]
+                    )[..., i, :]
                     for i, gnn in enumerate(self.gnns)
                 ],
                 dim=-2,
