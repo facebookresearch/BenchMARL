@@ -130,7 +130,10 @@ class Cnn(Model):
                 device=self.device,
                 **cnn_net_kwargs,
             )
-            example_net = self.cnn._empty_net
+            if hasattr(self.cnn, "_empy_net"):
+                example_net = self.cnn._empty_net
+            else:
+                example_net = self.cnn.agent_networks[0]
         else:
             self.cnn = nn.ModuleList(
                 [
