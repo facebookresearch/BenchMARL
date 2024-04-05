@@ -363,22 +363,17 @@ class Masac(Algorithm):
         if self.state_spec is not None:
 
             modules.append(
-                TensorDictModule(lambda action: action.reshape(*action.shape[:-2], -1)),
-                in_keys=[(group, "action")],
-                out_keys=[(group, "global_action")],
+                TensorDictModule(
+                    lambda action: action.reshape(*action.shape[:-2], -1),
+                    in_keys=[(group, "action")],
+                    out_keys=["global_action"],
+                )
             )
 
-            critic_input_spec = CompositeSpec(
+            critic_input_spec = self.state_spec.clone().update(
                 {
-                    self.state_spec.clone().update(
-                        {
-                            "global_action": UnboundedContinuousTensorSpec(
-                                shape=(
-                                    self.action_spec[group, "action"].shape[-1]
-                                    * n_agents,
-                                )
-                            )
-                        }
+                    "global_action": UnboundedContinuousTensorSpec(
+                        shape=(self.action_spec[group, "action"].shape[-1] * n_agents,)
                     )
                 }
             )
