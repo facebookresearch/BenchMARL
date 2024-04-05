@@ -6,8 +6,9 @@
 
 from .common import Model, ModelConfig, SequenceModel, SequenceModelConfig
 from .gnn import Gnn, GnnConfig
+from .cnn import Cnn, CnnConfig
 from .mlp import Mlp, MlpConfig
 
-classes = ["Mlp", "MlpConfig", "Gnn", "GnnConfig"]
+classes = ["Mlp", "MlpConfig", "Gnn", "GnnConfig", "Cnn", "CnnConfig"]
 
-model_config_registry = {"mlp": MlpConfig, "gnn": GnnConfig}
+model_config_registry = {"mlp": MlpConfig, "gnn": GnnConfig, "cnn": CnnConfig}
