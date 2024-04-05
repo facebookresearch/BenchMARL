@@ -165,16 +165,7 @@ class Isac(Algorithm):
             ]
 
         actor_input_spec = CompositeSpec(
-            {
-                group: CompositeSpec(
-                    {
-                        "observation": self.observation_spec[group]["observation"]
-                        .clone()
-                        .to(self.device)
-                    },
-                    shape=(n_agents,),
-                )
-            }
+            {group: self.observation_spec[group].clone().to(self.device)}
         )
 
         actor_output_spec = CompositeSpec(
@@ -291,16 +282,7 @@ class Isac(Algorithm):
         n_actions = self.action_spec[group, "action"].space.n
 
         critic_input_spec = CompositeSpec(
-            {
-                group: CompositeSpec(
-                    {
-                        "observation": self.observation_spec[group]["observation"]
-                        .clone()
-                        .to(self.device)
-                    },
-                    shape=(n_agents,),
-                )
-            }
+            {group: self.observation_spec[group].clone().to(self.device)}
         )
 
         critic_output_spec = CompositeSpec(

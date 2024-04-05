@@ -103,16 +103,7 @@ class CustomIqlAlgorithm(Algorithm):
 
         # This is the spec of the policy input for this group
         actor_input_spec = CompositeSpec(
-            {
-                group: CompositeSpec(
-                    {
-                        "observation": self.observation_spec[group]["observation"]
-                        .clone()
-                        .to(self.device)
-                    },
-                    shape=(n_agents,),
-                )
-            }
+            {group: self.observation_spec[group].clone().to(self.device)}
         )
         # This is the spec of the policy output for this group
         actor_output_spec = CompositeSpec(

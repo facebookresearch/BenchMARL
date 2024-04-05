@@ -95,16 +95,7 @@ class Maddpg(Algorithm):
             n_agents = len(self.group_map[group])
             logits_shape = list(self.action_spec[group, "action"].shape)
             actor_input_spec = CompositeSpec(
-                {
-                    group: CompositeSpec(
-                        {
-                            "observation": self.observation_spec[group]["observation"]
-                            .clone()
-                            .to(self.device)
-                        },
-                        shape=(n_agents,),
-                    )
-                }
+                {group: self.observation_spec[group].clone().to(self.device)}
             )
             actor_output_spec = CompositeSpec(
                 {

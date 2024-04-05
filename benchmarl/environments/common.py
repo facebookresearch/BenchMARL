@@ -156,7 +156,7 @@ class Task(Enum):
     def observation_spec(self, env: EnvBase) -> CompositeSpec:
         """
         A spec for the observation.
-        Must be a CompositeSpec with one (group_name, "observation") entry per group.
+        Must be a CompositeSpec with one (group_name, observation_key) entry per group.
 
         Args:
             env (EnvBase): An environment created via self.get_env_fun
@@ -179,7 +179,7 @@ class Task(Enum):
     def state_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
         """
         A spec for the state.
-        If provided, must be a CompositeSpec with one "state" entry.
+        If provided, must be a CompositeSpec with one entry.
 
         Args:
             env (EnvBase): An environment created via self.get_env_fun

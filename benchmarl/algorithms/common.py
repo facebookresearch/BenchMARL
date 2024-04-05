@@ -59,22 +59,16 @@ class Algorithm(ABC):
 
     def _check_specs(self):
         if self.state_spec is not None:
-            if (
-                len(self.state_spec.keys(True, True)) != 1
-                or list(self.state_spec.keys())[0] != "state"
-            ):
+            if len(self.state_spec.keys(True, True)) != 1:
                 raise ValueError(
-                    "State spec must contain one entry per group named 'state'"
+                    "State spec must contain one entry per group"
                     " to follow the library conventions, "
                     "you can apply a transform to your environment to satisfy this criteria."
                 )
         for group in self.group_map.keys():
-            if (
-                len(self.observation_spec[group].keys(True, True)) != 1
-                or list(self.observation_spec[group].keys())[0] != "observation"
-            ):
+            if len(self.observation_spec[group].keys(True, True)) != 1:
                 raise ValueError(
-                    "Observation spec must contain one entry per group named 'observation'"
+                    "Observation spec must contain one entry per group"
                     " to follow the library conventions, "
                     "you can apply a transform to your environment to satisfy this criteria."
                 )
