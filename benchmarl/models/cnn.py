@@ -4,16 +4,18 @@
 #  LICENSE file in the root directory of this source tree.
 #
 
-from dataclasses import MISSING, dataclass
+from dataclasses import dataclass, MISSING
 from typing import Optional, Sequence, Type
 
-from attr import field
 import torch
-from torch import nn
-from benchmarl.models.common import Model, ModelConfig
-from torchrl.modules.models import DdpgCnnActor as CnnActor
+
 from tensordict import TensorDictBase
+from torch import nn
+from torchrl.modules.models import DdpgCnnActor as CnnActor
+
+from benchmarl.models.common import Model, ModelConfig
 from benchmarl.utils import DEVICE_TYPING
+
 
 class MultiAgentCnnActor(nn.Module):
     """Multi-agent CNN.
@@ -21,7 +23,6 @@ class MultiAgentCnnActor(nn.Module):
     In MARL settings, agents may or may not share the same policy for their actions: we say that the parameters can be shared or not. Similarly, a network may take the entire observation space (across agents) or on a per-agent basis to compute its output, which we refer to as "centralized" and "non-centralized", respectively.
 
     It expects inputs with shape ``(*B, n_agents, channels, x, y)``.
-
     Args:
         n_agents (int): number of agents.
         centralised (bool): If ``True``, each agent will use the inputs of all agents to compute its output, resulting in input of shape ``(*B, n_agents * channels, x, y)``. Otherwise, each agent will only use its data as input.
@@ -49,7 +50,7 @@ class MultiAgentCnnActor(nn.Module):
         centralised: bool,
         share_params: bool,
         action_dim: int,
-        device: Optional[DEVICE_TYPING] = None, # type: ignore
+        device: Optional[DEVICE_TYPING] = None,  # type: ignore
         conv_net_kwargs: Optional[dict] = None,
         mlp_net_kwargs: Optional[dict] = None,
         use_avg_pooling: bool = False,
@@ -82,14 +83,12 @@ class MultiAgentCnnActor(nn.Module):
             ]
         )
 
-
-
     def forward(self, inputs: torch.Tensor):
         if len(inputs.shape) < 4:
             raise ValueError(
                 """Multi-agent network expects (*batch_size, num_agents, channels, x, y)"""
             )
-        if inputs.shape[-4] != self.n_agent_inputs:            
+        if inputs.shape[-4] != self.n_agent_inputs:
             raise ValueError(
                 f"""Multi-agent network expects {self.n_agent_inputs} but got {inputs.shape[-4]}"""
             )
@@ -168,9 +167,9 @@ class Cnn(Model):
         self.input_features = self.input_leaf_spec.shape[-1]
         self.output_features = self.output_leaf_spec.shape[-1]
 
-        mlp_net_kwargs = {k[4:]: v for k, v in kwargs.items() if k.startswith('mlp_')}
-        cnn_net_kwargs = {k[4:]: v for k, v in kwargs.items() if k.startswith('cnn_')}
-        
+        mlp_net_kwargs = {k[4:]: v for k, v in kwargs.items() if k.startswith("mlp_")}
+        cnn_net_kwargs = {k[4:]: v for k, v in kwargs.items() if k.startswith("cnn_")}
+
         self.cnn = MultiAgentCnnActor(
             n_agent_inputs=self.input_features if self.centralised else None,
             action_dim=self.output_features,
@@ -184,12 +183,22 @@ class Cnn(Model):
         )
 
         # initialize lazy parameters with input observation sizes
-        self.cnn(torch.randn((1, self.n_agents, kwargs['in_features'], kwargs['height'], kwargs['width'])).to(self.device))
+        self.cnn(
+            torch.randn(
+                (
+                    1,
+                    self.n_agents,
+                    kwargs["in_features"],
+                    kwargs["height"],
+                    kwargs["width"],
+                )
+            ).to(self.device)
+        )
 
     def _perform_checks(self):
         super()._perform_checks()
         # TODO add cnn checks
-        
+
     def _forward(self, tensordict: TensorDictBase) -> TensorDictBase:
         # Gather in_key
         input = tensordict.get(self.in_key)
@@ -202,9 +211,9 @@ class Cnn(Model):
             # We remove it without loss of data
             res = res[..., 0, :]
 
-                
         tensordict.set(self.out_key, res)
         return tensordict
+
 
 @dataclass
 class CnnConfig(ModelConfig):
@@ -218,13 +227,12 @@ class CnnConfig(ModelConfig):
     cnn_kernel_sizes: Sequence[int] = MISSING
     cnn_strides: Sequence[int] = MISSING
     cnn_paddings: Sequence[int] = MISSING
-    
+
     cnn_activation_class: Type[nn.Module] = MISSING
     cnn_aggregator_class: Type[nn.Module] = MISSING
     cnn_aggregator_kwargs: Optional[dict] = MISSING
     cnn_squeeze_output: bool = MISSING
-    
-    
+
     mlp_depth: int = MISSING
     mlp_num_cells: Sequence[int] = MISSING
     mlp_layer_class: Type[nn.Module] = MISSING
@@ -234,7 +242,7 @@ class CnnConfig(ModelConfig):
 
     mlp_norm_class: Type[nn.Module] = None
     mlp_norm_kwargs: Optional[dict] = None
-    
+
     mlp_bias_last_layer: bool = True
 
     @staticmethod
