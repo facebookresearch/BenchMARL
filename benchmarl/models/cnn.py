@@ -51,7 +51,42 @@ def _number_conv_outputs(
 
 
 class Cnn(Model):
-    """CNN model."""
+    """Convolutional Neural Network (CNN) model.
+
+    Args:
+
+        cnn_num_cells (int or Sequence of int): number of cells of
+            every layer in between the input and output. If an integer is
+            provided, every layer will have the same number of cells. If an
+            iterable is provided, the linear layers ``out_features`` will match
+            the content of num_cells.
+        cnn_kernel_sizes (int, sequence of int): Kernel size(s) of the
+            conv network. If iterable, the length must match the depth,
+            defined by the ``num_cells`` or depth arguments.
+        cnn_strides (int or sequence of int): Stride(s) of the conv network. If
+            iterable, the length must match the depth, defined by the
+            ``num_cells`` or depth arguments.
+        cnn_paddings: (int or Sequence of int): padding size for every layer.
+        cnn_activation_class (Type[nn.Module] or callable): activation
+            class or constructor to be used.
+        cnn_activation_kwargs (dict or list of dicts, optional): kwargs to be used
+            with the activation class. A list of kwargs of length ``depth``
+            can also be passed, with one element per layer.
+        cnn_norm_class (Type or callable, optional): normalization class or
+            constructor, if any.
+        cnn_norm_kwargs (dict or list of dicts, optional): kwargs to be used with
+            the normalization layers. A list of kwargs of length ``depth`` can
+            also be passed, with one element per layer.
+        mlp_num_cells (int or Sequence[int]): number of cells of every layer in between the input and output. If
+            an integer is provided, every layer will have the same number of cells. If an iterable is provided,
+            the linear layers out_features will match the content of num_cells.
+        mlp_layer_class (Type[nn.Module]): class to be used for the linear layers;
+        mlp_activation_class (Type[nn.Module]): activation class to be used.
+        mlp_activation_kwargs (dict, optional): kwargs to be used with the activation class;
+        mlp_norm_class (Type, optional): normalization class, if any.
+        mlp_norm_kwargs (dict, optional): kwargs to be used with the normalization layers;
+
+    """
 
     def __init__(
         self,
