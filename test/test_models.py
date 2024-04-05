@@ -58,9 +58,10 @@ def test_loading_sequence_models(model_name, intermediate_size=10):
 @pytest.mark.parametrize("input_has_agent_dim", [False, True])
 @pytest.mark.parametrize("centralised", [True, False])
 @pytest.mark.parametrize("share_params", [False, True])
+@pytest.mark.parametrize("batch_size", [(), (2,)])
 @pytest.mark.parametrize("model_name", model_config_registry.keys())
 def test_models_forward_shape(
-    share_params, centralised, input_has_agent_dim, model_name
+    share_params, centralised, input_has_agent_dim, model_name, batch_size
 ):
     if not input_has_agent_dim and not centralised:
         pytest.skip()  # this combination should never happen
@@ -76,10 +77,11 @@ def test_models_forward_shape(
     out_features = 4
 
     if model_name == "cnn":
-        multi_agent_tensor = torch.rand((n_agents, x, y, channels))
+        multi_agent_tensor = torch.rand((*batch_size, n_agents, x, y, channels))
+        single_agent_tensor = torch.rand((*batch_size, x, y, channels))
     else:
-        multi_agent_tensor = torch.rand((n_agents, channels))
-    single_agent_tensor = multi_agent_tensor[0].clone()
+        multi_agent_tensor = torch.rand((*batch_size, n_agents, channels))
+        single_agent_tensor = torch.rand((*batch_size, channels))
 
     if input_has_agent_dim:
         input_spec = CompositeSpec(
@@ -87,7 +89,7 @@ def test_models_forward_shape(
                 "agents": CompositeSpec(
                     {
                         "observation": UnboundedContinuousTensorSpec(
-                            shape=multi_agent_tensor.shape
+                            shape=multi_agent_tensor.shape[len(batch_size) :]
                         )
                     },
                     shape=(n_agents,),
@@ -98,7 +100,7 @@ def test_models_forward_shape(
         input_spec = CompositeSpec(
             {
                 "observation": UnboundedContinuousTensorSpec(
-                    shape=single_agent_tensor.shape
+                    shape=single_agent_tensor.shape[len(batch_size) :]
                 )
             },
         )
@@ -114,7 +116,7 @@ def test_models_forward_shape(
                     },
                     shape=(n_agents,),
                 )
-            }
+            },
         )
     else:
         output_spec = CompositeSpec(
@@ -134,4 +136,4 @@ def test_models_forward_shape(
     )
     input_td = input_spec.rand()
     out_td = cnn_model(input_td)
-    assert output_spec.is_in(out_td)
+    assert output_spec.expand(batch_size).is_in(out_td)
