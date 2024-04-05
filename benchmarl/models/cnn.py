@@ -147,6 +147,7 @@ class Cnn(Model):
     def _forward(self, tensordict: TensorDictBase) -> TensorDictBase:
         # Gather in_key
         input = tensordict.get(self.in_key)
+        # BenchMARL images are X,Y,C -> we convert them to C, X, Y for processing in TorchRL models
         input = input.transpose(-3, -1).transpose(-2, -1)
 
         # Has multi-agent input dimension
@@ -171,11 +172,6 @@ class Cnn(Model):
         # Cnn output has multi-agent input dimension
         if self.output_has_agent_dim:
             res = self.mlp.forward(cnn_out)
-            if not self.output_has_agent_dim:
-                # If we are here the module is centralised and parameter shared.
-                # Thus the multi-agent dimension has been expanded,
-                # We remove it without loss of data
-                res = res[..., 0, :]
         else:
             if not self.share_params:
                 res = torch.stack(
