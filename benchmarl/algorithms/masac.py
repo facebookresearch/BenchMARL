@@ -343,7 +343,6 @@ class Masac(Algorithm):
         n_agents = len(self.group_map[group])
         modules = []
         group_observation_key = self.observation_spec[group].keys()[0]
-        global_state_key = self.state_spec.keys()[0]
 
         if self.share_param_critic:
             critic_output_spec = CompositeSpec(
@@ -364,6 +363,7 @@ class Masac(Algorithm):
             )
 
         if self.state_spec is not None:
+            global_state_key = self.state_spec.keys()[0]
             modules.append(
                 TensorDictModule(
                     lambda state, action: torch.cat(
