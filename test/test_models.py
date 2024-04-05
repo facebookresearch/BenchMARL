@@ -59,7 +59,9 @@ def test_loading_sequence_models(model_name, intermediate_size=10):
 @pytest.mark.parametrize("centralised", [True, False])
 @pytest.mark.parametrize("share_params", [False, True])
 @pytest.mark.parametrize("model_name", model_config_registry.keys())
-def test_cnn(share_params, centralised, input_has_agent_dim, model_name):
+def test_models_forward_shape(
+    share_params, centralised, input_has_agent_dim, model_name
+):
     if not input_has_agent_dim and not centralised:
         pytest.skip()  # this combination should never happen
     if model_name == "gnn" and centralised:
@@ -75,10 +77,9 @@ def test_cnn(share_params, centralised, input_has_agent_dim, model_name):
 
     if model_name == "cnn":
         multi_agent_tensor = torch.rand((n_agents, x, y, channels))
-        single_agent_tensor = multi_agent_tensor[0].clone()
     else:
         multi_agent_tensor = torch.rand((n_agents, channels))
-        single_agent_tensor = multi_agent_tensor[0].clone()
+    single_agent_tensor = multi_agent_tensor[0].clone()
 
     if input_has_agent_dim:
         input_spec = CompositeSpec(
