@@ -4,9 +4,9 @@
 #  LICENSE file in the root directory of this source tree.
 #
 
+from .cnn import Cnn, CnnConfig
 from .common import Model, ModelConfig, SequenceModel, SequenceModelConfig
 from .gnn import Gnn, GnnConfig
-from .cnn import Cnn, CnnConfig
 from .mlp import Mlp, MlpConfig
 
 classes = ["Mlp", "MlpConfig", "Gnn", "GnnConfig", "Cnn", "CnnConfig"]
