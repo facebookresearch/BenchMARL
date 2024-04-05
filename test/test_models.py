@@ -58,7 +58,7 @@ def test_loading_sequence_models(model_name, intermediate_size=10):
 @pytest.mark.parametrize("input_has_agent_dim", [False, True])
 @pytest.mark.parametrize("centralised", [True, False])
 @pytest.mark.parametrize("share_params", [False, True])
-@pytest.mark.parametrize("batch_size", [(), (2,)])
+@pytest.mark.parametrize("batch_size", [(), (2,), (3, 2)])
 @pytest.mark.parametrize("model_name", model_config_registry.keys())
 def test_models_forward_shape(
     share_params, centralised, input_has_agent_dim, model_name, batch_size
