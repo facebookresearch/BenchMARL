@@ -363,7 +363,7 @@ class Masac(Algorithm):
             )
 
         if self.state_spec is not None:
-            global_state_key = self.state_spec.keys()[0]
+            global_state_key = list(self.state_spec.keys())[0]
             modules.append(
                 TensorDictModule(
                     lambda state, action: torch.cat(

@@ -180,7 +180,7 @@ class Qmix(Algorithm):
         group_observation_key = list(self.observation_spec[group].keys())[0]
 
         if self.state_spec is not None:
-            global_state_key = self.state_spec.keys()[0]
+            global_state_key = list(self.state_spec.keys())[0]
             state_shape = self.state_spec[global_state_key].shape
             in_keys = [(group, "chosen_action_value"), global_state_key]
         else:
