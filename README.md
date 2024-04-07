@@ -258,12 +258,12 @@ agent group. Here is a table of the models implemented in BenchMARL
 |--------------------------------|:-------------:|:-----------------------------:|:-----------------------------:|
 | [MLP](benchmarl/models/mlp.py) |      Yes      |              Yes              |              Yes              |
 | [GNN](benchmarl/models/gnn.py) |      Yes      |              No               |              No               |
+| [CNN](benchmarl/models/cnn.py) |      Yes      |              Yes              |              Yes              |
 
 And the ones that are _work in progress_
 
 | Name               | Decentralized | Centralized with local inputs | Centralized with global input | 
 |--------------------|:-------------:|:-----------------------------:|:-----------------------------:|
-| CNN                |      Yes      |              Yes              |              Yes              | 
 | RNN (GRU and LSTM) |      Yes      |              Yes              |              Yes              | 
 
 
