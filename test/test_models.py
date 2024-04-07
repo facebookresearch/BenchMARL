@@ -77,7 +77,7 @@ def test_models_forward_shape(
         pytest.skip()  # this combination should never happen
     if ("gnn" in model_name) and centralised:
         pytest.skip("gnn model is always decentralized")
-    if importlib.metadata.version("torchrl") >= "0.3.1" and "cnn" in model_name:
+    if importlib.metadata.version("torchrl") <= "0.3.1" and "cnn" in model_name:
         pytest.skip("TorchRL <= 0.3.1 does not support MultiAgentCNN")
 
     torch.manual_seed(0)
