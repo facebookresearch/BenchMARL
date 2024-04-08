@@ -79,8 +79,7 @@ class TestMeltingPot:
         algo_config: AlgorithmConfig,
         task: Task,
         experiment_config,
-        mlp_sequence_config,
-        prefer_continuous,
+        cnn_sequence_config,
     ):
         algo_config = algo_config.get_from_yaml()
         if isinstance(algo_config, VdnConfig):
@@ -88,7 +87,7 @@ class TestMeltingPot:
             pytest.skip()
         ExperimentUtils.check_experiment_loading(
             algo_config=algo_config,
-            model_config=mlp_sequence_config,
+            model_config=cnn_sequence_config,
             experiment_config=experiment_config,
             task=task.get_from_yaml(),
         )
@@ -102,13 +101,13 @@ class TestMeltingPot:
         task: Task,
         share_params,
         experiment_config,
-        mlp_sequence_config,
+        cnn_sequence_config,
     ):
         experiment_config.share_policy_params = share_params
         task = task.get_from_yaml()
         experiment = Experiment(
             algorithm_config=algo_config.get_from_yaml(),
-            model_config=mlp_sequence_config,
+            model_config=cnn_sequence_config,
             seed=0,
             config=experiment_config,
             task=task,
