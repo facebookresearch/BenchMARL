@@ -317,9 +317,9 @@ class CnnConfig(ModelConfig):
     """Dataclass config for a :class:`~benchmarl.models.Cnn`."""
 
     cnn_num_cells: Sequence[int] = MISSING
-    cnn_kernel_sizes: Sequence[int] = MISSING
-    cnn_strides: Sequence[int] = MISSING
-    cnn_paddings: Sequence[int] = MISSING
+    cnn_kernel_sizes: Union[Sequence[int], int] = MISSING
+    cnn_strides: Union[Sequence[int], int] = MISSING
+    cnn_paddings: Union[Sequence[int], int] = MISSING
     cnn_activation_class: Type[nn.Module] = MISSING
 
     mlp_num_cells: Sequence[int] = MISSING

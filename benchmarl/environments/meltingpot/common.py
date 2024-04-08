@@ -110,4 +110,4 @@ class MeltingPotTask(Task):
 
     @staticmethod
     def render_callback(experiment, env: EnvBase, data: TensorDictBase):
-        return data.get("WORLD.RGB")
+        return data.get("RGB")

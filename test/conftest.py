@@ -8,7 +8,7 @@ import pytest
 import torch_geometric.nn.conv
 
 from benchmarl.experiment import ExperimentConfig
-from benchmarl.models import GnnConfig, MlpConfig
+from benchmarl.models import CnnConfig, GnnConfig, MlpConfig
 from benchmarl.models.common import ModelConfig, SequenceModelConfig
 from torch import nn
 
@@ -48,6 +48,26 @@ def mlp_sequence_config() -> ModelConfig:
     return SequenceModelConfig(
         model_configs=[
             MlpConfig(num_cells=[8], activation_class=nn.Tanh, layer_class=nn.Linear),
+            MlpConfig(num_cells=[4], activation_class=nn.Tanh, layer_class=nn.Linear),
+        ],
+        intermediate_sizes=[5],
+    )
+
+
+@pytest.fixture
+def cnn_sequence_config() -> ModelConfig:
+    return SequenceModelConfig(
+        model_configs=[
+            CnnConfig(
+                cnn_num_cells=[4, 3],
+                cnn_kernel_sizes=[3, 2],
+                cnn_strides=1,
+                cnn_paddings=0,
+                cnn_activation_class=nn.Tanh,
+                mlp_num_cells=[4],
+                mlp_activation_class=nn.Tanh,
+                mlp_layer_class=nn.Linear,
+            ),
             MlpConfig(num_cells=[4], activation_class=nn.Tanh, layer_class=nn.Linear),
         ],
         intermediate_sizes=[5],
