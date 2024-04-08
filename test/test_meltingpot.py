@@ -34,13 +34,7 @@ class TestMeltingPot:
         cnn_sequence_config,
     ):
         # To not run unsupported algo-task pairs
-        if (
-            not task.supports_continuous_actions()
-            and not algo_config.supports_discrete_actions()
-        ) or (
-            not task.supports_discrete_actions()
-            and not algo_config.supports_continuous_actions()
-        ):
+        if not algo_config.supports_discrete_actions():
             pytest.skip()
 
         task = task.get_from_yaml()
@@ -81,6 +75,10 @@ class TestMeltingPot:
         experiment_config,
         cnn_sequence_config,
     ):
+        # To not run unsupported algo-task pairs
+        if not algo_config.supports_discrete_actions():
+            pytest.skip()
+
         algo_config = algo_config.get_from_yaml()
         if isinstance(algo_config, VdnConfig):
             # There are some bugs currently in TorchRL https://github.com/pytorch/rl/issues/1593
