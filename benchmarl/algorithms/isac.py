@@ -7,7 +7,6 @@
 from dataclasses import dataclass, MISSING
 from typing import Dict, Iterable, Optional, Tuple, Type, Union
 
-import torch
 from tensordict import TensorDictBase
 from tensordict.nn import NormalParamExtractor, TensorDictModule, TensorDictSequential
 from torch.distributions import Categorical
@@ -315,31 +314,12 @@ class Isac(Algorithm):
     def get_continuous_value_module(self, group: str) -> TensorDictModule:
         n_agents = len(self.group_map[group])
         modules = []
-        group_observation_key = list(self.observation_spec[group].keys())[0]
 
-        modules.append(
-            TensorDictModule(
-                lambda obs, action: torch.cat([obs, action], dim=-1),
-                in_keys=[(group, group_observation_key), (group, "action")],
-                out_keys=[(group, "obs_action")],
-            )
-        )
         critic_input_spec = CompositeSpec(
             {
-                group: CompositeSpec(
-                    {
-                        "obs_action": UnboundedContinuousTensorSpec(
-                            shape=(
-                                n_agents,
-                                self.observation_spec[
-                                    group, group_observation_key
-                                ].shape[-1]
-                                + self.action_spec[group, "action"].shape[-1],
-                            )
-                        )
-                    },
-                    shape=(n_agents,),
-                )
+                group: self.observation_spec[group]
+                .clone()
+                .update(self.action_spec[group])
             }
         )
 

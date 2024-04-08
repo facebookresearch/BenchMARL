@@ -12,7 +12,8 @@ from typing import Any, Callable, Dict, List, Optional, Sequence
 
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModuleBase, TensorDictSequential
-from torchrl.data import CompositeSpec, UnboundedContinuousTensorSpec
+from tensordict.utils import NestedKey
+from torchrl.data import CompositeSpec, TensorSpec, UnboundedContinuousTensorSpec
 from torchrl.envs import EnvBase
 
 from benchmarl.utils import _class_from_name, _read_yaml_config, DEVICE_TYPING
@@ -103,9 +104,7 @@ class Model(TensorDictModuleBase, ABC):
         self.in_keys = list(self.input_spec.keys(True, True))
         self.out_keys = list(self.output_spec.keys(True, True))
 
-        self.in_key = self.in_keys[0]
         self.out_key = self.out_keys[0]
-        self.input_leaf_spec = self.input_spec[self.in_key]
         self.output_leaf_spec = self.output_spec[self.out_key]
 
         self._perform_checks()
@@ -120,14 +119,22 @@ class Model(TensorDictModuleBase, ABC):
         """
         return output_has_agent_dim(self.share_params, self.centralised)
 
+    @property
+    def in_key(self) -> NestedKey:
+        if len(self.in_keys) > 1:
+            raise ValueError("Model has more than one input key")
+        return self.in_keys[0]
+
+    @property
+    def input_leaf_spec(self) -> TensorSpec:
+        return self.input_spec[self.in_key]
+
     def _perform_checks(self):
         if not self.input_has_agent_dim and not self.centralised:
             raise ValueError(
                 "If input does not have an agent dimension the model should be marked as centralised"
             )
 
-        if len(self.in_keys) > 1:
-            raise ValueError("Currently models support just one input key")
         if len(self.out_keys) > 1:
             raise ValueError("Currently models support just one output key")
 
@@ -158,7 +165,7 @@ class Model(TensorDictModuleBase, ABC):
     def _forward(self, tensordict: TensorDictBase) -> TensorDictBase:
         """
         Method to implement for the forward pass of the model.
-        It should read self.in_key, process it and write self.out_key.
+        It should read self.in_keys, process it and write self.out_key.
 
         Args:
             tensordict (TensorDictBase): the input td

@@ -53,8 +53,20 @@ def _number_conv_outputs(
 class Cnn(Model):
     """Convolutional Neural Network (CNN) model.
 
-    Args:
+    The BenchMARL CNN accepts multiple inputs of 2 types:
 
+    - images: Tensors of shape (*batch, X,Y,C)
+    - arrays: Tensors of shape (*batch, F)
+
+    The CNN model will check that all image inputs have the same shape (excluding the last dimension)
+    and cat them along that dimension before processing them with :class:`torchrl.modules.ConvNet`.
+
+    It will check that all array inputs have the same shape (excluding the last dimension)
+    and cat them along that dimension.
+
+    It will then cat the arrays and processed images and feed them to the MLP together.
+
+    Args:
         cnn_num_cells (int or Sequence of int): number of cells of
             every layer in between the input and output. If an integer is
             provided, every layer will have the same number of cells. If an
@@ -104,9 +116,17 @@ class Cnn(Model):
             action_spec=kwargs.pop("action_spec"),
         )
 
-        self.x = self.input_leaf_spec.shape[-3]
-        self.y = self.input_leaf_spec.shape[-2]
-        self.input_features = self.input_leaf_spec.shape[-1]
+        self.x = self.input_spec[self.image_in_keys[0]].shape[-3]
+        self.y = self.input_spec[self.image_in_keys[0]].shape[-2]
+        self.input_features_images = sum(
+            [self.input_spec[key].shape[-1] for key in self.image_in_keys]
+        )
+        self.input_features_tensors = sum(
+            [self.input_spec[key].shape[-1] for key in self.tensor_in_keys]
+        )
+        if self.input_has_agent_dim and not self.output_has_agent_dim:
+            # In this case the tensor features will be centralized
+            self.input_features_tensors *= self.n_agents
 
         self.output_features = self.output_leaf_spec.shape[-1]
 
@@ -123,7 +143,7 @@ class Cnn(Model):
 
         if self.input_has_agent_dim:
             self.cnn = MultiAgentConvNet(
-                in_features=self.input_features,
+                in_features=self.input_features_images,
                 n_agents=self.n_agents,
                 centralised=self.centralised,
                 share_params=self.share_params,
@@ -136,7 +156,7 @@ class Cnn(Model):
             self.cnn = nn.ModuleList(
                 [
                     ConvNet(
-                        in_features=self.input_features,
+                        in_features=self.input_features_images,
                         device=self.device,
                         **cnn_net_kwargs,
                     )
@@ -156,7 +176,7 @@ class Cnn(Model):
 
         if self.output_has_agent_dim:
             self.mlp = MultiAgentMLP(
-                n_agent_inputs=cnn_output_size,
+                n_agent_inputs=cnn_output_size + self.input_features_tensors,
                 n_agent_outputs=self.output_features,
                 n_agents=self.n_agents,
                 centralised=self.centralised,
@@ -168,7 +188,7 @@ class Cnn(Model):
             self.mlp = nn.ModuleList(
                 [
                     MLP(
-                        in_features=cnn_output_size,
+                        in_features=cnn_output_size + self.input_features_tensors,
                         out_features=self.output_features,
                         device=self.device,
                         **mlp_net_kwargs,
@@ -180,10 +200,49 @@ class Cnn(Model):
     def _perform_checks(self):
         super()._perform_checks()
 
-        if self.input_has_agent_dim and self.input_leaf_spec.shape[-4] != self.n_agents:
+        input_shape_tensor = None
+        self.image_in_keys = []
+        input_shape_image = None
+        self.tensor_in_keys = []
+        for input_key, input_spec in self.input_spec.items(True, True):
+            if (self.input_has_agent_dim and len(input_spec.shape) == 4) or (
+                not self.input_has_agent_dim and len(input_spec.shape) == 3
+            ):
+                self.image_in_keys.append(input_key)
+                if input_shape_image is None:
+                    input_shape_image = input_spec.shape[:-1]
+                elif input_spec.shape[:-1] != input_shape_image:
+                    raise ValueError(
+                        f"CNN image inputs should all have the same shape up to the last dimension, got {self.input_spec}"
+                    )
+            elif (self.input_has_agent_dim and len(input_spec.shape) == 2) or (
+                not self.input_has_agent_dim and len(input_spec.shape) == 1
+            ):
+                self.tensor_in_keys.append(input_key)
+                if input_shape_tensor is None:
+                    input_shape_tensor = input_spec.shape[:-1]
+                elif input_spec.shape[:-1] != input_shape_tensor:
+                    raise ValueError(
+                        f"CNN tensor inputs should all have the same shape up to the last dimension, got {self.input_spec}"
+                    )
+            else:
+                raise ValueError(
+                    f"CNN input value {input_key} from {self.input_spec} has an invalid shape"
+                )
+
+        if self.input_has_agent_dim and input_shape_image[-3] != self.n_agents:
             raise ValueError(
                 "If the CNN input has the agent dimension,"
-                " the forth to last spec dimension should be the number of agents"
+                " the forth to last spec dimension of image inputs should be the number of agents"
+            )
+        if (
+            self.input_has_agent_dim
+            and input_shape_tensor is not None
+            and input_shape_tensor[-1] != self.n_agents
+        ):
+            raise ValueError(
+                "If the CNN input has the agent dimension,"
+                " the second to last spec dimension of tensor inputs should be the number of agents"
             )
         if (
             self.output_has_agent_dim
@@ -195,10 +254,24 @@ class Cnn(Model):
             )
 
     def _forward(self, tensordict: TensorDictBase) -> TensorDictBase:
-        # Gather in_key
-        input = tensordict.get(self.in_key)
+        # Gather images
+        input = torch.cat(
+            [tensordict.get(in_key) for in_key in self.image_in_keys], dim=-1
+        )
         # BenchMARL images are X,Y,C -> we convert them to C, X, Y for processing in TorchRL models
         input = input.transpose(-3, -1).transpose(-2, -1)
+
+        # Gather tensor inputs
+        if len(self.tensor_in_keys):
+            tensor_inputs = torch.cat(
+                [tensordict.get(in_key) for in_key in self.tensor_in_keys], dim=-1
+            )
+            if self.input_has_agent_dim and not self.output_has_agent_dim:
+                tensor_inputs = tensor_inputs.reshape((*tensor_inputs.shape[:-2], -1))
+            elif not self.input_has_agent_dim and self.output_has_agent_dim:
+                tensor_inputs = tensor_inputs.unsqueeze(-2).expand(
+                    (*tensor_inputs.shape[:-1], self.n_agents, tensor_inputs.shape[-1])
+                )
 
         # Has multi-agent input dimension
         if self.input_has_agent_dim:
@@ -218,6 +291,9 @@ class Cnn(Model):
                 )
             else:
                 cnn_out = self.cnn[0](input)
+
+        if len(self.tensor_in_keys):
+            cnn_out = torch.cat([cnn_out, tensor_inputs], dim=-1)
 
         # Cnn output has multi-agent input dimension
         if self.output_has_agent_dim:
