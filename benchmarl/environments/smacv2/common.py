@@ -88,7 +88,7 @@ class Smacv2Task(Task):
         return observation_spec
 
     def action_spec(self, env: EnvBase) -> CompositeSpec:
-        return env.input_spec["full_action_spec"]
+        return env.full_action_spec
 
     @staticmethod
     def log_info(batch: TensorDictBase) -> Dict[str, float]:

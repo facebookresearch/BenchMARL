@@ -257,7 +257,7 @@ class Cnn(Model):
         # Gather images
         input = torch.cat(
             [tensordict.get(in_key) for in_key in self.image_in_keys], dim=-1
-        )
+        ).to(torch.float)
         # BenchMARL images are X,Y,C -> we convert them to C, X, Y for processing in TorchRL models
         input = input.transpose(-3, -1).transpose(-2, -1)
 

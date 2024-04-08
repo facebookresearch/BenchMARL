@@ -5,6 +5,7 @@
 #
 
 from .common import Task
+from .meltingpot.common import MeltingPotTask
 from .pettingzoo.common import PettingZooTask
 from .smacv2.common import Smacv2Task
 from .vmas.common import VmasTask
@@ -12,7 +13,7 @@ from .vmas.common import VmasTask
 # This is a registry mapping "envname/task_name" to the EnvNameTask.TASK_NAME enum
 # It is used by automatically load task enums from yaml files
 task_config_registry = {}
-for env in [VmasTask, Smacv2Task, PettingZooTask]:
+for env in [VmasTask, Smacv2Task, PettingZooTask, MeltingPotTask]:
     env_config_registry = {
         f"{env.env_name()}/{task.name.lower()}": task for task in env
     }

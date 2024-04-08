@@ -82,7 +82,7 @@ evaluation_episodes: 10
 evaluation_deterministic_actions: True
 
 # List of loggers to use, options are: wandb, csv, tensorboard, mflow
-loggers: [wandb]
+loggers: []
 # Create a json folder as part of the output in the format of marl-eval
 create_json: True
 
