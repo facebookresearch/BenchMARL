@@ -229,7 +229,8 @@ class Cnn(Model):
                 raise ValueError(
                     f"CNN input value {input_key} from {self.input_spec} has an invalid shape"
                 )
-
+        if not len(self.image_in_keys):
+            raise ValueError("CNN found no image inputs, maybe use an MLP?")
         if self.input_has_agent_dim and input_shape_image[-3] != self.n_agents:
             raise ValueError(
                 "If the CNN input has the agent dimension,"
