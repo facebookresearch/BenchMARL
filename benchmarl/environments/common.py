@@ -242,6 +242,9 @@ class Task(Enum):
             reset_keys = env.reset_keys
         return RewardSum(reset_keys=reset_keys)
 
+    def get_transforms(self, env: EnvBase) -> List[Transform]:
+        return []
+
     @staticmethod
     def render_callback(experiment, env: EnvBase, data: TensorDictBase):
         try:

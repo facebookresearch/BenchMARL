@@ -6,10 +6,11 @@
 
 from typing import Callable, Dict, List, Optional
 
+import torch
 from tensordict import TensorDictBase
 
 from torchrl.data import CompositeSpec
-from torchrl.envs import EnvBase
+from torchrl.envs import DoubleToFloat, DTypeCastTransform, EnvBase, Transform
 from torchrl.envs.libs.meltingpot import MeltingpotEnv
 
 from benchmarl.environments.common import Task
@@ -48,6 +49,22 @@ class MeltingPotTask(Task):
 
     def group_map(self, env: EnvBase) -> Dict[str, List[str]]:
         return env.group_map
+
+    def get_transforms(self, env: EnvBase) -> List[Transform]:
+        return [
+            DoubleToFloat(),
+            DTypeCastTransform(
+                dtype_in=torch.uint8,
+                dtype_out=torch.float,
+                in_keys=[
+                    "WORLD.RGB",
+                    *[
+                        (group, "observation", "RGB")
+                        for group in self.group_map(env).keys()
+                    ],
+                ],
+            ),
+        ]
 
     def state_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
         observation_spec = env.observation_spec.clone()
