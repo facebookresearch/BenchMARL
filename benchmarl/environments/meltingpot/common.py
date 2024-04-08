@@ -57,7 +57,7 @@ class MeltingPotTask(Task):
                 dtype_in=torch.uint8,
                 dtype_out=torch.float,
                 in_keys=[
-                    "WORLD.RGB",
+                    "RGB",
                     *[
                         (group, "observation", "RGB")
                         for group in self.group_map(env).keys()
@@ -70,7 +70,7 @@ class MeltingPotTask(Task):
         observation_spec = env.observation_spec.clone()
         for group in self.group_map(env):
             del observation_spec[group]
-        if list(observation_spec.keys()) != ["WORLD.RGB"]:
+        if list(observation_spec.keys()) != ["RGB"]:
             raise ValueError(
                 f"More than one global state key found in observation spec {observation_spec}."
             )
