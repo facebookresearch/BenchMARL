@@ -53,8 +53,20 @@ def _number_conv_outputs(
 class Cnn(Model):
     """Convolutional Neural Network (CNN) model.
 
-    Args:
+    The BenchMARL CNN accepts multiple inputs of 2 types:
 
+    - images: Tensors of shape (*batch, X,Y,C)
+    - arrays: Tensors of shape (*batch, F)
+
+    The CNN model will check that all image inputs have the same shape (excluding the last dimension)
+    and cat them along that dimension before processing them with :class:`torchrl.modules.ConvNet`.
+
+    It will check that all array inputs have the same shape (excluding the last dimension)
+    and cat them along that dimension.
+
+    It will then cat the arrays and processed images and feed them to the MLP together.
+
+    Args:
         cnn_num_cells (int or Sequence of int): number of cells of
             every layer in between the input and output. If an integer is
             provided, every layer will have the same number of cells. If an
@@ -113,6 +125,7 @@ class Cnn(Model):
             [self.input_spec[key].shape[-1] for key in self.tensor_in_keys]
         )
         if self.input_has_agent_dim and not self.output_has_agent_dim:
+            # In this case the tensor features will be centralized
             self.input_features_tensors *= self.n_agents
 
         self.output_features = self.output_leaf_spec.shape[-1]

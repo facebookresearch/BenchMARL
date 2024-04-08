@@ -165,7 +165,7 @@ class Model(TensorDictModuleBase, ABC):
     def _forward(self, tensordict: TensorDictBase) -> TensorDictBase:
         """
         Method to implement for the forward pass of the model.
-        It should read self.in_key, process it and write self.out_key.
+        It should read self.in_keys, process it and write self.out_key.
 
         Args:
             tensordict (TensorDictBase): the input td
