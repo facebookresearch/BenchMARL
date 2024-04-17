@@ -55,8 +55,8 @@ class Cnn(Model):
 
     The BenchMARL CNN accepts multiple inputs of 2 types:
 
-    - images: Tensors of shape (*batch, X,Y,C)
-    - arrays: Tensors of shape (*batch, F)
+    - images: Tensors of shape ``(*batch,X,Y,C)``
+    - arrays: Tensors of shape ``(*batch,F)``
 
     The CNN model will check that all image inputs have the same shape (excluding the last dimension)
     and cat them along that dimension before processing them with :class:`torchrl.modules.ConvNet`.
