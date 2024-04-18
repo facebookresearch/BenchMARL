@@ -11,7 +11,6 @@ from tensordict import TensorDictBase
 
 from torchrl.data import CompositeSpec
 from torchrl.envs import DoubleToFloat, DTypeCastTransform, EnvBase, Transform
-from torchrl.envs.libs.meltingpot import MeltingpotEnv
 
 from benchmarl.environments.common import Task
 from benchmarl.utils import DEVICE_TYPING
@@ -29,6 +28,8 @@ class MeltingPotTask(Task):
         seed: Optional[int],
         device: DEVICE_TYPING,
     ) -> Callable[[], EnvBase]:
+        from torchrl.envs.libs.meltingpot import MeltingpotEnv
+
         return lambda: MeltingpotEnv(
             substrate=self.name.lower(),
             categorical_actions=True,
