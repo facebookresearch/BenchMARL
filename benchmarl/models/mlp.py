@@ -93,7 +93,7 @@ class Mlp(Model):
                         )
             else:
                 raise ValueError(
-                    f"MLP input value {input_key} from {self.input_spec} has an invalid shape"
+                    f"MLP input value {input_key} from {self.input_spec} has an invalid shape, maybe you need a CNN?"
                 )
         if self.input_has_agent_dim:
             if input_shape[-1] != self.n_agents:

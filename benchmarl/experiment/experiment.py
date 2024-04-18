@@ -387,7 +387,6 @@ class Experiment(CallbackNotifier):
                 device=self.config.sampling_device,
             )
         )
-
         self.observation_spec = self.task.observation_spec(test_env)
         self.info_spec = self.task.info_spec(test_env)
         self.state_spec = self.task.state_spec(test_env)
@@ -397,24 +396,34 @@ class Experiment(CallbackNotifier):
         self.train_group_map = copy.deepcopy(self.group_map)
         self.max_steps = self.task.max_steps(test_env)
 
-        transforms = [self.task.get_reward_sum_transform(test_env)]
-        transform = Compose(*transforms)
+        transforms_env = self.task.get_env_transforms(test_env)
+        transforms_training = transforms_env + [
+            self.task.get_reward_sum_transform(test_env)
+        ]
+
+        transforms_env = Compose(*transforms_env)
+        transforms_training = Compose(*transforms_training)
 
         if test_env.batch_size == ():
             self.env_func = lambda: TransformedEnv(
                 SerialEnv(self.config.n_envs_per_worker(self.on_policy), env_func),
-                transform.clone(),
+                transforms_training.clone(),
             )
         else:
-            self.env_func = lambda: TransformedEnv(env_func(), transform.clone())
+            self.env_func = lambda: TransformedEnv(
+                env_func(), transforms_training.clone()
+            )
 
-        self.test_env = test_env.to(self.config.sampling_device)
+        self.test_env = TransformedEnv(test_env, transforms_env.clone()).to(
+            self.config.sampling_device
+        )
 
     def _setup_algorithm(self):
         self.algorithm = self.algorithm_config.get_algorithm(experiment=self)
         self.replay_buffers = {
             group: self.algorithm.get_replay_buffer(
                 group=group,
+                transforms=self.task.get_replay_buffer_transforms(self.test_env),
             )
             for group in self.group_map.keys()
         }

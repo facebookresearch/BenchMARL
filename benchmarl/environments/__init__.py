@@ -5,6 +5,7 @@
 #
 
 from .common import Task
+from .meltingpot.common import MeltingPotTask
 from .pettingzoo.common import PettingZooTask
 from .smacv2.common import Smacv2Task
 from .vmas.common import VmasTask
@@ -12,7 +13,7 @@ from .vmas.common import VmasTask
 # This is a registry mapping "envname/task_name" to the EnvNameTask.TASK_NAME enum
 # It is used by automatically load task enums from yaml files
 task_config_registry = {}
-for env in [VmasTask, Smacv2Task, PettingZooTask]:
+for env in [VmasTask, Smacv2Task, PettingZooTask, MeltingPotTask]:
     env_config_registry = {
         f"{env.env_name()}/{task.name.lower()}": task for task in env
     }
@@ -31,6 +32,7 @@ from .pettingzoo.simple_spread import TaskConfig as SimpleSpreadConfig
 from .pettingzoo.simple_tag import TaskConfig as SimpleTagConfig
 from .pettingzoo.simple_world_comm import TaskConfig as SimpleWorldComm
 from .pettingzoo.waterworld import TaskConfig as WaterworldConfig
+
 from .vmas.balance import TaskConfig as BalanceConfig
 from .vmas.dispersion import TaskConfig as DispersionConfig
 from .vmas.dropout import TaskConfig as DropoutConfig
@@ -38,7 +40,6 @@ from .vmas.give_way import TaskConfig as GiveWayConfig
 from .vmas.navigation import TaskConfig as NavigationConfig
 from .vmas.reverse_transport import TaskConfig as ReverseTransportConfig
 from .vmas.sampling import TaskConfig as SamplingConfig
-
 from .vmas.simple_adverasary import TaskConfig as VmasSimpleAdversaryConfig
 from .vmas.simple_crypto import TaskConfig as VmasSimpleCryptoConfig
 from .vmas.simple_push import TaskConfig as VmasSimplePushConfig

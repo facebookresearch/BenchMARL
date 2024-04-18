@@ -7,7 +7,7 @@
 import pathlib
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Dict, Iterable, Optional, Tuple, Type
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Type
 
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModule, TensorDictSequential
@@ -19,6 +19,7 @@ from torchrl.data import (
     TensorDictReplayBuffer,
 )
 from torchrl.data.replay_buffers import RandomSampler, SamplerWithoutReplacement
+from torchrl.envs import Compose, Transform
 from torchrl.objectives import LossModule
 from torchrl.objectives.utils import HardUpdate, SoftUpdate, TargetNetUpdater
 
@@ -132,8 +133,7 @@ class Algorithm(ABC):
         return self._losses_and_updaters[group]
 
     def get_replay_buffer(
-        self,
-        group: str,
+        self, group: str, transforms: List[Transform] = None
     ) -> ReplayBuffer:
         """
         Get the ReplayBuffer for a specific group.
@@ -141,6 +141,7 @@ class Algorithm(ABC):
 
         Args:
             group (str): agent group of the loss and updater
+            transforms (optional, list of Transform): Transforms to apply to the replay buffer ``.sample()`` call
 
         Returns: ReplayBuffer the group
         """
@@ -154,6 +155,7 @@ class Algorithm(ABC):
             sampler=sampler,
             batch_size=sampling_size,
             priority_key=(group, "td_error"),
+            transform=Compose(*transforms) if transforms is not None else None,
         )
 
     def get_policy_for_loss(self, group: str) -> TensorDictModule:

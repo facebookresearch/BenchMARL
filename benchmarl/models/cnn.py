@@ -229,7 +229,8 @@ class Cnn(Model):
                 raise ValueError(
                     f"CNN input value {input_key} from {self.input_spec} has an invalid shape"
                 )
-
+        if not len(self.image_in_keys):
+            raise ValueError("CNN found no image inputs, maybe use an MLP?")
         if self.input_has_agent_dim and input_shape_image[-3] != self.n_agents:
             raise ValueError(
                 "If the CNN input has the agent dimension,"
@@ -257,7 +258,7 @@ class Cnn(Model):
         # Gather images
         input = torch.cat(
             [tensordict.get(in_key) for in_key in self.image_in_keys], dim=-1
-        )
+        ).to(torch.float)
         # BenchMARL images are X,Y,C -> we convert them to C, X, Y for processing in TorchRL models
         input = input.transpose(-3, -1).transpose(-2, -1)
 
@@ -316,9 +317,9 @@ class CnnConfig(ModelConfig):
     """Dataclass config for a :class:`~benchmarl.models.Cnn`."""
 
     cnn_num_cells: Sequence[int] = MISSING
-    cnn_kernel_sizes: Sequence[int] = MISSING
-    cnn_strides: Sequence[int] = MISSING
-    cnn_paddings: Sequence[int] = MISSING
+    cnn_kernel_sizes: Union[Sequence[int], int] = MISSING
+    cnn_strides: Union[Sequence[int], int] = MISSING
+    cnn_paddings: Union[Sequence[int], int] = MISSING
     cnn_activation_class: Type[nn.Module] = MISSING
 
     mlp_num_cells: Sequence[int] = MISSING
