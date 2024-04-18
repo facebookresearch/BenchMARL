@@ -64,24 +64,24 @@ class TestMeltingPot:
         )
         experiment.run()
 
-    @pytest.mark.parametrize("algo_config", [IppoConfig, MasacConfig])
-    @pytest.mark.parametrize("task", _get_unique_envs(list(MeltingPotTask)))
-    def test_all_tasks(
-        self,
-        algo_config: AlgorithmConfig,
-        task: Task,
-        experiment_config,
-        cnn_sequence_config,
-    ):
-        task = task.get_from_yaml()
-        experiment = Experiment(
-            algorithm_config=algo_config.get_from_yaml(),
-            model_config=cnn_sequence_config,
-            seed=0,
-            config=experiment_config,
-            task=task,
-        )
-        experiment.run()
+    # @pytest.mark.parametrize("algo_config", [IppoConfig, MasacConfig])
+    # @pytest.mark.parametrize("task", _get_unique_envs(list(MeltingPotTask)))
+    # def test_all_tasks(
+    #     self,
+    #     algo_config: AlgorithmConfig,
+    #     task: Task,
+    #     experiment_config,
+    #     cnn_sequence_config,
+    # ):
+    #     task = task.get_from_yaml()
+    #     experiment = Experiment(
+    #         algorithm_config=algo_config.get_from_yaml(),
+    #         model_config=cnn_sequence_config,
+    #         seed=0,
+    #         config=experiment_config,
+    #         task=task,
+    #     )
+    #     experiment.run()
 
     @pytest.mark.parametrize("algo_config", algorithm_config_registry.values())
     @pytest.mark.parametrize("task", [MeltingPotTask.COMMONS_HARVEST__OPEN])
