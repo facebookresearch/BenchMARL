@@ -26,7 +26,7 @@ from utils_experiment import ExperimentUtils
 
 @pytest.mark.skipif(not _has_meltingpot, reason="Meltingpot not found")
 @pytest.mark.skipif(
-    not packaging.version.parse(torchrl.__version__).base_version <= "0.3.1",
+    packaging.version.parse(torchrl.__version__).base_version <= "0.3.1",
     reason="TorchRL <= 0.3.1 does nto support meltingpot",
 )
 class TestMeltingPot:
