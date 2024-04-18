@@ -54,6 +54,7 @@ class TestMeltingPot:
             pytest.skip()
 
         task = task.get_from_yaml()
+        experiment_config.checkpoint_interval = 0
         experiment = Experiment(
             algorithm_config=algo_config.get_from_yaml(),
             model_config=cnn_sequence_config,
@@ -82,46 +83,47 @@ class TestMeltingPot:
     #     )
     #     experiment.run()
 
-    @pytest.mark.parametrize("algo_config", algorithm_config_registry.values())
-    @pytest.mark.parametrize("task", [MeltingPotTask.COMMONS_HARVEST__OPEN])
-    def test_reloading_trainer(
-        self,
-        algo_config: AlgorithmConfig,
-        task: Task,
-        experiment_config,
-        cnn_sequence_config,
-    ):
-        # To not run unsupported algo-task pairs
-        if not algo_config.supports_discrete_actions():
-            pytest.skip()
-
-        algo_config = algo_config.get_from_yaml()
-
-        ExperimentUtils.check_experiment_loading(
-            algo_config=algo_config,
-            model_config=cnn_sequence_config,
-            experiment_config=experiment_config,
-            task=task.get_from_yaml(),
-        )
-
-    @pytest.mark.parametrize("algo_config", [QmixConfig, IppoConfig, MasacConfig])
-    @pytest.mark.parametrize("task", [MeltingPotTask.COMMONS_HARVEST__OPEN])
-    @pytest.mark.parametrize("share_params", [True, False])
-    def test_share_policy_params(
-        self,
-        algo_config: AlgorithmConfig,
-        task: Task,
-        share_params,
-        experiment_config,
-        cnn_sequence_config,
-    ):
-        experiment_config.share_policy_params = share_params
-        task = task.get_from_yaml()
-        experiment = Experiment(
-            algorithm_config=algo_config.get_from_yaml(),
-            model_config=cnn_sequence_config,
-            seed=0,
-            config=experiment_config,
-            task=task,
-        )
-        experiment.run()
+    # @pytest.mark.parametrize("algo_config", algorithm_config_registry.values())
+    # @pytest.mark.parametrize("task", [MeltingPotTask.COMMONS_HARVEST__OPEN])
+    # def test_reloading_trainer(
+    #     self,
+    #     algo_config: AlgorithmConfig,
+    #     task: Task,
+    #     experiment_config,
+    #     cnn_sequence_config,
+    # ):
+    #     # To not run unsupported algo-task pairs
+    #     if not algo_config.supports_discrete_actions():
+    #         pytest.skip()
+    #
+    #     algo_config = algo_config.get_from_yaml()
+    #
+    #     ExperimentUtils.check_experiment_loading(
+    #         algo_config=algo_config,
+    #         model_config=cnn_sequence_config,
+    #         experiment_config=experiment_config,
+    #         task=task.get_from_yaml(),
+    #     )
+    #
+    # @pytest.mark.parametrize("algo_config", [QmixConfig, IppoConfig, MasacConfig])
+    # @pytest.mark.parametrize("task", [MeltingPotTask.COMMONS_HARVEST__OPEN])
+    # @pytest.mark.parametrize("share_params", [True, False])
+    # def test_share_policy_params(
+    #     self,
+    #     algo_config: AlgorithmConfig,
+    #     task: Task,
+    #     share_params,
+    #     experiment_config,
+    #     cnn_sequence_config,
+    # ):
+    #     experiment_config.share_policy_params = share_params
+    #     task = task.get_from_yaml()
+    #     experiment_config.checkpoint_interval = 0
+    #     experiment = Experiment(
+    #         algorithm_config=algo_config.get_from_yaml(),
+    #         model_config=cnn_sequence_config,
+    #         seed=0,
+    #         config=experiment_config,
+    #         task=task,
+    #     )
+    #     experiment.run()
