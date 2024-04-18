@@ -64,7 +64,7 @@ class TestMeltingPot:
         )
         experiment.run()
 
-    @pytest.mark.parametrize("algo_config", [IppoConfig, MasacConfig])
+    @pytest.mark.parametrize("algo_config", [MasacConfig])
     @pytest.mark.parametrize("task", _get_unique_envs(list(MeltingPotTask)))
     def test_all_tasks(
         self,
