@@ -244,7 +244,7 @@ class Task(Enum):
 
     def get_env_transforms(self, env: EnvBase) -> List[Transform]:
         """
-        Returns a list of :class:`torchrl.envs.Transorm` to be applied to the env.
+        Returns a list of :class:`torchrl.envs.Transform` to be applied to the env.
 
         Args:
             env (EnvBase): An environment created via self.get_env_fun
@@ -255,7 +255,7 @@ class Task(Enum):
 
     def get_replay_buffer_transforms(self, env: EnvBase) -> List[Transform]:
         """
-        Returns a list of :class:`torchrl.envs.Transorm` to be applied to the :class:`torchrl.data.ReplayBuffer`.
+        Returns a list of :class:`torchrl.envs.Transform` to be applied to the :class:`torchrl.data.ReplayBuffer`.
 
         Args:
             env (EnvBase): An environment created via self.get_env_fun
