@@ -19,7 +19,55 @@ from benchmarl.utils import DEVICE_TYPING
 class MeltingPotTask(Task):
     """Enum for meltingpot tasks."""
 
+    PREDATOR_PREY__ALLEY_HUNT = None
+    CLEAN_UP = None
+    COLLABORATIVE_COOKING__CIRCUIT = None
+    FRUIT_MARKET__CONCENTRIC_RIVERS = None
+    COLLABORATIVE_COOKING__FIGURE_EIGHT = None
+    PAINTBALL__KING_OF_THE_HILL = None
+    FACTORY_COMMONS__EITHER_OR = None
+    PURE_COORDINATION_IN_THE_MATRIX__ARENA = None
+    RUNNING_WITH_SCISSORS_IN_THE_MATRIX__REPEATED = None
+    COLLABORATIVE_COOKING__CRAMPED = None
+    RUNNING_WITH_SCISSORS_IN_THE_MATRIX__ARENA = None
+    PRISONERS_DILEMMA_IN_THE_MATRIX__REPEATED = None
+    TERRITORY__OPEN = None
+    STAG_HUNT_IN_THE_MATRIX__REPEATED = None
+    CHICKEN_IN_THE_MATRIX__REPEATED = None
+    GIFT_REFINEMENTS = None
+    PURE_COORDINATION_IN_THE_MATRIX__REPEATED = None
+    COLLABORATIVE_COOKING__FORCED = None
+    RATIONALIZABLE_COORDINATION_IN_THE_MATRIX__ARENA = None
+    BACH_OR_STRAVINSKY_IN_THE_MATRIX__ARENA = None
+    CHEMISTRY__TWO_METABOLIC_CYCLES_WITH_DISTRACTORS = None
+    COMMONS_HARVEST__PARTNERSHIP = None
+    PREDATOR_PREY__OPEN = None
+    TERRITORY__ROOMS = None
+    HIDDEN_AGENDA = None
+    COOP_MINING = None
+    DAYCARE = None
+    PRISONERS_DILEMMA_IN_THE_MATRIX__ARENA = None
+    TERRITORY__INSIDE_OUT = None
+    BACH_OR_STRAVINSKY_IN_THE_MATRIX__REPEATED = None
+    COMMONS_HARVEST__CLOSED = None
+    CHEMISTRY__THREE_METABOLIC_CYCLES_WITH_PLENTIFUL_DISTRACTORS = None
+    STAG_HUNT_IN_THE_MATRIX__ARENA = None
+    PAINTBALL__CAPTURE_THE_FLAG = None
+    COLLABORATIVE_COOKING__CROWDED = None
+    ALLELOPATHIC_HARVEST__OPEN = None
+    COLLABORATIVE_COOKING__RING = None
     COMMONS_HARVEST__OPEN = None
+    COINS = None
+    PREDATOR_PREY__ORCHARD = None
+    PREDATOR_PREY__RANDOM_FOREST = None
+    COLLABORATIVE_COOKING__ASYMMETRIC = None
+    RATIONALIZABLE_COORDINATION_IN_THE_MATRIX__REPEATED = None
+    CHEMISTRY__THREE_METABOLIC_CYCLES = None
+    RUNNING_WITH_SCISSORS_IN_THE_MATRIX__ONE_SHOT = None
+    CHEMISTRY__TWO_METABOLIC_CYCLES = None
+    CHICKEN_IN_THE_MATRIX__ARENA = None
+    BOAT_RACE__EIGHT_RACES = None
+    EXTERNALITY_MUSHROOMS__DENSE = None
 
     def get_env_fun(
         self,
@@ -46,14 +94,16 @@ class MeltingPotTask(Task):
         return True
 
     def max_steps(self, env: EnvBase) -> int:
-        return self.config["max_steps"]
+        return self.config.get("max_steps", 100)
 
     def group_map(self, env: EnvBase) -> Dict[str, List[str]]:
         return env.group_map
 
-    def get_transforms(self, env: EnvBase) -> List[Transform]:
+    def get_env_transforms(self, env: EnvBase) -> List[Transform]:
+        return [DoubleToFloat()]
+
+    def get_replay_buffer_transforms(self, env: EnvBase) -> List[Transform]:
         return [
-            DoubleToFloat(),
             DTypeCastTransform(
                 dtype_in=torch.uint8,
                 dtype_out=torch.float,
@@ -63,8 +113,14 @@ class MeltingPotTask(Task):
                         (group, "observation", "RGB")
                         for group in self.group_map(env).keys()
                     ],
+                    ("next", "RGB"),
+                    *[
+                        ("next", group, "observation", "RGB")
+                        for group in self.group_map(env).keys()
+                    ],
                 ],
-            ),
+                in_keys_inv=[],
+            )
         ]
 
     def state_spec(self, env: EnvBase) -> Optional[CompositeSpec]:

@@ -24,6 +24,17 @@ from utils import _has_meltingpot
 from utils_experiment import ExperimentUtils
 
 
+def _get_unique_envs(names):
+    prefixes = set()
+    result = []
+    for env in names:
+        prefix = env.name.split("_")[0]
+        if prefix not in prefixes:
+            prefixes.add(prefix)
+            result.append(env)
+    return result
+
+
 @pytest.mark.skipif(not _has_meltingpot, reason="Meltingpot not found")
 @pytest.mark.skipif(
     packaging.version.parse(torchrl.__version__).base_version <= "0.3.1",
@@ -54,7 +65,7 @@ class TestMeltingPot:
         experiment.run()
 
     @pytest.mark.parametrize("algo_config", [IppoConfig, MasacConfig])
-    @pytest.mark.parametrize("task", list(MeltingPotTask))
+    @pytest.mark.parametrize("task", _get_unique_envs(list(MeltingPotTask)))
     def test_all_tasks(
         self,
         algo_config: AlgorithmConfig,

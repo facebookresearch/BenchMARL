@@ -396,7 +396,7 @@ class Experiment(CallbackNotifier):
         self.train_group_map = copy.deepcopy(self.group_map)
         self.max_steps = self.task.max_steps(test_env)
 
-        transforms_env = self.task.get_transforms(test_env)
+        transforms_env = self.task.get_env_transforms(test_env)
         transforms_training = transforms_env + [
             self.task.get_reward_sum_transform(test_env)
         ]
@@ -423,6 +423,7 @@ class Experiment(CallbackNotifier):
         self.replay_buffers = {
             group: self.algorithm.get_replay_buffer(
                 group=group,
+                transforms=self.task.get_replay_buffer_transforms(self.test_env),
             )
             for group in self.group_map.keys()
         }

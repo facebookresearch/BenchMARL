@@ -21,6 +21,8 @@ def _read_yaml_config(config_file: str) -> Dict[str, Any]:
     with open(config_file) as config:
         yaml_string = config.read()
     config_dict = yaml.safe_load(yaml_string)
+    if config_dict is None:
+        config_dict = {}
     if "defaults" in config_dict.keys():
         del config_dict["defaults"]
     return config_dict
