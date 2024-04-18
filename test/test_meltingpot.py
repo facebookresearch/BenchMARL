@@ -14,7 +14,6 @@ from benchmarl.algorithms import (
     IppoConfig,
     MasacConfig,
     QmixConfig,
-    VdnConfig,
 )
 from benchmarl.algorithms.common import AlgorithmConfig
 from benchmarl.environments import MeltingPotTask, Task
@@ -97,9 +96,7 @@ class TestMeltingPot:
             pytest.skip()
 
         algo_config = algo_config.get_from_yaml()
-        if isinstance(algo_config, VdnConfig):
-            # There are some bugs currently in TorchRL https://github.com/pytorch/rl/issues/1593
-            pytest.skip()
+
         ExperimentUtils.check_experiment_loading(
             algo_config=algo_config,
             model_config=cnn_sequence_config,
