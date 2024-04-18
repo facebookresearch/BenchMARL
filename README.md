@@ -113,6 +113,10 @@ pip install vmas
 pip install "pettingzoo[all]"
 ```
 
+##### MeltingPot
+```bash
+pip install dm-meltingpot
+```
 ##### SMACv2
 
 Follow the instructions on the environment [repository](https://github.com/oxwhirl/smacv2).
