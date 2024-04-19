@@ -93,4 +93,4 @@ save_folder: null
 restore_file: null
 # Interval for experiment saving in terms of collected frames (this should be a multiple of on/off_policy_collected_frames_per_batch).
 # Set it to 0 to disable checkpointing
-checkpoint_interval: 300_000
+checkpoint_interval: 0
