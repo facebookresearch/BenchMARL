@@ -86,7 +86,7 @@ evaluation_deterministic_actions: True
 # List of loggers to use, options are: wandb, csv, tensorboard, mflow
 loggers: []
 # Create a json folder as part of the output in the format of marl-eval
-create_json: False
+create_json: True
 
 # Absolute path to the folder where the experiment will log.
 # If null, this will default to the hydra output dir (if using hydra) or to the current folder when the script is run (if not).
