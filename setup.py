@@ -32,10 +32,11 @@ setup(
     url="https://github.com/facebookresearch/BenchMARL",
     author="Matteo Bettini",
     author_email="mb2389@cl.cam.ac.uk",
-    install_requires=["torchrl==0.3.1", "tqdm", "hydra-core"],
+    install_requires=["torchrl>=0.3.1", "tqdm", "hydra-core"],
     extras_require={
         "vmas": ["vmas>=1.3.4"],
         "pettingzoo": ["pettingzoo[all]>=1.24.3"],
+        "meltingpot": ["dm-meltingpot"],
         "gnn": ["torch_geometric"],
     },
     packages=find_packages(),
