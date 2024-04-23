@@ -52,6 +52,15 @@ PettingZoo
 
    pip install "pettingzoo[all]"
 
+MeltingPot
+^^^^^^^^^^
+:github:`null` `GitHub <https://github.com/google-deepmind/meltingpot>`__
+
+
+.. code-block:: console
+
+   pip install "dm-meltingpot"
+
 
 SMACv2
 ^^^^^^

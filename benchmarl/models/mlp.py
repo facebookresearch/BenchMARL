@@ -48,7 +48,9 @@ class Mlp(Model):
             action_spec=kwargs.pop("action_spec"),
         )
 
-        self.input_features = self.input_leaf_spec.shape[-1]
+        self.input_features = sum(
+            [spec.shape[-1] for spec in self.input_spec.values(True, True)]
+        )
         self.output_features = self.output_leaf_spec.shape[-1]
 
         if self.input_has_agent_dim:
@@ -77,11 +79,28 @@ class Mlp(Model):
     def _perform_checks(self):
         super()._perform_checks()
 
-        if self.input_has_agent_dim and self.input_leaf_spec.shape[-2] != self.n_agents:
-            raise ValueError(
-                "If the MLP input has the agent dimension,"
-                " the second to last spec dimension should be the number of agents"
-            )
+        input_shape = None
+        for input_key, input_spec in self.input_spec.items(True, True):
+            if (self.input_has_agent_dim and len(input_spec.shape) == 2) or (
+                not self.input_has_agent_dim and len(input_spec.shape) == 1
+            ):
+                if input_shape is None:
+                    input_shape = input_spec.shape[:-1]
+                else:
+                    if input_spec.shape[:-1] != input_shape:
+                        raise ValueError(
+                            f"MLP inputs should all have the same shape up to the last dimension, got {self.input_spec}"
+                        )
+            else:
+                raise ValueError(
+                    f"MLP input value {input_key} from {self.input_spec} has an invalid shape, maybe you need a CNN?"
+                )
+        if self.input_has_agent_dim:
+            if input_shape[-1] != self.n_agents:
+                raise ValueError(
+                    "If the MLP input has the agent dimension,"
+                    " the second to last spec dimension should be the number of agents, got {self.input_spec}"
+                )
         if (
             self.output_has_agent_dim
             and self.output_leaf_spec.shape[-2] != self.n_agents
@@ -93,7 +112,7 @@ class Mlp(Model):
 
     def _forward(self, tensordict: TensorDictBase) -> TensorDictBase:
         # Gather in_key
-        input = tensordict.get(self.in_key)
+        input = torch.cat([tensordict.get(in_key) for in_key in self.in_keys], dim=-1)
 
         # Has multi-agent input dimension
         if self.input_has_agent_dim:

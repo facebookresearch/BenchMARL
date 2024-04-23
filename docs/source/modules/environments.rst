@@ -44,7 +44,7 @@ PettingZoo
 
 
 SMACv2
-----------
+------
 
 .. autosummary::
    :nosignatures:
@@ -52,3 +52,13 @@ SMACv2
    :template: autosummary/class.rst
 
    Smacv2Task
+
+MeltingPot
+----------
+
+.. autosummary::
+   :nosignatures:
+   :toctree: ../generated
+   :template: autosummary/class.rst
+
+   MeltingPotTask

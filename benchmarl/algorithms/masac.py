@@ -7,7 +7,6 @@
 from dataclasses import dataclass, MISSING
 from typing import Dict, Iterable, Optional, Tuple, Type, Union
 
-import torch
 from tensordict import TensorDictBase
 from tensordict.nn import NormalParamExtractor, TensorDictModule, TensorDictSequential
 from torch.distributions import Categorical
@@ -166,16 +165,7 @@ class Masac(Algorithm):
             ]
 
         actor_input_spec = CompositeSpec(
-            {
-                group: CompositeSpec(
-                    {
-                        "observation": self.observation_spec[group]["observation"]
-                        .clone()
-                        .to(self.device)
-                    },
-                    shape=(n_agents,),
-                )
-            }
+            {group: self.observation_spec[group].clone().to(self.device)}
         )
 
         actor_output_spec = CompositeSpec(
@@ -323,16 +313,7 @@ class Masac(Algorithm):
 
         else:
             critic_input_spec = CompositeSpec(
-                {
-                    group: CompositeSpec(
-                        {
-                            "observation": self.observation_spec[group]["observation"]
-                            .clone()
-                            .to(self.device)
-                        },
-                        shape=(n_agents,),
-                    )
-                }
+                {group: self.observation_spec[group].clone().to(self.device)}
             )
             value_module = self.critic_model_config.get_model(
                 input_spec=critic_input_spec,
@@ -380,22 +361,19 @@ class Masac(Algorithm):
             )
 
         if self.state_spec is not None:
+
             modules.append(
                 TensorDictModule(
-                    lambda state, action: torch.cat(
-                        [state, action.reshape(*action.shape[:-2], -1)], dim=-1
-                    ),
-                    in_keys=["state", (group, "action")],
-                    out_keys=["state_action"],
+                    lambda action: action.reshape(*action.shape[:-2], -1),
+                    in_keys=[(group, "action")],
+                    out_keys=["global_action"],
                 )
             )
-            critic_input_spec = CompositeSpec(
+
+            critic_input_spec = self.state_spec.clone().update(
                 {
-                    "state_action": UnboundedContinuousTensorSpec(
-                        shape=(
-                            self.state_spec["state"].shape[-1]
-                            + self.action_spec[group, "action"].shape[-1] * n_agents,
-                        )
+                    "global_action": UnboundedContinuousTensorSpec(
+                        shape=(self.action_spec[group, "action"].shape[-1] * n_agents,)
                     )
                 }
             )
@@ -415,29 +393,11 @@ class Masac(Algorithm):
             )
 
         else:
-            modules.append(
-                TensorDictModule(
-                    lambda obs, action: torch.cat([obs, action], dim=-1),
-                    in_keys=[(group, "observation"), (group, "action")],
-                    out_keys=[(group, "obs_action")],
-                )
-            )
             critic_input_spec = CompositeSpec(
                 {
-                    group: CompositeSpec(
-                        {
-                            "obs_action": UnboundedContinuousTensorSpec(
-                                shape=(
-                                    n_agents,
-                                    self.observation_spec[group, "observation"].shape[
-                                        -1
-                                    ]
-                                    + self.action_spec[group, "action"].shape[-1],
-                                )
-                            )
-                        },
-                        shape=(n_agents,),
-                    )
+                    group: self.observation_spec[group]
+                    .clone()
+                    .update(self.action_spec[group])
                 }
             )
 

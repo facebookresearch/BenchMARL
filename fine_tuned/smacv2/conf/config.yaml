@@ -52,6 +52,9 @@ experiment:
   evaluation_interval: 300_000
   evaluation_episodes: 20
 
+  loggers: [wandb]
+  create_json: True
+
   save_folder: null
   restore_file: null
-  checkpoint_interval: 600_000
+  checkpoint_interval: 0

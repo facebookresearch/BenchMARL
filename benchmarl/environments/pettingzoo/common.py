@@ -122,7 +122,6 @@ class PettingZooTask(Task):
             del observation_spec["state"]
         if observation_spec.is_empty():
             return None
-
         return observation_spec
 
     def observation_spec(self, env: EnvBase) -> CompositeSpec:
@@ -132,7 +131,8 @@ class PettingZooTask(Task):
             for key in list(group_obs_spec.keys()):
                 if key != "observation":
                     del group_obs_spec[key]
-
+        if "state" in observation_spec.keys():
+            del observation_spec["state"]
         return observation_spec
 
     def info_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
@@ -142,10 +142,12 @@ class PettingZooTask(Task):
             for key in list(group_obs_spec.keys()):
                 if key != "info":
                     del group_obs_spec[key]
+        if "state" in observation_spec.keys():
+            del observation_spec["state"]
         return observation_spec
 
     def action_spec(self, env: EnvBase) -> CompositeSpec:
-        return env.input_spec["full_action_spec"]
+        return env.full_action_spec
 
     @staticmethod
     def env_name() -> str:

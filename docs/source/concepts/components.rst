@@ -73,7 +73,7 @@ Environments
 
 Tasks are scenarios from a specific environment which constitute the MARL
 challenge to solve.
-They differ based on many aspects, here is a table with the current environments in BenchMARL
+They differ based on many aspects, here is a table with the current environments in BenchMARL:
 
 
 .. _environment-table:
@@ -89,6 +89,9 @@ They differ based on many aspects, here is a table with the current environments
     +-------------------------------------------------+-------+---------------------------+--------------+-------------------------------+-----------------------+------------+
     | :class:`~benchmarl.environments.PettingZooTask` |  10   | Cooperative + Competitive |   Yes + No   |     Shared + Independent      | Continuous + Discrete |     No     |
     +-------------------------------------------------+-------+---------------------------+--------------+-------------------------------+-----------------------+------------+
+    | :class:`~benchmarl.environments.MeltingPotTask` |  49   | Cooperative + Competitive |     Yes      |          Independent          |       Discrete        |     No     |
+    +-------------------------------------------------+-------+---------------------------+--------------+-------------------------------+-----------------------+------------+
+
 
 
 Models
@@ -110,4 +113,6 @@ agent group. Here is a table of the models implemented in BenchMARL
     | :class:`~benchmarl.models.Mlp`  |      Yes      |              Yes              |              Yes              |
     +---------------------------------+---------------+-------------------------------+-------------------------------+
     | :class:`~benchmarl.models.Gnn`  |      Yes      |              No               |              No               |
+    +---------------------------------+---------------+-------------------------------+-------------------------------+
+    | :class:`~benchmarl.models.Cnn`  |      Yes      |              Yes              |              Yes              |
     +---------------------------------+---------------+-------------------------------+-------------------------------+

@@ -104,7 +104,9 @@ class Gnn(Model):
 
         super().__init__(**kwargs)
 
-        self.input_features = self.input_leaf_spec.shape[-1]
+        self.input_features = sum(
+            [spec.shape[-1] for spec in self.input_spec.values(True, True)]
+        )
         self.output_features = self.output_leaf_spec.shape[-1]
 
         if gnn_kwargs is None:
@@ -142,9 +144,26 @@ class Gnn(Model):
                 "if your algorithm has a centralized critic and the task has a global state."
             )
 
-        if self.input_leaf_spec.shape[-2] != self.n_agents:
+        input_shape = None
+        for input_key, input_spec in self.input_spec.items(True, True):
+            if (self.input_has_agent_dim and len(input_spec.shape) == 2) or (
+                not self.input_has_agent_dim and len(input_spec.shape) == 1
+            ):
+                if input_shape is None:
+                    input_shape = input_spec.shape[:-1]
+                else:
+                    if input_spec.shape[:-1] != input_shape:
+                        raise ValueError(
+                            f"GNN inputs should all have the same shape up to the last dimension, got {self.input_spec}"
+                        )
+            else:
+                raise ValueError(
+                    f"GNN input value {input_key} from {self.input_spec} has an invalid shape"
+                )
+
+        if input_shape[-1] != self.n_agents:
             raise ValueError(
-                "The second to last input spec dimension should be the number of agents"
+                f"The second to last input spec dimension should be the number of agents, got {self.input_spec}"
             )
         if (
             self.output_has_agent_dim
@@ -157,7 +176,7 @@ class Gnn(Model):
 
     def _forward(self, tensordict: TensorDictBase) -> TensorDictBase:
         # Gather in_key
-        input = tensordict.get(self.in_key)
+        input = torch.cat([tensordict.get(in_key) for in_key in self.in_keys], dim=-1)
 
         batch_size = input.shape[:-2]
 
@@ -170,7 +189,7 @@ class Gnn(Model):
                         *batch_size,
                         self.n_agents,
                         self.output_features,
-                    )[:, i]
+                    )[..., i, :]
                     for i, gnn in enumerate(self.gnns)
                 ],
                 dim=-2,

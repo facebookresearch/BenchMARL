@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10"]
+        python-version: ["3.11"]
 
     steps:
     - uses: actions/checkout@v3
@@ -38,8 +38,7 @@ jobs:
       run: |
         xvfb-run -s "-screen 0 1024x768x24" pytest test/test_vmas.py --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml --cov-report=html
 
-    - if: matrix.python-version == '3.10'
-      name: Upload coverage to Codecov
+    - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:
         fail_ci_if_error: false

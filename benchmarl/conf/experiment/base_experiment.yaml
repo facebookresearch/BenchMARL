@@ -82,7 +82,7 @@ evaluation_episodes: 10
 evaluation_deterministic_actions: True
 
 # List of loggers to use, options are: wandb, csv, tensorboard, mflow
-loggers: [wandb]
+loggers: []
 # Create a json folder as part of the output in the format of marl-eval
 create_json: True
 
@@ -93,4 +93,4 @@ save_folder: null
 restore_file: null
 # Interval for experiment saving in terms of collected frames (this should be a multiple of on/off_policy_collected_frames_per_batch).
 # Set it to 0 to disable checkpointing
-checkpoint_interval: 300_000
+checkpoint_interval: 0

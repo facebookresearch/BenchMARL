@@ -5,7 +5,7 @@
 [![tests](https://github.com/facebookresearch/BenchMARL/actions/workflows/unit_tests.yml/badge.svg)](test)
 [![codecov](https://codecov.io/github/facebookresearch/BenchMARL/coverage.svg?branch=main)](https://codecov.io/gh/facebookresearch/BenchMARL)
 [![Documentation Status](https://readthedocs.org/projects/benchmarl/badge/?version=latest)](https://benchmarl.readthedocs.io/en/latest/?badge=latest)
-[![Python](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10-blue.svg)](https://www.python.org/downloads/)
+[![Python](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11-blue.svg)](https://www.python.org/downloads/)
 <a href="https://pypi.org/project/benchmarl"><img src="https://img.shields.io/pypi/v/benchmarl" alt="pypi version"></a>
 [![Downloads](https://static.pepy.tech/personalized-badge/benchmarl?period=total&units=international_system&left_color=grey&right_color=blue&left_text=Downloads)](https://pepy.tech/project/benchmarl)
 [![Discord Shield](https://dcbadge.vercel.app/api/server/jEEWCn6T3p?style=flat)](https://discord.gg/jEEWCn6T3p)
@@ -113,6 +113,10 @@ pip install vmas
 pip install "pettingzoo[all]"
 ```
 
+##### MeltingPot
+```bash
+pip install dm-meltingpot
+```
 ##### SMACv2
 
 Follow the instructions on the environment [repository](https://github.com/oxwhirl/smacv2).
@@ -236,12 +240,14 @@ determine the training strategy. Here is a table with the currently implemented 
 challenge to solve.
 They differ based on many aspects, here is a table with the current environments in BenchMARL
 
-| Environment                                                        | Tasks                               | Cooperation               | Global state | Reward function               | Action space          |    Vectorized    |
-|--------------------------------------------------------------------|-------------------------------------|---------------------------|--------------|-------------------------------|-----------------------|:----------------:|
-| [VMAS](https://github.com/proroklab/VectorizedMultiAgentSimulator) | [18](benchmarl/conf/task/vmas)      | Cooperative + Competitive | No           | Shared + Independent + Global | Continuous + Discrete |       Yes        |    
-| [SMACv2](https://github.com/oxwhirl/smacv2)                        | [15](benchmarl/conf/task/smacv2)    | Cooperative               | Yes          | Global                        | Discrete              |        No        |
-| [MPE](https://github.com/openai/multiagent-particle-envs)          | [8](benchmarl/conf/task/pettingzoo) | Cooperative + Competitive | Yes          | Shared + Independent          | Continuous + Discrete |        No        |
-| [SISL](https://github.com/sisl/MADRL)                              | [2](benchmarl/conf/task/pettingzoo) | Cooperative               | No           | Shared                        | Continuous            |        No        |
+| Environment                                                        | Tasks                                | Cooperation               | Global state | Reward function               | Action space          |    Vectorized    |
+|--------------------------------------------------------------------|--------------------------------------|---------------------------|--------------|-------------------------------|-----------------------|:----------------:|
+| [VMAS](https://github.com/proroklab/VectorizedMultiAgentSimulator) | [18](benchmarl/conf/task/vmas)       | Cooperative + Competitive | No           | Shared + Independent + Global | Continuous + Discrete |       Yes        |    
+| [SMACv2](https://github.com/oxwhirl/smacv2)                        | [15](benchmarl/conf/task/smacv2)     | Cooperative               | Yes          | Global                        | Discrete              |        No        |
+| [MPE](https://github.com/openai/multiagent-particle-envs)          | [8](benchmarl/conf/task/pettingzoo)  | Cooperative + Competitive | Yes          | Shared + Independent          | Continuous + Discrete |        No        |
+| [SISL](https://github.com/sisl/MADRL)                              | [2](benchmarl/conf/task/pettingzoo)  | Cooperative               | No           | Shared                        | Continuous            |        No        |
+| [MeltingPot](https://github.com/google-deepmind/meltingpot)        | [49](benchmarl/conf/task/meltingpot) | Cooperative + Competitive | Yes          | Independent                   | Discrete              |        No        |
+
 
 > [!NOTE]  
 > BenchMARL uses the [TorchRL MARL API](https://github.com/pytorch/rl/issues/1463) for grouping agents.
@@ -258,12 +264,12 @@ agent group. Here is a table of the models implemented in BenchMARL
 |--------------------------------|:-------------:|:-----------------------------:|:-----------------------------:|
 | [MLP](benchmarl/models/mlp.py) |      Yes      |              Yes              |              Yes              |
 | [GNN](benchmarl/models/gnn.py) |      Yes      |              No               |              No               |
+| [CNN](benchmarl/models/cnn.py) |      Yes      |              Yes              |              Yes              |
 
 And the ones that are _work in progress_
 
 | Name               | Decentralized | Centralized with local inputs | Centralized with global input | 
 |--------------------|:-------------:|:-----------------------------:|:-----------------------------:|
-| CNN                |      Yes      |              Yes              |              Yes              | 
 | RNN (GRU and LSTM) |      Yes      |              Yes              |              Yes              | 
 
 
