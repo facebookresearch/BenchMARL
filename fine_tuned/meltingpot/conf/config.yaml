@@ -14,7 +14,8 @@ hydra:
 seed: 0
 
 task:
-  max_steps: 200
+  max_steps: 1400
+  disable_shooting: True
 
 model:
   mlp_num_cells: [ 256, 256 ]
@@ -46,7 +47,7 @@ experiment:
   gamma: 0.99
 
   adam_eps: 0.000001
-  lr: 0.00025
+  lr: 0.00005
   clip_grad_norm: True
   clip_grad_val: 5
 
@@ -61,7 +62,7 @@ experiment:
   evaluation: True
   render: True
   evaluation_interval: 1000
-  evaluation_episodes: 5
+  evaluation_episodes: 1
   evaluation_deterministic_actions: False
 
   loggers: [wandb]
