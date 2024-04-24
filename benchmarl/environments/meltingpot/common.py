@@ -81,6 +81,7 @@ class MeltingPotTask(Task):
         return lambda: MeltingpotEnv(
             substrate=self.name.lower(),
             categorical_actions=True,
+            device=device,
             **self.config,
         )
 
