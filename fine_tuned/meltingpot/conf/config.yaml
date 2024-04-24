@@ -14,7 +14,7 @@ hydra:
 seed: 0
 
 task:
-  max_steps: 1000
+  max_steps: 200
 
 model:
   mlp_num_cells: [ 256, 256 ]
@@ -61,7 +61,8 @@ experiment:
   evaluation: True
   render: True
   evaluation_interval: 1000
-  evaluation_episodes: 1
+  evaluation_episodes: 5
+  evaluation_deterministic_actions: False
 
   loggers: [wandb]
   create_json: False
