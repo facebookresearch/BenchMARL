@@ -224,10 +224,11 @@ class Logger:
 
         self.log(to_log, step=step)
         if video_frames is not None and rollouts[0].batch_size[0] > 1:
+            video_frames = np.stack(
+                video_frames[: rollouts[0].batch_size[0] - 1], axis=0
+            )
             vid = torch.tensor(
-                np.transpose(
-                    video_frames[: rollouts[0].batch_size[0] - 1], (0, 3, 1, 2)
-                ),
+                np.transpose(video_frames, (0, 3, 1, 2)),
                 dtype=torch.uint8,
             ).unsqueeze(0)
             for logger in self.loggers:
