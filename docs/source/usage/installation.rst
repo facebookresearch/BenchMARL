@@ -30,6 +30,21 @@ Or also clone it locally to access the configs and scripts
     git clone https://github.com/facebookresearch/BenchMARL.git
     pip install -e BenchMARL
 
+Install optional packages
+-------------------------
+
+By default, BenchMARL has only the core requirements.
+Here are some optional packages you may want to install.
+
+Logging
+^^^^^^^
+
+You may want to install the following rendering and logging tools
+
+.. code-block:: console
+
+   pip install wandb moviepy torchvision
+
 Install environments
 --------------------
 

@@ -170,6 +170,6 @@ def test_models_forward_shape(
         agent_group="agents",
         action_spec=None,
     )
-    input_td = input_spec.rand()
+    input_td = input_spec.expand(batch_size).rand()
     out_td = model(input_td)
     assert output_spec.expand(batch_size).is_in(out_td)
