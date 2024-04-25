@@ -52,6 +52,7 @@ setup(
         "pettingzoo": ["pettingzoo[all]>=1.24.3"],
         "meltingpot": ["dm-meltingpot"],
         "gnn": ["torch_geometric"],
+        "logging": ["moviepy", "wandb", "torchvision"],
     },
     packages=find_packages(),
     include_package_data=True,
