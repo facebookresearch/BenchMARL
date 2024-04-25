@@ -43,7 +43,7 @@ You may want to install the following rendering and logging tools
 
 .. code-block:: console
 
-   pip install wandb moviepy torchvision
+   pip install wandb moviepy torchvision av
 
 Install environments
 --------------------
