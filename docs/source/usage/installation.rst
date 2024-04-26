@@ -17,7 +17,7 @@ For more details, or for installing nightly versions, see the
 Install BenchMARL
 -----------------
 
-You can just install it from github
+You can just install it from PyPi
 
 .. code-block:: console
 
@@ -33,7 +33,7 @@ Or also clone it locally to access the configs and scripts
 Install environments
 --------------------
 
-All enviornment dependencies are optional in BenchMARL and can be installed separately.
+All environment dependencies are optional in BenchMARL and can be installed separately.
 
 VMAS
 ^^^^
