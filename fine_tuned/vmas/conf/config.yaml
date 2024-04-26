@@ -14,12 +14,12 @@ hydra:
 seed: 0
 
 task:
-  n_agents: 4
+  n_agents: 5
   pos_shaping_factor: 1
   final_reward: 0.005
   agent_collision_penalty: -1
-  v_range: 2
-  a_range: 2
+  v_range: 3
+  a_range: 3
 
 algorithm:
   entropy_coef: 0.001
