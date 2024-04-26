@@ -36,7 +36,7 @@ def get_policy():
 
 
 def run_policy(policy):
-    n_agents = 4
+    n_agents = 5
 
     # These are he input args
     pos = torch.zeros((1, n_agents, 2), dtype=torch.float)
