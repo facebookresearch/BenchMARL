@@ -5,9 +5,7 @@
 #
 
 
-import packaging
 import pytest
-import torchrl
 
 from benchmarl.algorithms import (
     algorithm_config_registry,
@@ -35,10 +33,6 @@ def _get_unique_envs(names):
 
 
 @pytest.mark.skipif(not _has_meltingpot, reason="Meltingpot not found")
-@pytest.mark.skipif(
-    packaging.version.parse(torchrl.__version__).base_version <= "0.3.1",
-    reason="TorchRL <= 0.3.1 does nto support meltingpot",
-)
 class TestMeltingPot:
     @pytest.mark.parametrize("algo_config", algorithm_config_registry.values())
     @pytest.mark.parametrize("task", [MeltingPotTask.COMMONS_HARVEST__OPEN])
