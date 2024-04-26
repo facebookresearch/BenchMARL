@@ -34,8 +34,8 @@ intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
     "sphinx": ("https://www.sphinx-doc.org/en/master/", None),
     "torch": ("https://pytorch.org/docs/master", None),
-    "torchrl": ("https://pytorch.org/rl", None),
-    "tensordict": ("https://pytorch.org/tensordict", None),
+    "torchrl": ("https://pytorch.org/rl/stable/", None),
+    "tensordict": ("https://pytorch.org/tensordict/stable", None),
 }
 intersphinx_disabled_domains = ["std"]
 
