@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 
 import torch
+import vmas
 
 from benchmarl.algorithms import IppoConfig
 from benchmarl.environments import VmasTask
@@ -35,18 +36,18 @@ def get_policy():
     return experiment.policy
 
 
-def run_policy(policy):
+def run_policy(policy, obs):
     n_agents = 5
 
     # These are he input args
-    pos = torch.zeros((1, n_agents, 2), dtype=torch.float)
-    vel = torch.zeros((1, n_agents, 2), dtype=torch.float)
-
-    goal = pos.clone()
-
-    rel_goal_pos = pos - goal
-
-    obs = torch.cat([pos, vel, rel_goal_pos], dim=-1)
+    # pos = torch.zeros((1, n_agents, 2), dtype=torch.float)
+    # vel = torch.zeros((1, n_agents, 2), dtype=torch.float)
+    #
+    # goal = pos.clone()
+    #
+    # rel_goal_pos = pos - goal
+    #
+    # obs = torch.cat([pos, vel, rel_goal_pos], dim=-1)
     td = TensorDict(
         {"agents": TensorDict({"observation": obs}, batch_size=[1, n_agents])},
         batch_size=[1],
@@ -58,5 +59,32 @@ def run_policy(policy):
 
 
 if __name__ == "__main__":
+    n_agents = 5
     policy = get_policy()
-    print(run_policy(policy))
+
+    env = vmas.make_env(
+        scenario="rm_navigation",
+        num_envs=1,
+        continuous_actions=True,
+        # Environment specific variables
+        n_agents=n_agents,
+        v_range=3,
+        a_range=3,
+    )
+    obs = torch.stack(env.reset(), dim=-2)
+    frame_list = []
+    for _ in range(100):
+
+        actions = run_policy(policy, obs).unbind(-2)
+
+        obs, rews, dones, info = env.step(actions)
+        obs = torch.stack(obs, dim=-2)
+        frame = env.render(
+            mode="rgb_array",
+            visualize_when_rgb=True,
+        )
+        frame_list.append(frame)
+
+    # vmas.simulator.utils.save_video(
+    #     "rm_navigation", frame_list, fps=1 / env.scenario.world.dt
+    # )
