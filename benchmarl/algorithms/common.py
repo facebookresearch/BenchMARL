@@ -67,12 +67,6 @@ class Algorithm(ABC):
                     "you can apply a transform to your environment to satisfy this criteria."
                 )
         for group in self.group_map.keys():
-            if len(self.observation_spec[group].keys(True, True)) != 1:
-                raise ValueError(
-                    "Observation spec must contain one entry per group"
-                    " to follow the library conventions, "
-                    "you can apply a transform to your environment to satisfy this criteria."
-                )
             if (
                 len(self.action_spec[group].keys(True, True)) != 1
                 or list(self.action_spec[group].keys())[0] != "action"

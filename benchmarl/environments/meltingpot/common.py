@@ -81,6 +81,7 @@ class MeltingPotTask(Task):
         return lambda: MeltingpotEnv(
             substrate=self.name.lower(),
             categorical_actions=True,
+            device=device,
             **self.config,
         )
 
@@ -141,11 +142,6 @@ class MeltingPotTask(Task):
         for group_key in list(observation_spec.keys()):
             if group_key not in self.group_map(env).keys():
                 del observation_spec[group_key]
-            else:
-                group_obs_spec = observation_spec[group_key]["observation"]
-                for key in list(group_obs_spec.keys()):
-                    if key != "RGB":
-                        del group_obs_spec[key]
         return observation_spec
 
     def info_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
