@@ -10,7 +10,13 @@ import torch
 from tensordict import TensorDictBase
 
 from torchrl.data import CompositeSpec
-from torchrl.envs import DoubleToFloat, DTypeCastTransform, EnvBase, Transform
+from torchrl.envs import (
+    DoubleToFloat,
+    DTypeCastTransform,
+    EnvBase,
+    FlattenObservation,
+    Transform,
+)
 
 from benchmarl.environments.common import Task
 from benchmarl.utils import DEVICE_TYPING
@@ -101,7 +107,17 @@ class MeltingPotTask(Task):
         return env.group_map
 
     def get_env_transforms(self, env: EnvBase) -> List[Transform]:
-        return [DoubleToFloat()]
+        return [
+            DoubleToFloat(),
+            FlattenObservation(
+                in_keys=[
+                    (group, "observation", "INTERACTION_INVENTORIES")
+                    for group in self.group_map(env).keys()
+                ],
+                first_dim=-2,
+                last_dim=-1,
+            ),
+        ]
 
     def get_replay_buffer_transforms(self, env: EnvBase) -> List[Transform]:
         return [
