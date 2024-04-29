@@ -387,14 +387,6 @@ class Experiment(CallbackNotifier):
                 device=self.config.sampling_device,
             )
         )
-        self.observation_spec = self.task.observation_spec(test_env)
-        self.info_spec = self.task.info_spec(test_env)
-        self.state_spec = self.task.state_spec(test_env)
-        self.action_mask_spec = self.task.action_mask_spec(test_env)
-        self.action_spec = self.task.action_spec(test_env)
-        self.group_map = self.task.group_map(test_env)
-        self.train_group_map = copy.deepcopy(self.group_map)
-        self.max_steps = self.task.max_steps(test_env)
 
         transforms_env = self.task.get_env_transforms(test_env)
         transforms_training = transforms_env + [
@@ -417,6 +409,15 @@ class Experiment(CallbackNotifier):
         self.test_env = TransformedEnv(test_env, transforms_env.clone()).to(
             self.config.sampling_device
         )
+
+        self.observation_spec = self.task.observation_spec(self.test_env)
+        self.info_spec = self.task.info_spec(self.test_env)
+        self.state_spec = self.task.state_spec(self.test_env)
+        self.action_mask_spec = self.task.action_mask_spec(self.test_env)
+        self.action_spec = self.task.action_spec(self.test_env)
+        self.group_map = self.task.group_map(self.test_env)
+        self.train_group_map = copy.deepcopy(self.group_map)
+        self.max_steps = self.task.max_steps(self.test_env)
 
     def _setup_algorithm(self):
         self.algorithm = self.algorithm_config.get_algorithm(experiment=self)
