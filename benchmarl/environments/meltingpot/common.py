@@ -107,17 +107,23 @@ class MeltingPotTask(Task):
         return env.group_map
 
     def get_env_transforms(self, env: EnvBase) -> List[Transform]:
-        return [
-            DoubleToFloat(),
-            FlattenObservation(
-                in_keys=[
-                    (group, "observation", "INTERACTION_INVENTORIES")
-                    for group in self.group_map(env).keys()
-                ],
-                first_dim=-2,
-                last_dim=-1,
-            ),
+        interaction_inventories_keys = [
+            (group, "observation", "INTERACTION_INVENTORIES")
+            for group in self.group_map(env).keys()
+            if (group, "observation", "INTERACTION_INVENTORIES")
+            in env.observation_spec.keys(True, True)
         ]
+        return [DoubleToFloat()] + (
+            [
+                FlattenObservation(
+                    in_keys=interaction_inventories_keys,
+                    first_dim=-2,
+                    last_dim=-1,
+                )
+            ]
+            if len(interaction_inventories_keys)
+            else []
+        )
 
     def get_replay_buffer_transforms(self, env: EnvBase) -> List[Transform]:
         return [
