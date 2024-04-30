@@ -156,10 +156,31 @@ class Task(Enum):
     def observation_spec(self, env: EnvBase) -> CompositeSpec:
         """
         A spec for the observation.
-        Must be a CompositeSpec with one (group_name, observation_key) entry per group.
+        Must be a CompositeSpec with as many entries as needed nested under the ``group_name`` key.
 
         Args:
             env (EnvBase): An environment created via self.get_env_fun
+
+        Examples:
+            >>> print(task.observation_spec(env))
+            CompositeSpec(
+                agents: CompositeSpec(
+                    observation: CompositeSpec(
+                        image: UnboundedDiscreteTensorSpec(
+                            shape=torch.Size([8, 88, 88, 3]),
+                            space=ContinuousBox(
+                                low=Tensor(shape=torch.Size([8, 88, 88, 3]), device=cpu, dtype=torch.int64, contiguous=True),
+                                high=Tensor(shape=torch.Size([8, 88, 88, 3]), device=cpu, dtype=torch.int64, contiguous=True)),
+                            device=cpu,
+                            dtype=torch.uint8,
+                            domain=discrete),
+                        array: UnboundedContinuousTensorSpec(
+                            shape=torch.Size([8, 3]),
+                            space=None,
+                            device=cpu,
+                            dtype=torch.float32,
+                            domain=continuous), device=cpu, shape=torch.Size([8])), device=cpu, shape=torch.Size([8])), device=cpu, shape=torch.Size([]))
+
 
         """
         raise NotImplementedError
