@@ -127,6 +127,9 @@ class MyCustomEnv2(ParallelEnv):
 
         infos = {agent: {} for agent in self.agents}
 
+        if env_truncation:
+            self.agents = []
+
         return observations, rewards, terminations, truncations, infos
 
 
