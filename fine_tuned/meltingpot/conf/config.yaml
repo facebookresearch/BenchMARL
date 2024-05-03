@@ -14,8 +14,7 @@ hydra:
 seed: 0
 
 task:
-  max_steps: 1400
-  disable_shooting: True
+  max_steps: 200
 
 model:
   mlp_num_cells: [ 256, 256 ]
@@ -47,7 +46,7 @@ experiment:
   gamma: 0.99
 
   adam_eps: 0.000001
-  lr: 0.00005
+  lr: 0.00025
   clip_grad_norm: True
   clip_grad_val: 5
 
