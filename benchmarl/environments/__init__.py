@@ -37,6 +37,7 @@ from .vmas.balance import TaskConfig as BalanceConfig
 from .vmas.dispersion import TaskConfig as DispersionConfig
 from .vmas.dropout import TaskConfig as DropoutConfig
 from .vmas.give_way import TaskConfig as GiveWayConfig
+from .vmas.multi_give_way import TaskConfig as MultiGiveWayConfig
 from .vmas.navigation import TaskConfig as NavigationConfig
 from .vmas.reverse_transport import TaskConfig as ReverseTransportConfig
 from .vmas.sampling import TaskConfig as SamplingConfig
@@ -66,6 +67,7 @@ _task_class_registry = {
     "vmas_wheel_config": WheelConfig,
     "vmas_dispersion_config": DispersionConfig,
     "vmas_give_way_config": GiveWayConfig,
+    "vmas_multi_give_way_config": MultiGiveWayConfig,
     "vmas_wind_flocking_config": WindFlockingConfig,
     "vmas_dropout_config": DropoutConfig,
     "vmas_simple_adversary_config": VmasSimpleAdversaryConfig,

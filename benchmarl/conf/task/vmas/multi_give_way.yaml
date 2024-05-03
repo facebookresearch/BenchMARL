@@ -1,0 +1,6 @@
+defaults:
+  - _self_
+  - vmas_multi_give_way_config
+
+max_steps: 200
+agent_collision_penalty: -0.1

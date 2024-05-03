@@ -24,6 +24,7 @@ class VmasTask(Task):
     REVERSE_TRANSPORT = None
     WHEEL = None
     DISPERSION = None
+    MULTI_GIVE_WAY = None
     DROPOUT = None
     GIVE_WAY = None
     WIND_FLOCKING = None
