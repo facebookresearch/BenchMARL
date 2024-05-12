@@ -1,4 +1,3 @@
-#  Copyright (c) Meta Platforms, Inc. and affiliates.
 #
 #  This source code is licensed under the license found in the
 #  LICENSE file in the root directory of this source tree.
@@ -123,12 +122,14 @@ class Maddpg(Algorithm):
                 in_keys=[(group, "param")],
                 out_keys=[(group, "action")],
                 distribution_class=TanhDelta if self.use_tanh_mapping else Delta,
-                distribution_kwargs={
-                    "min": self.action_spec[(group, "action")].space.low,
-                    "max": self.action_spec[(group, "action")].space.high,
-                }
-                if self.use_tanh_mapping
-                else {},
+                distribution_kwargs=(
+                    {
+                        "min": self.action_spec[(group, "action")].space.low,
+                        "max": self.action_spec[(group, "action")].space.high,
+                    }
+                    if self.use_tanh_mapping
+                    else {}
+                ),
                 return_log_prob=False,
                 safe=not self.use_tanh_mapping,
             )

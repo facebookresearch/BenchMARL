@@ -1,4 +1,3 @@
-#  Copyright (c) Meta Platforms, Inc. and affiliates.
 #
 #  This source code is licensed under the license found in the
 #  LICENSE file in the root directory of this source tree.
@@ -148,15 +147,17 @@ class Ippo(Algorithm):
                 spec=self.action_spec[group, "action"],
                 in_keys=[(group, "loc"), (group, "scale")],
                 out_keys=[(group, "action")],
-                distribution_class=IndependentNormal
-                if not self.use_tanh_normal
-                else TanhNormal,
-                distribution_kwargs={
-                    "min": self.action_spec[(group, "action")].space.low,
-                    "max": self.action_spec[(group, "action")].space.high,
-                }
-                if self.use_tanh_normal
-                else {},
+                distribution_class=(
+                    IndependentNormal if not self.use_tanh_normal else TanhNormal
+                ),
+                distribution_kwargs=(
+                    {
+                        "min": self.action_spec[(group, "action")].space.low,
+                        "max": self.action_spec[(group, "action")].space.high,
+                    }
+                    if self.use_tanh_normal
+                    else {}
+                ),
                 return_log_prob=True,
                 log_prob_key=(group, "log_prob"),
             )
