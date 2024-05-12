@@ -42,9 +42,9 @@ setup(
     name="benchmarl",
     version=get_version(),
     description="BenchMARL",
-    url="https://github.com/facebookresearch/BenchMARL",
-    author="Matteo Bettini",
-    author_email="mb2389@cl.cam.ac.uk",
+    url="",
+    author="",
+    author_email="",
     install_requires=["torchrl>=0.4.0", "tqdm", "hydra-core"],
     extras_require={
         "vmas": ["vmas>=1.3.4"],

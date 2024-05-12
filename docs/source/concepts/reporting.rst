@@ -15,29 +15,3 @@ Example plots
 -------------
 
 Here are some example plots you can generate, for more info, check out `marl-eval <https://github.com/instadeepai/marl-eval>`__.
-
-
-Aggregate scores
-^^^^^^^^^^^^^^^^
-
-.. figure:: https://raw.githubusercontent.com/matteobettini/benchmarl_sphinx_theme/master/benchmarl_sphinx_theme/static/img/benchmarks/vmas/aggregate_scores.png
-   :align: center
-
-   Aggregate scores
-
-Sample efficiency curves
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. figure:: https://raw.githubusercontent.com/matteobettini/benchmarl_sphinx_theme/master/benchmarl_sphinx_theme/static/img/benchmarks/vmas/environemnt_sample_efficiency_curves.png
-   :align: center
-
-   Sample efficiency curves
-
-
-Performance profile
-^^^^^^^^^^^^^^^^^^^
-
-.. figure:: https://raw.githubusercontent.com/matteobettini/benchmarl_sphinx_theme/master/benchmarl_sphinx_theme/static/img/benchmarks/vmas/performance_profile_figure.png
-   :align: center
-
-   Performance profile

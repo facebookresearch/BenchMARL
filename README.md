@@ -1,25 +1,17 @@
-![BenchMARL](https://raw.githubusercontent.com/matteobettini/benchmarl_sphinx_theme/master/benchmarl_sphinx_theme/static/img/benchmarl.png?raw=true)
 
 
 # BenchMARL
-[![tests](https://github.com/facebookresearch/BenchMARL/actions/workflows/unit_tests.yml/badge.svg)](test)
-[![codecov](https://codecov.io/github/facebookresearch/BenchMARL/coverage.svg?branch=main)](https://codecov.io/gh/facebookresearch/BenchMARL)
-[![Documentation Status](https://readthedocs.org/projects/benchmarl/badge/?version=latest)](https://benchmarl.readthedocs.io/en/latest/?badge=latest)
 [![Python](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11-blue.svg)](https://www.python.org/downloads/)
 <a href="https://pypi.org/project/benchmarl"><img src="https://img.shields.io/pypi/v/benchmarl" alt="pypi version"></a>
 [![Downloads](https://static.pepy.tech/personalized-badge/benchmarl?period=total&units=international_system&left_color=grey&right_color=blue&left_text=Downloads)](https://pepy.tech/project/benchmarl)
-[![Discord Shield](https://dcbadge.vercel.app/api/server/jEEWCn6T3p?style=flat)](https://discord.gg/jEEWCn6T3p)
-[![arXiv](https://img.shields.io/badge/arXiv-2312.01472-b31b1b.svg)](https://arxiv.org/abs/2312.01472)
 
 ```bash
 python benchmarl/run.py algorithm=mappo task=vmas/balance
 ```
 
 
-[![Examples](https://img.shields.io/badge/Examples-blue.svg)](examples) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/facebookresearch/BenchMARL/blob/main/notebooks/run.ipynb)
-[![Static Badge](https://img.shields.io/badge/Benchmarks-Wandb-yellow)](https://wandb.ai/matteobettini/benchmarl-public/reportlist)
+[![Examples](https://img.shields.io/badge/Examples-blue.svg)](examples) 
 
-Watch the [talk on multi-agent simulation and learning in BenchMARL and TorchRL](https://www.youtube.com/watch?v=1tOIMgJf_VQ).
 
 ### What is BenchMARL 🧐?
 
@@ -74,7 +66,7 @@ the domain and want to easily take a picture of the landscape.
 ## How to use
 
 ### Notebooks
-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/facebookresearch/BenchMARL/blob/main/notebooks/run.ipynb) &ensp; **Running BenchMARL experiments**.
+- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)]() &ensp; **Running BenchMARL experiments**.
 
 ### Install
 
@@ -284,17 +276,14 @@ specific environments to enable users to bootstrap their benchmarking.
 You can just run the scripts in this folder to automatically use the proposed hyperparameters.
 
 We will tune benchmarks for you and publish the config and benchmarking plots on
-[Wandb](https://wandb.ai/matteobettini/benchmarl-public/reportlist) publicly
+[Wandb]() publicly
 
 Currently available ones are:
 
-- **VMAS**:  [![Conf](https://img.shields.io/badge/Conf-purple.svg)](fine_tuned/vmas/conf/config.yaml)  [![Static Badge](https://img.shields.io/badge/Benchmarks-Wandb-yellow)](https://api.wandb.ai/links/matteobettini/r5744vas)
+- **VMAS**:  [![Conf](https://img.shields.io/badge/Conf-purple.svg)](fine_tuned/vmas/conf/config.yaml)  [![Static Badge](https://img.shields.io/badge/Benchmarks-Wandb-yellow)]()
 
 In the following, we report a table of the results:
 
-| **<p align="center">Environment</p>** | **<p align="center">Sample efficiency curves (all tasks)</p>**                                                                                                                        | **<p align="center">Performance profile</p>**                                                                                                                               | **<p align="center">Aggregate scores</p>**                                                                                                                        |
-|---------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| VMAS                                  | <img src="https://raw.githubusercontent.com/matteobettini/benchmarl_sphinx_theme/master/benchmarl_sphinx_theme/static/img/benchmarks/vmas/environemnt_sample_efficiency_curves.png"/> | <img src="https://raw.githubusercontent.com/matteobettini/benchmarl_sphinx_theme/master/benchmarl_sphinx_theme/static/img/benchmarks/vmas/performance_profile_figure.png"/> | <img src="https://raw.githubusercontent.com/matteobettini/benchmarl_sphinx_theme/master/benchmarl_sphinx_theme/static/img/benchmarks/vmas/aggregate_scores.png"/> |
 
 ## Reporting and plotting
 
@@ -306,9 +295,7 @@ your benchmarks.  No more struggling with matplotlib and latex!
 
 [![Example](https://img.shields.io/badge/Example-blue.svg)](examples/plotting)
 
-![aggregate_scores](https://raw.githubusercontent.com/matteobettini/benchmarl_sphinx_theme/master/benchmarl_sphinx_theme/static/img/benchmarks/vmas/aggregate_scores.png)
-![sample_efficiancy](https://raw.githubusercontent.com/matteobettini/benchmarl_sphinx_theme/master/benchmarl_sphinx_theme/static/img/benchmarks/vmas/environemnt_sample_efficiency_curves.png)
-![performace_profile](https://raw.githubusercontent.com/matteobettini/benchmarl_sphinx_theme/master/benchmarl_sphinx_theme/static/img/benchmarks/vmas/performance_profile_figure.png)
+
 
 
 ## Extending
@@ -480,19 +467,6 @@ as `on_batch_collected`, `on_train_end`, and `on_evaluation_end`.
 
 [![Example](https://img.shields.io/badge/Example-blue.svg)](examples/callback/custom_callback.py)
 
-
-## Citing BenchMARL
-
-If you use BenchMARL in your research please use the following BibTeX entry:
-
-```BibTeX
-@article{bettini2023benchmarl,
-      title={BenchMARL: Benchmarking Multi-Agent Reinforcement Learning},
-      author={Matteo Bettini and Amanda Prorok and Vincent Moens},
-      year={2023},
-      journal={arXiv preprint arXiv:2312.01472},
-}
-```
 
 ## License
 BenchMARL is licensed under the MIT License. See [LICENSE](LICENSE) for details.
