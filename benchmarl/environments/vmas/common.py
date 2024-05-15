@@ -36,6 +36,7 @@ class VmasTask(Task):
     SIMPLE_SPREAD = None
     SIMPLE_TAG = None
     SIMPLE_WORLD_COMM = None
+    PAC_MEN = None
 
     def get_env_fun(
         self,

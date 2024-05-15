@@ -39,6 +39,7 @@ from .vmas.dropout import TaskConfig as DropoutConfig
 from .vmas.give_way import TaskConfig as GiveWayConfig
 from .vmas.multi_give_way import TaskConfig as MultiGiveWayConfig
 from .vmas.navigation import TaskConfig as NavigationConfig
+from .vmas.pac_men import TaskConfig as PacMenConfig
 from .vmas.reverse_transport import TaskConfig as ReverseTransportConfig
 from .vmas.sampling import TaskConfig as SamplingConfig
 from .vmas.simple_adverasary import TaskConfig as VmasSimpleAdversaryConfig
@@ -78,6 +79,7 @@ _task_class_registry = {
     "vmas_simple_spread_config": VmasSimpleSpreadConfig,
     "vmas_simple_tag_config": VmasSimpleTagConfig,
     "vmas_simple_world_comm_config": VmasSimpleWorldComm,
+    "vmas_pac_men_config": PacMenConfig,
     "pettingzoo_multiwalker_config": MultiwalkerConfig,
     "pettingzoo_waterworld_config": WaterworldConfig,
     "pettingzoo_simple_adversary_config": SimpleAdversaryConfig,

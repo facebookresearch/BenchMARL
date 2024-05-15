@@ -1,0 +1,6 @@
+defaults:
+  - _self_
+  - vmas_pac_men_config
+
+max_steps: 300
+shared_reward: True
