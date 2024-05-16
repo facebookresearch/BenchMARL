@@ -10,4 +10,7 @@ from dataclasses import dataclass, MISSING
 @dataclass
 class TaskConfig:
     max_steps: int = MISSING
-    shared_reward: bool = MISSING
+    shared_rew: bool = MISSING
+    corridors_length: float = MISSING
+    observe_position: bool = MISSING
+    spawn_same_pos: bool = MISSING

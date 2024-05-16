@@ -3,4 +3,7 @@ defaults:
   - vmas_pac_men_config
 
 max_steps: 300
-shared_reward: True
+shared_rew: True
+corridors_length: 1.5
+observe_position: False
+spawn_same_pos: False
