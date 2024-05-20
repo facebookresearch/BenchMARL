@@ -5,6 +5,7 @@
 #
 
 from dataclasses import dataclass, MISSING
+from typing import Tuple
 
 
 @dataclass
@@ -14,3 +15,4 @@ class TaskConfig:
     corridors_length: float = MISSING
     observe_position: bool = MISSING
     spawn_same_pos: bool = MISSING
+    lrud_ratio: Tuple[float] = MISSING

@@ -7,3 +7,4 @@ shared_rew: True
 corridors_length: 1.5
 observe_position: False
 spawn_same_pos: False
+lrud_ratio: [2,2,3,1]
