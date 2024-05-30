@@ -6,7 +6,7 @@ defaults:
 
 share_param_critic: True
 clip_epsilon: 0.2
-entropy_coef: 0.0
+entropy_coef: 0.001
 critic_coef: 1.0
 loss_critic_type: "l2"
 lmbda: 0.9

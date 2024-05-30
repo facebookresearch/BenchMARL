@@ -36,6 +36,7 @@ from .pettingzoo.waterworld import TaskConfig as WaterworldConfig
 from .vmas.balance import TaskConfig as BalanceConfig
 from .vmas.dispersion import TaskConfig as DispersionConfig
 from .vmas.dropout import TaskConfig as DropoutConfig
+from .vmas.football import TaskConfig as FootballConfig
 from .vmas.give_way import TaskConfig as GiveWayConfig
 from .vmas.multi_give_way import TaskConfig as MultiGiveWayConfig
 from .vmas.navigation import TaskConfig as NavigationConfig
@@ -53,7 +54,6 @@ from .vmas.simple_world_comm import TaskConfig as VmasSimpleWorldComm
 from .vmas.transport import TaskConfig as TransportConfig
 from .vmas.wheel import TaskConfig as WheelConfig
 from .vmas.wind_flocking import TaskConfig as WindFlockingConfig
-
 
 # This is a registry mapping task config schemas names to their python dataclass
 # It is used by hydra to validate loaded configs.
@@ -80,6 +80,7 @@ _task_class_registry = {
     "vmas_simple_tag_config": VmasSimpleTagConfig,
     "vmas_simple_world_comm_config": VmasSimpleWorldComm,
     "vmas_pac_men_config": PacMenConfig,
+    "vmas_football_config": FootballConfig,
     "pettingzoo_multiwalker_config": MultiwalkerConfig,
     "pettingzoo_waterworld_config": WaterworldConfig,
     "pettingzoo_simple_adversary_config": SimpleAdversaryConfig,

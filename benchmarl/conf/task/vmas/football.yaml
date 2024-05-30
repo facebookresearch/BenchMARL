@@ -1,0 +1,11 @@
+defaults:
+  - _self_
+  - vmas_football_config
+
+max_steps: 500
+n_blue_agents: 1
+n_red_agents: 1
+disable_ai_red: True
+ball_mass: 0.5
+ai_start_vel: 0.6
+observe_teammates: True

@@ -38,6 +38,7 @@ class VmasTask(Task):
     SIMPLE_WORLD_COMM = None
     PAC_MEN = None
     EMPTY = None
+    FOOTBALL = None
 
     def get_env_fun(
         self,
