@@ -20,13 +20,14 @@ task:
   n_red_agents: 2
   disable_ai_red: True
   ball_mass: 0.25
-  ai_start_vel: 1.5
+  ai_start_vel: 2
   observe_teammates: True
 
 experiment:
 
   sampling_device: "cuda"
   train_device: "cuda"
+  buffer_device: "cpu"
 
   share_policy_params: True
   prefer_continuous_actions: True
@@ -56,11 +57,11 @@ experiment:
   off_policy_n_envs_per_worker: 12
   off_policy_n_optimizer_steps: 1000
   off_policy_train_batch_size: 128
-  off_policy_memory_size: 5_000_000
+  off_policy_memory_size: 10_000_000
 
   evaluation: True
   render: True
-  evaluation_interval: 480_000
+  evaluation_interval: 960_000
   evaluation_episodes: 200
 
   loggers: [wandb]

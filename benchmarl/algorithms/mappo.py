@@ -65,6 +65,7 @@ class Mappo(Algorithm):
         self.lmbda = lmbda
         self.scale_mapping = scale_mapping
         self.use_tanh_normal = use_tanh_normal
+        self.group_critics = {}
 
     #############################
     # Overridden abstract methods
@@ -73,10 +74,11 @@ class Mappo(Algorithm):
     def _get_loss(
         self, group: str, policy_for_loss: TensorDictModule, continuous: bool
     ) -> Tuple[LossModule, bool]:
+        self.group_critics[group] = self.get_critic(group)
         # Loss
         loss_module = ClipPPOLoss(
             actor=policy_for_loss,
-            critic=self.get_critic(group),
+            critic=self.group_critics[group],
             clip_epsilon=self.clip_epsilon,
             entropy_coef=self.entropy_coef,
             critic_coef=self.critic_coef,
@@ -152,15 +154,17 @@ class Mappo(Algorithm):
                 spec=self.action_spec[group, "action"],
                 in_keys=[(group, "loc"), (group, "scale")],
                 out_keys=[(group, "action")],
-                distribution_class=IndependentNormal
-                if not self.use_tanh_normal
-                else TanhNormal,
-                distribution_kwargs={
-                    "min": self.action_spec[(group, "action")].space.low,
-                    "max": self.action_spec[(group, "action")].space.high,
-                }
-                if self.use_tanh_normal
-                else {},
+                distribution_class=(
+                    IndependentNormal if not self.use_tanh_normal else TanhNormal
+                ),
+                distribution_kwargs=(
+                    {
+                        "min": self.action_spec[(group, "action")].space.low,
+                        "max": self.action_spec[(group, "action")].space.high,
+                    }
+                    if self.use_tanh_normal
+                    else {}
+                ),
                 return_log_prob=True,
                 log_prob_key=(group, "log_prob"),
             )
