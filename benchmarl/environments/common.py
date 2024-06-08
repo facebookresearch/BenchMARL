@@ -9,6 +9,7 @@ from __future__ import annotations
 import importlib
 import os
 import os.path as osp
+import warnings
 from enum import Enum
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
@@ -23,22 +24,25 @@ from benchmarl.utils import _read_yaml_config, DEVICE_TYPING
 def _load_config(name: str, config: Dict[str, Any]):
     if not name.endswith(".py"):
         name += ".py"
-
+    environemnt_name, task_name = name.split("/")
     pathname = None
-    for dirpath, _, filenames in os.walk(osp.dirname(__file__)):
-        if pathname is None:
-            for filename in filenames:
-                if filename == name:
-                    pathname = os.path.join(dirpath, filename)
-                    break
+    for dirpath, _, filenames in os.walk(
+        Path(osp.dirname(__file__)) / environemnt_name
+    ):
+        if task_name in filenames:
+            pathname = os.path.join(dirpath, task_name)
+            break
 
-    if pathname is None:
-        raise ValueError(f"Task {name} not found.")
-
-    spec = importlib.util.spec_from_file_location("", pathname)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module.TaskConfig(**config).__dict__
+    if pathname is not None:
+        spec = importlib.util.spec_from_file_location("", pathname)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module.TaskConfig(**config).__dict__
+    else:
+        warnings.warn(
+            "TaskConfig python dataclass not foud, task is being loaded without type checks"
+        )
+        return config
 
 
 class Task(Enum):
@@ -302,7 +306,7 @@ class Task(Enum):
     @staticmethod
     def _load_from_yaml(name: str) -> Dict[str, Any]:
         yaml_path = Path(__file__).parent.parent / "conf" / "task" / f"{name}.yaml"
-        return _read_yaml_config(str(yaml_path.resolve()))
+        return _load_config(name, _read_yaml_config(str(yaml_path.resolve())))
 
     def get_from_yaml(self, path: Optional[str] = None) -> Task:
         """

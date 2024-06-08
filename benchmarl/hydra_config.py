@@ -7,6 +7,7 @@ import importlib
 
 from benchmarl.algorithms.common import AlgorithmConfig
 from benchmarl.environments import Task, task_config_registry
+from benchmarl.environments.common import _load_config
 from benchmarl.experiment import Experiment, ExperimentConfig
 from benchmarl.models import model_config_registry
 from benchmarl.models.common import ModelConfig, parse_model_config, SequenceModelConfig
@@ -56,7 +57,14 @@ def load_task_config_from_hydra(cfg: DictConfig, task_name: str) -> Task:
 
     """
     return task_config_registry[task_name].update_config(
-        OmegaConf.to_container(cfg, resolve=True, throw_on_missing=True)
+        _load_config(
+            task_name,
+            OmegaConf.to_container(
+                cfg,
+                resolve=True,
+                throw_on_missing=True,
+            ),
+        )
     )
 
 
