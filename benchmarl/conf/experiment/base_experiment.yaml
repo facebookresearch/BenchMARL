@@ -6,6 +6,8 @@ defaults:
 sampling_device: "cpu"
 # The device for training (e.g. cuda)
 train_device: "cpu"
+# The device for the replay buffer of off-policy algorithms (e.g. cuda)
+buffer_device: "cpu"
 
 # Whether to share the parameters of the policy within agent groups
 share_policy_params: True
