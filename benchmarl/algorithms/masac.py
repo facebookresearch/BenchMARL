@@ -79,6 +79,7 @@ class Masac(Algorithm):
         self.fixed_alpha = fixed_alpha
         self.scale_mapping = scale_mapping
         self.use_tanh_normal = use_tanh_normal
+        self.group_critics = {}
 
     #############################
     # Overridden abstract methods
@@ -89,9 +90,10 @@ class Masac(Algorithm):
     ) -> Tuple[LossModule, bool]:
         if continuous:
             # Loss
+            self.group_critics[group] = self.get_continuous_value_module(group)
             loss_module = SACLoss(
                 actor_network=policy_for_loss,
-                qvalue_network=self.get_continuous_value_module(group),
+                qvalue_network=self.group_critics[group],
                 num_qvalue_nets=self.num_qvalue_nets,
                 loss_function=self.loss_function,
                 alpha_init=self.alpha_init,
@@ -112,9 +114,10 @@ class Masac(Algorithm):
             )
 
         else:
+            self.group_critics[group] = self.get_discrete_value_module(group)
             loss_module = DiscreteSACLoss(
                 actor_network=policy_for_loss,
-                qvalue_network=self.get_discrete_value_module(group),
+                qvalue_network=self.group_critics[group],
                 num_qvalue_nets=self.num_qvalue_nets,
                 loss_function=self.loss_function,
                 alpha_init=self.alpha_init,
@@ -199,15 +202,17 @@ class Masac(Algorithm):
                 spec=self.action_spec[group, "action"],
                 in_keys=[(group, "loc"), (group, "scale")],
                 out_keys=[(group, "action")],
-                distribution_class=IndependentNormal
-                if not self.use_tanh_normal
-                else TanhNormal,
-                distribution_kwargs={
-                    "min": self.action_spec[(group, "action")].space.low,
-                    "max": self.action_spec[(group, "action")].space.high,
-                }
-                if self.use_tanh_normal
-                else {},
+                distribution_class=(
+                    IndependentNormal if not self.use_tanh_normal else TanhNormal
+                ),
+                distribution_kwargs=(
+                    {
+                        "min": self.action_spec[(group, "action")].space.low,
+                        "max": self.action_spec[(group, "action")].space.high,
+                    }
+                    if self.use_tanh_normal
+                    else {}
+                ),
                 return_log_prob=True,
                 log_prob_key=(group, "log_prob"),
             )

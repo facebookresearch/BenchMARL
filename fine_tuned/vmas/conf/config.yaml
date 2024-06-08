@@ -20,7 +20,7 @@ task:
   n_red_agents: 2
   disable_ai_red: True
   ball_mass: 0.25
-  ai_start_vel: 2
+  ai_strength: 0.5
   observe_teammates: True
 
 experiment:

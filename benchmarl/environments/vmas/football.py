@@ -14,5 +14,5 @@ class TaskConfig:
     n_red_agents: int = MISSING
     ball_mass: float = MISSING
     disable_ai_red: bool = MISSING
-    ai_start_vel: float = MISSING
+    ai_strength: float = MISSING
     observe_teammates: bool = MISSING
