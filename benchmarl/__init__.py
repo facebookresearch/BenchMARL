@@ -35,6 +35,6 @@ if _has_hydra:
             cs.store(name=f"{algo_name}_config", group="algorithm", node=algo_schema)
         # Load task schemas
         for task_schema_name, task_schema in _task_class_registry.items():
-            cs.store(name=task_schema_name, group="task", node=task_schema)
+            cs.store(name=f"{task_schema_name}_config", group="task", node=task_schema)
 
     _load_hydra_schemas()

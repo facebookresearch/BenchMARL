@@ -27,8 +27,23 @@ def _type_check_task_config(
     config: Dict[str, Any],
     warn_on_missing_dataclass: bool = True,
 ):
+
+    task_config_class = _get_task_config_class(environemnt_name, task_name)
+
+    if task_config_class is not None:
+        return task_config_class(**config).__dict__
+    else:
+        if warn_on_missing_dataclass:
+            warnings.warn(
+                "TaskConfig python dataclass not foud, task is being loaded without type checks"
+            )
+        return config
+
+
+def _get_task_config_class(environemnt_name: str, task_name: str):
     if not task_name.endswith(".py"):
         task_name += ".py"
+
     pathname = None
     for dirpath, _, filenames in os.walk(
         Path(osp.dirname(__file__)) / environemnt_name
@@ -41,13 +56,9 @@ def _type_check_task_config(
         spec = importlib.util.spec_from_file_location("", pathname)
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
-        return module.TaskConfig(**config).__dict__
+        return module.TaskConfig
     else:
-        if warn_on_missing_dataclass:
-            warnings.warn(
-                "TaskConfig python dataclass not foud, task is being loaded without type checks"
-            )
-        return config
+        return None
 
 
 class Task(Enum):

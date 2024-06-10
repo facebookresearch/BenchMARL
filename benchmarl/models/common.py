@@ -295,8 +295,7 @@ class ModelConfig(ABC):
             / "layers"
             / f"{name.lower()}.yaml"
         )
-        cfg = _read_yaml_config(str(yaml_path.resolve()))
-        return parse_model_config(cfg)
+        return _read_yaml_config(str(yaml_path.resolve()))
 
     @classmethod
     def get_from_yaml(cls, path: Optional[str] = None):
@@ -311,13 +310,11 @@ class ModelConfig(ABC):
         Returns: the loaded AlgorithmConfig
         """
         if path is None:
-            return cls(
-                **ModelConfig._load_from_yaml(
-                    name=cls.associated_class().__name__,
-                )
-            )
+            config = ModelConfig._load_from_yaml(name=cls.associated_class().__name__)
         else:
-            return cls(**parse_model_config(_read_yaml_config(path)))
+            config = _read_yaml_config(path)
+        config = parse_model_config(config)
+        return cls(**config)
 
 
 @dataclass
