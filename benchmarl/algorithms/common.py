@@ -41,6 +41,7 @@ class Algorithm(ABC):
         self.experiment = experiment
 
         self.device: DEVICE_TYPING = experiment.config.train_device
+        self.buffer_device: DEVICE_TYPING = experiment.config.buffer_device
         self.experiment_config = experiment.config
         self.model_config = experiment.model_config
         self.critic_model_config = experiment.critic_model_config
@@ -67,12 +68,6 @@ class Algorithm(ABC):
                     "you can apply a transform to your environment to satisfy this criteria."
                 )
         for group in self.group_map.keys():
-            if len(self.observation_spec[group].keys(True, True)) != 1:
-                raise ValueError(
-                    "Observation spec must contain one entry per group"
-                    " to follow the library conventions, "
-                    "you can apply a transform to your environment to satisfy this criteria."
-                )
             if (
                 len(self.action_spec[group].keys(True, True)) != 1
                 or list(self.action_spec[group].keys())[0] != "action"
@@ -147,11 +142,12 @@ class Algorithm(ABC):
         """
         memory_size = self.experiment_config.replay_buffer_memory_size(self.on_policy)
         sampling_size = self.experiment_config.train_minibatch_size(self.on_policy)
-        storing_device = self.device
         sampler = SamplerWithoutReplacement() if self.on_policy else RandomSampler()
-
         return TensorDictReplayBuffer(
-            storage=LazyTensorStorage(memory_size, device=storing_device),
+            storage=LazyTensorStorage(
+                memory_size,
+                device=self.device if self.on_policy else self.buffer_device,
+            ),
             sampler=sampler,
             batch_size=sampling_size,
             priority_key=(group, "td_error"),

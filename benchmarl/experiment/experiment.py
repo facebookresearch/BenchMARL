@@ -50,6 +50,7 @@ class ExperimentConfig:
 
     sampling_device: str = MISSING
     train_device: str = MISSING
+    buffer_device: str = MISSING
 
     share_policy_params: bool = MISSING
     prefer_continuous_actions: bool = MISSING
@@ -388,14 +389,6 @@ class Experiment(CallbackNotifier):
                 device=self.config.sampling_device,
             )
         )
-        self.observation_spec = self.task.observation_spec(test_env)
-        self.info_spec = self.task.info_spec(test_env)
-        self.state_spec = self.task.state_spec(test_env)
-        self.action_mask_spec = self.task.action_mask_spec(test_env)
-        self.action_spec = self.task.action_spec(test_env)
-        self.group_map = self.task.group_map(test_env)
-        self.train_group_map = copy.deepcopy(self.group_map)
-        self.max_steps = self.task.max_steps(test_env)
 
         transforms_env = self.task.get_env_transforms(test_env)
         transforms_training = transforms_env + [
@@ -418,6 +411,15 @@ class Experiment(CallbackNotifier):
         self.test_env = TransformedEnv(test_env, transforms_env.clone()).to(
             self.config.sampling_device
         )
+
+        self.observation_spec = self.task.observation_spec(self.test_env)
+        self.info_spec = self.task.info_spec(self.test_env)
+        self.state_spec = self.task.state_spec(self.test_env)
+        self.action_mask_spec = self.task.action_mask_spec(self.test_env)
+        self.action_spec = self.task.action_spec(self.test_env)
+        self.group_map = self.task.group_map(self.test_env)
+        self.train_group_map = copy.deepcopy(self.group_map)
+        self.max_steps = self.task.max_steps(self.test_env)
 
     def _setup_algorithm(self):
         self.algorithm = self.algorithm_config.get_algorithm(experiment=self)
@@ -463,9 +465,9 @@ class Experiment(CallbackNotifier):
                 storing_device=self.config.train_device,
                 frames_per_batch=self.config.collected_frames_per_batch(self.on_policy),
                 total_frames=self.config.get_max_n_frames(self.on_policy),
-                init_random_frames=self.config.off_policy_init_random_frames
-                if not self.on_policy
-                else 0,
+                init_random_frames=(
+                    self.config.off_policy_init_random_frames if not self.on_policy else 0
+                ),
             )
         else:
             if self.config.off_policy_init_random_frames and not self.on_policy:
@@ -682,7 +684,7 @@ class Experiment(CallbackNotifier):
         return excluded_keys
 
     def _optimizer_loop(self, group: str) -> TensorDictBase:
-        subdata = self.replay_buffers[group].sample()
+        subdata = self.replay_buffers[group].sample().to(self.config.train_device)
         loss_vals = self.losses[group](subdata)
         training_td = loss_vals.detach()
         loss_vals = self.algorithm.process_loss_vals(group, loss_vals)

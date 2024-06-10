@@ -10,7 +10,13 @@ import torch
 from tensordict import TensorDictBase
 
 from torchrl.data import CompositeSpec
-from torchrl.envs import DoubleToFloat, DTypeCastTransform, EnvBase, Transform
+from torchrl.envs import (
+    DoubleToFloat,
+    DTypeCastTransform,
+    EnvBase,
+    FlattenObservation,
+    Transform,
+)
 
 from benchmarl.environments.common import Task
 from benchmarl.utils import DEVICE_TYPING
@@ -81,6 +87,7 @@ class MeltingPotTask(Task):
         return lambda: MeltingpotEnv(
             substrate=self.name.lower(),
             categorical_actions=True,
+            device=device,
             **self.config,
         )
 
@@ -100,7 +107,23 @@ class MeltingPotTask(Task):
         return env.group_map
 
     def get_env_transforms(self, env: EnvBase) -> List[Transform]:
-        return [DoubleToFloat()]
+        interaction_inventories_keys = [
+            (group, "observation", "INTERACTION_INVENTORIES")
+            for group in self.group_map(env).keys()
+            if (group, "observation", "INTERACTION_INVENTORIES")
+            in env.observation_spec.keys(True, True)
+        ]
+        return [DoubleToFloat()] + (
+            [
+                FlattenObservation(
+                    in_keys=interaction_inventories_keys,
+                    first_dim=-2,
+                    last_dim=-1,
+                )
+            ]
+            if len(interaction_inventories_keys)
+            else []
+        )
 
     def get_replay_buffer_transforms(self, env: EnvBase) -> List[Transform]:
         return [
@@ -141,11 +164,6 @@ class MeltingPotTask(Task):
         for group_key in list(observation_spec.keys()):
             if group_key not in self.group_map(env).keys():
                 del observation_spec[group_key]
-            else:
-                group_obs_spec = observation_spec[group_key]["observation"]
-                for key in list(group_obs_spec.keys()):
-                    if key != "RGB":
-                        del group_obs_spec[key]
         return observation_spec
 
     def info_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
