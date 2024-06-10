@@ -57,10 +57,13 @@ def load_task_config_from_hydra(cfg: DictConfig, task_name: str) -> Task:
         :class:`~benchmarl.environments.Task`
 
     """
+    environment_name, inner_task_name = task_name.split("/")
     cfg_dict_checked = OmegaConf.to_object(cfg)
     if is_dataclass(cfg_dict_checked):
         cfg_dict_checked = cfg_dict_checked.__dict__
-    cfg_dict_checked = _type_check_task_config(task_name, cfg_dict_checked)
+    cfg_dict_checked = _type_check_task_config(
+        environment_name, inner_task_name, cfg_dict_checked
+    )
     return task_config_registry[task_name].update_config(cfg_dict_checked)
 
 

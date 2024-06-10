@@ -14,9 +14,12 @@ from .vmas.common import VmasTask
 # It is used by automatically load task enums from yaml files
 task_config_registry = {}
 for env in [VmasTask, Smacv2Task, PettingZooTask, MeltingPotTask]:
-    env_config_registry = {
-        f"{env.env_name()}/{task.name.lower()}": task for task in env
-    }
+    env_config_registry = {}
+    environemnt_name = env.env_name()
+    for task in env:
+        task_name = task.name.lower()
+        full_task_name = f"{environemnt_name}/{task_name}"
+        env_config_registry[full_task_name] = task
     task_config_registry.update(env_config_registry)
 
 

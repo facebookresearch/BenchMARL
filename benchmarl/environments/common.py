@@ -22,11 +22,13 @@ from benchmarl.utils import _read_yaml_config, DEVICE_TYPING
 
 
 def _type_check_task_config(
-    name: str, config: Dict[str, Any], warn_on_missing_dataclass: bool = True
+    environemnt_name: str,
+    task_name: str,
+    config: Dict[str, Any],
+    warn_on_missing_dataclass: bool = True,
 ):
-    if not name.endswith(".py"):
-        name += ".py"
-    environemnt_name, task_name = name.split("/")
+    if not task_name.endswith(".py"):
+        task_name += ".py"
     pathname = None
     for dirpath, _, filenames in os.walk(
         Path(osp.dirname(__file__)) / environemnt_name
@@ -321,10 +323,12 @@ class Task(Enum):
 
         Returns: the task with the loaded config
         """
-        full_name = str(Path(self.env_name()) / Path(self.name.lower()))
+        environment_name = self.env_name()
+        task_name = self.name.lower()
+        full_name = str(Path(environment_name) / Path(task_name))
         if path is None:
             config = Task._load_from_yaml(full_name)
         else:
             config = _read_yaml_config(path)
-        config = _type_check_task_config(full_name, config)
+        config = _type_check_task_config(environment_name, task_name, config)
         return self.update_config(config)
