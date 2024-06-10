@@ -34,12 +34,16 @@ from .pettingzoo.simple_world_comm import TaskConfig as SimpleWorldComm
 from .pettingzoo.waterworld import TaskConfig as WaterworldConfig
 
 from .vmas.balance import TaskConfig as BalanceConfig
+from .vmas.ball_passage import TaskConfig as BallPassageConfig
+from .vmas.ball_trajectory import TaskConfig as BallTrajectoryConfig
+from .vmas.buzz_wire import TaskConfig as BuzzWireConfig
 from .vmas.discovery import TaskConfig as DiscoveryConfig
 from .vmas.dispersion import TaskConfig as DispersionConfig
 from .vmas.dropout import TaskConfig as DropoutConfig
 from .vmas.flocking import TaskConfig as FlockingConfig
 from .vmas.give_way import TaskConfig as GiveWayConfig
 from .vmas.joint_passage import TaskConfig as JointPassageConfig
+from .vmas.joint_passage_size import TaskConfig as JointPassageSizeConfig
 from .vmas.multi_give_way import TaskConfig as MultiGiveWayConfig
 from .vmas.navigation import TaskConfig as NavigationConfig
 from .vmas.passage import TaskConfig as PassageConfig
@@ -73,6 +77,10 @@ _task_class_registry = {
     "vmas_multi_give_way_config": MultiGiveWayConfig,
     "vmas_passage_config": PassageConfig,
     "vmas_joint_passage_config": JointPassageConfig,
+    "vmas_joint_passage_size_config": JointPassageSizeConfig,
+    "vmas_ball_passage_config": BallPassageConfig,
+    "vmas_buzz_wire_config": BuzzWireConfig,
+    "vmas_ball_trajectory_config": BallTrajectoryConfig,
     "vmas_flocking_config": FlockingConfig,
     "vmas_wind_flocking_config": WindFlockingConfig,
     "vmas_dropout_config": DropoutConfig,
