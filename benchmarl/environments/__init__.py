@@ -21,7 +21,7 @@ for env in [VmasTask, Smacv2Task, PettingZooTask, MeltingPotTask]:
 
 
 from .pettingzoo.multiwalker import TaskConfig as MultiwalkerConfig
-from .pettingzoo.simple_adverasary import TaskConfig as SimpleAdversaryConfig
+from .pettingzoo.simple_adversary import TaskConfig as SimpleAdversaryConfig
 from .pettingzoo.simple_crypto import TaskConfig as SimpleCryptoConfig
 from .pettingzoo.simple_push import TaskConfig as SimplePushConfig
 from .pettingzoo.simple_reference import TaskConfig as SimpleReferenceConfig
@@ -40,7 +40,7 @@ from .vmas.give_way import TaskConfig as GiveWayConfig
 from .vmas.navigation import TaskConfig as NavigationConfig
 from .vmas.reverse_transport import TaskConfig as ReverseTransportConfig
 from .vmas.sampling import TaskConfig as SamplingConfig
-from .vmas.simple_adverasary import TaskConfig as VmasSimpleAdversaryConfig
+from .vmas.simple_adversary import TaskConfig as VmasSimpleAdversaryConfig
 from .vmas.simple_crypto import TaskConfig as VmasSimpleCryptoConfig
 from .vmas.simple_push import TaskConfig as VmasSimplePushConfig
 from .vmas.simple_reference import TaskConfig as VmasSimpleReferenceConfig
