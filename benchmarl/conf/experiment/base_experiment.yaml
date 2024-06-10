@@ -13,6 +13,8 @@ buffer_device: "cpu"
 share_policy_params: True
 # If an algorithm and an env support both continuous and discrete actions, what should be preferred
 prefer_continuous_actions: True
+# If False collection is done using a collector (under no grad). If True, collection is done with gradients.
+collect_with_grad: False
 
 # Discount factor
 gamma: 0.9
