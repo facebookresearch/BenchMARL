@@ -21,7 +21,9 @@ from torchrl.envs import EnvBase, RewardSum, Transform
 from benchmarl.utils import _read_yaml_config, DEVICE_TYPING
 
 
-def _load_config(name: str, config: Dict[str, Any]):
+def _type_check_task_config(
+    name: str, config: Dict[str, Any], warn_on_missing_dataclass: bool = True
+):
     if not name.endswith(".py"):
         name += ".py"
     environemnt_name, task_name = name.split("/")
@@ -39,9 +41,10 @@ def _load_config(name: str, config: Dict[str, Any]):
         spec.loader.exec_module(module)
         return module.TaskConfig(**config).__dict__
     else:
-        warnings.warn(
-            "TaskConfig python dataclass not foud, task is being loaded without type checks"
-        )
+        if warn_on_missing_dataclass:
+            warnings.warn(
+                "TaskConfig python dataclass not foud, task is being loaded without type checks"
+            )
         return config
 
 
@@ -306,7 +309,7 @@ class Task(Enum):
     @staticmethod
     def _load_from_yaml(name: str) -> Dict[str, Any]:
         yaml_path = Path(__file__).parent.parent / "conf" / "task" / f"{name}.yaml"
-        return _load_config(name, _read_yaml_config(str(yaml_path.resolve())))
+        return _read_yaml_config(str(yaml_path.resolve()))
 
     def get_from_yaml(self, path: Optional[str] = None) -> Task:
         """
@@ -318,10 +321,10 @@ class Task(Enum):
 
         Returns: the task with the loaded config
         """
+        full_name = str(Path(self.env_name()) / Path(self.name.lower()))
         if path is None:
-            task_name = self.name.lower()
-            return self.update_config(
-                Task._load_from_yaml(str(Path(self.env_name()) / Path(task_name)))
-            )
+            config = Task._load_from_yaml(full_name)
         else:
-            return self.update_config(**_read_yaml_config(path))
+            config = _read_yaml_config(path)
+        config = _type_check_task_config(full_name, config)
+        return self.update_config(config)
