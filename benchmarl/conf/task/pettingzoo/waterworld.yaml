@@ -1,6 +1,7 @@
 defaults:
-  - _self_
   - pettingzoo_waterworld_config
+  - _self_
+
 
 task: "waterworld_v4"
 max_cycles: 500

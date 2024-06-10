@@ -17,7 +17,7 @@ from torchrl.modules import EGreedyModule, QValueModule
 from torchrl.objectives import DQNLoss, LossModule, ValueEstimators
 
 
-class CustomIqlAlgorithm(Algorithm):
+class CustomAlgorithm(Algorithm):
     def __init__(
         self, delay_value: bool, loss_function: str, my_custom_arg: int, **kwargs
     ):
@@ -213,7 +213,7 @@ class CustomIqlAlgorithm(Algorithm):
 
 
 @dataclass
-class CustomIqlConfig(AlgorithmConfig):
+class CustomAlgorithmConfig(AlgorithmConfig):
     # This is a class representing the configuration of your algorithm
     # It will be used to validate loaded configs, so that everytime you load this algorithm
     # we know exactly which and what parameters to expect with their types
@@ -226,7 +226,7 @@ class CustomIqlConfig(AlgorithmConfig):
     @staticmethod
     def associated_class() -> Type[Algorithm]:
         # The associated algorithm class
-        return CustomIqlAlgorithm
+        return CustomAlgorithm
 
     @staticmethod
     def supports_continuous_actions() -> bool:

@@ -1,6 +1,7 @@
 defaults:
-  - _self_
   - vmas_simple_crypto_config
+  - _self_
+
 
 max_steps: 100
 dim_c: 4

@@ -358,14 +358,15 @@ class AlgorithmConfig:
 
         Returns: the loaded AlgorithmConfig
         """
+
         if path is None:
-            return cls(
-                **AlgorithmConfig._load_from_yaml(
-                    name=cls.associated_class().__name__,
-                )
+            config = AlgorithmConfig._load_from_yaml(
+                name=cls.associated_class().__name__
             )
+
         else:
-            return cls(**_read_yaml_config(path))
+            config = _read_yaml_config(path)
+        return cls(**config)
 
     @staticmethod
     @abstractmethod
