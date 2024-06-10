@@ -19,7 +19,9 @@ if _has_hydra:
     from omegaconf import DictConfig, OmegaConf
 
 
-def load_experiment_from_hydra(cfg: DictConfig, task_name: str) -> Experiment:
+def load_experiment_from_hydra(
+    cfg: DictConfig, task_name: str, callbacks=()
+) -> Experiment:
     """Creates an :class:`~benchmarl.experiment.Experiment` from hydra config.
 
     Args:
@@ -43,6 +45,7 @@ def load_experiment_from_hydra(cfg: DictConfig, task_name: str) -> Experiment:
         critic_model_config=critic_model_config,
         seed=cfg.seed,
         config=experiment_config,
+        callbacks=callbacks,
     )
 
 
