@@ -17,7 +17,7 @@ tasks = [VmasTask, Smacv2Task, PettingZooTask, MeltingPotTask]
 # This is a registry mapping "envname/task_name" to the EnvNameTask.TASK_NAME enum
 # It is used by automatically load task enums from yaml files.
 # It is populated automatically.
-_task_config_registry = {}
+task_config_registry = {}
 
 # This is a registry mapping "envname_taskname" to the TaskConfig python dataclass of the task.
 # It is used by hydra to validate loaded configs.
@@ -38,4 +38,4 @@ for env in tasks:
         task_config_class = _get_task_config_class(environemnt_name, task_name)
         if task_config_class is not None:
             _task_class_registry[full_task_name.replace("/", "_")] = task_config_class
-    _task_config_registry.update(env_config_registry)
+    task_config_registry.update(env_config_registry)
