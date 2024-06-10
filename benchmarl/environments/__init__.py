@@ -10,10 +10,14 @@ from .pettingzoo.common import PettingZooTask
 from .smacv2.common import Smacv2Task
 from .vmas.common import VmasTask
 
+# The enum classes for the environments available.
+# This is the only object in this file you need to modify when adding a new environment.
+tasks = [VmasTask, Smacv2Task, PettingZooTask, MeltingPotTask]
+
 # This is a registry mapping "envname/task_name" to the EnvNameTask.TASK_NAME enum
-# It is populated automatically.
 # It is used by automatically load task enums from yaml files.
-task_config_registry = {}
+# It is populated automatically.
+_task_config_registry = {}
 
 # This is a registry mapping "envname_taskname" to the TaskConfig python dataclass of the task.
 # It is used by hydra to validate loaded configs.
@@ -23,7 +27,7 @@ task_config_registry = {}
 _task_class_registry = {}
 
 # Automatic population of registries
-for env in [VmasTask, Smacv2Task, PettingZooTask, MeltingPotTask]:
+for env in tasks:
     env_config_registry = {}
     environemnt_name = env.env_name()
     for task in env:
@@ -34,4 +38,4 @@ for env in [VmasTask, Smacv2Task, PettingZooTask, MeltingPotTask]:
         task_config_class = _get_task_config_class(environemnt_name, task_name)
         if task_config_class is not None:
             _task_class_registry[full_task_name.replace("/", "_")] = task_config_class
-    task_config_registry.update(env_config_registry)
+    _task_config_registry.update(env_config_registry)
