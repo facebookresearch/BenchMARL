@@ -1,8 +1,8 @@
 # Creating a new task
 
 In the following we will see how to:
-- Creating new tasks from a new environment
-- Creating new tasks from an existing environment
+- Create new tasks from a new environment
+- Create new tasks from an existing environment
 
 ## Creating new tasks from a new environment
 
