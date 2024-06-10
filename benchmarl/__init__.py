@@ -22,7 +22,6 @@ if _has_hydra:
     def _load_hydra_schemas():
         from hydra.core.config_store import ConfigStore
 
-        import benchmarl.environments
         from benchmarl.algorithms import algorithm_config_registry
         from benchmarl.environments import _task_class_registry
         from benchmarl.experiment import ExperimentConfig

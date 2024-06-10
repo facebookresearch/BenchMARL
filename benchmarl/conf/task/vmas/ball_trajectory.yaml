@@ -1,6 +1,7 @@
 defaults:
-  - _self_
   - vmas_ball_trajectory_config
+  - _self_
+
 
 max_steps: 100
 joints: True

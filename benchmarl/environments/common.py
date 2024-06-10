@@ -7,8 +7,7 @@
 from __future__ import annotations
 
 import importlib
-import os
-import os.path as osp
+
 import warnings
 from enum import Enum
 from pathlib import Path
@@ -41,23 +40,12 @@ def _type_check_task_config(
 
 
 def _get_task_config_class(environemnt_name: str, task_name: str):
-    if not task_name.endswith(".py"):
-        task_name += ".py"
-
-    pathname = None
-    for dirpath, _, filenames in os.walk(
-        Path(osp.dirname(__file__)) / environemnt_name
-    ):
-        if task_name in filenames:
-            pathname = os.path.join(dirpath, task_name)
-            break
-
-    if pathname is not None:
-        spec = importlib.util.spec_from_file_location("", pathname)
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
+    try:
+        module = importlib.import_module(
+            f"{'.'.join(__name__.split('.')[:-1])}.{environemnt_name}.{task_name}"
+        )
         return module.TaskConfig
-    else:
+    except ModuleNotFoundError:
         return None
 
 

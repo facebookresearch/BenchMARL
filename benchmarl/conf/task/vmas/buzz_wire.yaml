@@ -1,6 +1,7 @@
 defaults:
-  - _self_
   - vmas_buzz_wire_config
+  - _self_
+
 
 max_steps: 100
 random_start_angle: True

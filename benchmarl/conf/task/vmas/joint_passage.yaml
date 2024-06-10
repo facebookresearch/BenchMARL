@@ -1,6 +1,7 @@
 defaults:
-  - _self_
   - vmas_joint_passage_config
+  - _self_
+
 
 max_steps: 500
 n_passages: 1
