@@ -1,4 +1,4 @@
 
-name: custommodel
+name: custom_model
 custom_param: 3
 activation_class: torch.nn.Tanh

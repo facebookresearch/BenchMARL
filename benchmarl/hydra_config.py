@@ -4,11 +4,9 @@
 #  LICENSE file in the root directory of this source tree.
 #
 import importlib
-from dataclasses import is_dataclass
 
 from benchmarl.algorithms.common import AlgorithmConfig
 from benchmarl.environments import Task, task_config_registry
-from benchmarl.environments.common import _type_check_task_config
 from benchmarl.experiment import Experiment, ExperimentConfig
 from benchmarl.models import model_config_registry
 from benchmarl.models.common import ModelConfig, parse_model_config, SequenceModelConfig
@@ -19,7 +17,9 @@ if _has_hydra:
     from omegaconf import DictConfig, OmegaConf
 
 
-def load_experiment_from_hydra(cfg: DictConfig, task_name: str) -> Experiment:
+def load_experiment_from_hydra(
+    cfg: DictConfig, task_name: str, callbacks=()
+) -> Experiment:
     """Creates an :class:`~benchmarl.experiment.Experiment` from hydra config.
 
     Args:
@@ -43,6 +43,7 @@ def load_experiment_from_hydra(cfg: DictConfig, task_name: str) -> Experiment:
         critic_model_config=critic_model_config,
         seed=cfg.seed,
         config=experiment_config,
+        callbacks=callbacks,
     )
 
 
@@ -57,14 +58,9 @@ def load_task_config_from_hydra(cfg: DictConfig, task_name: str) -> Task:
         :class:`~benchmarl.environments.Task`
 
     """
-    environment_name, inner_task_name = task_name.split("/")
-    cfg_dict_checked = OmegaConf.to_object(cfg)
-    if is_dataclass(cfg_dict_checked):
-        cfg_dict_checked = cfg_dict_checked.__dict__
-    cfg_dict_checked = _type_check_task_config(
-        environment_name, inner_task_name, cfg_dict_checked
+    return task_config_registry[task_name].update_config(
+        OmegaConf.to_container(cfg, resolve=True, throw_on_missing=True)
     )
-    return task_config_registry[task_name].update_config(cfg_dict_checked)
 
 
 def load_experiment_config_from_hydra(cfg: DictConfig) -> ExperimentConfig:

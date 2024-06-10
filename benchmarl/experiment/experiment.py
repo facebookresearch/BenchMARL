@@ -50,6 +50,7 @@ class ExperimentConfig:
 
     sampling_device: str = MISSING
     train_device: str = MISSING
+    buffer_device: str = MISSING
 
     share_policy_params: bool = MISSING
     prefer_continuous_actions: bool = MISSING
@@ -462,9 +463,9 @@ class Experiment(CallbackNotifier):
             storing_device=self.config.train_device,
             frames_per_batch=self.config.collected_frames_per_batch(self.on_policy),
             total_frames=self.config.get_max_n_frames(self.on_policy),
-            init_random_frames=self.config.off_policy_init_random_frames
-            if not self.on_policy
-            else 0,
+            init_random_frames=(
+                self.config.off_policy_init_random_frames if not self.on_policy else 0
+            ),
         )
 
     def _setup_name(self):
@@ -647,7 +648,7 @@ class Experiment(CallbackNotifier):
         return excluded_keys
 
     def _optimizer_loop(self, group: str) -> TensorDictBase:
-        subdata = self.replay_buffers[group].sample()
+        subdata = self.replay_buffers[group].sample().to(self.config.train_device)
         loss_vals = self.losses[group](subdata)
         training_td = loss_vals.detach()
         loss_vals = self.algorithm.process_loss_vals(group, loss_vals)

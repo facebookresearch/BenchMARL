@@ -9,7 +9,6 @@ from __future__ import annotations
 import importlib
 import os
 import os.path as osp
-import warnings
 from enum import Enum
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
@@ -21,44 +20,25 @@ from torchrl.envs import EnvBase, RewardSum, Transform
 from benchmarl.utils import _read_yaml_config, DEVICE_TYPING
 
 
-def _type_check_task_config(
-    environemnt_name: str,
-    task_name: str,
-    config: Dict[str, Any],
-    warn_on_missing_dataclass: bool = True,
-):
-
-    task_config_class = _get_task_config_class(environemnt_name, task_name)
-
-    if task_config_class is not None:
-        return task_config_class(**config).__dict__
-    else:
-        if warn_on_missing_dataclass:
-            warnings.warn(
-                "TaskConfig python dataclass not foud, task is being loaded without type checks"
-            )
-        return config
-
-
-def _get_task_config_class(environemnt_name: str, task_name: str):
-    if not task_name.endswith(".py"):
-        task_name += ".py"
+def _load_config(name: str, config: Dict[str, Any]):
+    if not name.endswith(".py"):
+        name += ".py"
 
     pathname = None
-    for dirpath, _, filenames in os.walk(
-        Path(osp.dirname(__file__)) / environemnt_name
-    ):
-        if task_name in filenames:
-            pathname = os.path.join(dirpath, task_name)
-            break
+    for dirpath, _, filenames in os.walk(osp.dirname(__file__)):
+        if pathname is None:
+            for filename in filenames:
+                if filename == name:
+                    pathname = os.path.join(dirpath, filename)
+                    break
 
-    if pathname is not None:
-        spec = importlib.util.spec_from_file_location("", pathname)
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        return module.TaskConfig
-    else:
-        return None
+    if pathname is None:
+        raise ValueError(f"Task {name} not found.")
+
+    spec = importlib.util.spec_from_file_location("", pathname)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.TaskConfig(**config).__dict__
 
 
 class Task(Enum):
@@ -334,12 +314,10 @@ class Task(Enum):
 
         Returns: the task with the loaded config
         """
-        environment_name = self.env_name()
-        task_name = self.name.lower()
-        full_name = str(Path(environment_name) / Path(task_name))
         if path is None:
-            config = Task._load_from_yaml(full_name)
+            task_name = self.name.lower()
+            return self.update_config(
+                Task._load_from_yaml(str(Path(self.env_name()) / Path(task_name)))
+            )
         else:
-            config = _read_yaml_config(path)
-        config = _type_check_task_config(environment_name, task_name, config)
-        return self.update_config(config)
+            return self.update_config(**_read_yaml_config(path))

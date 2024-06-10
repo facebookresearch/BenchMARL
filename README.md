@@ -253,7 +253,7 @@ They differ based on many aspects, here is a table with the current environments
 > BenchMARL uses the [TorchRL MARL API](https://github.com/pytorch/rl/issues/1463) for grouping agents.
 > In competitive environments like MPE, for example, teams will be in different groups. Each group has its own loss,
 > models, buffers, and so on. Parameter sharing options refer to sharing within the group. See the example on [creating
-> a custom algorithm](examples/extending/algorithm/customalgorithm.py) for more info.
+> a custom algorithm](examples/extending/algorithm/custom_algorithm.py) for more info.
 
 **Models**. Models are neural networks used to process data. They can be used as actors (policies) or, 
 when requested, as critics. We provide a set of base models (layers) and a SequenceModel to concatenate

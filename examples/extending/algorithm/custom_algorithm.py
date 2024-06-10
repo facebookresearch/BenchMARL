@@ -1,6 +1,4 @@
-#  Copyright (c) 2024.
-#  ProrokLab (https://www.proroklab.org/)
-#  All rights reserved.
+#  Copyright (c) Meta Platforms, Inc. and affiliates.
 #
 #  This source code is licensed under the license found in the
 #  LICENSE file in the root directory of this source tree.
@@ -19,7 +17,7 @@ from torchrl.modules import EGreedyModule, QValueModule
 from torchrl.objectives import DQNLoss, LossModule, ValueEstimators
 
 
-class CustomAlgorithm(Algorithm):
+class CustomIqlAlgorithm(Algorithm):
     def __init__(
         self, delay_value: bool, loss_function: str, my_custom_arg: int, **kwargs
     ):
@@ -215,7 +213,7 @@ class CustomAlgorithm(Algorithm):
 
 
 @dataclass
-class CustomAlgorithmConfig(AlgorithmConfig):
+class CustomIqlConfig(AlgorithmConfig):
     # This is a class representing the configuration of your algorithm
     # It will be used to validate loaded configs, so that everytime you load this algorithm
     # we know exactly which and what parameters to expect with their types
@@ -228,7 +226,7 @@ class CustomAlgorithmConfig(AlgorithmConfig):
     @staticmethod
     def associated_class() -> Type[Algorithm]:
         # The associated algorithm class
-        return CustomAlgorithm
+        return CustomIqlAlgorithm
 
     @staticmethod
     def supports_continuous_actions() -> bool:
