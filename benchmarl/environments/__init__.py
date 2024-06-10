@@ -34,10 +34,19 @@ from .pettingzoo.simple_world_comm import TaskConfig as SimpleWorldComm
 from .pettingzoo.waterworld import TaskConfig as WaterworldConfig
 
 from .vmas.balance import TaskConfig as BalanceConfig
+from .vmas.ball_passage import TaskConfig as BallPassageConfig
+from .vmas.ball_trajectory import TaskConfig as BallTrajectoryConfig
+from .vmas.buzz_wire import TaskConfig as BuzzWireConfig
+from .vmas.discovery import TaskConfig as DiscoveryConfig
 from .vmas.dispersion import TaskConfig as DispersionConfig
 from .vmas.dropout import TaskConfig as DropoutConfig
+from .vmas.flocking import TaskConfig as FlockingConfig
 from .vmas.give_way import TaskConfig as GiveWayConfig
+from .vmas.joint_passage import TaskConfig as JointPassageConfig
+from .vmas.joint_passage_size import TaskConfig as JointPassageSizeConfig
+from .vmas.multi_give_way import TaskConfig as MultiGiveWayConfig
 from .vmas.navigation import TaskConfig as NavigationConfig
+from .vmas.passage import TaskConfig as PassageConfig
 from .vmas.reverse_transport import TaskConfig as ReverseTransportConfig
 from .vmas.sampling import TaskConfig as SamplingConfig
 from .vmas.simple_adversary import TaskConfig as VmasSimpleAdversaryConfig
@@ -52,7 +61,6 @@ from .vmas.transport import TaskConfig as TransportConfig
 from .vmas.wheel import TaskConfig as WheelConfig
 from .vmas.wind_flocking import TaskConfig as WindFlockingConfig
 
-
 # This is a registry mapping task config schemas names to their python dataclass
 # It is used by hydra to validate loaded configs.
 # You will see the "envname_taskname_config" strings in the hydra defaults at the top of yaml files.
@@ -66,8 +74,17 @@ _task_class_registry = {
     "vmas_wheel_config": WheelConfig,
     "vmas_dispersion_config": DispersionConfig,
     "vmas_give_way_config": GiveWayConfig,
+    "vmas_multi_give_way_config": MultiGiveWayConfig,
+    "vmas_passage_config": PassageConfig,
+    "vmas_joint_passage_config": JointPassageConfig,
+    "vmas_joint_passage_size_config": JointPassageSizeConfig,
+    "vmas_ball_passage_config": BallPassageConfig,
+    "vmas_buzz_wire_config": BuzzWireConfig,
+    "vmas_ball_trajectory_config": BallTrajectoryConfig,
+    "vmas_flocking_config": FlockingConfig,
     "vmas_wind_flocking_config": WindFlockingConfig,
     "vmas_dropout_config": DropoutConfig,
+    "vmas_discovery_config": DiscoveryConfig,
     "vmas_simple_adversary_config": VmasSimpleAdversaryConfig,
     "vmas_simple_crypto_config": VmasSimpleCryptoConfig,
     "vmas_simple_push_config": VmasSimplePushConfig,
