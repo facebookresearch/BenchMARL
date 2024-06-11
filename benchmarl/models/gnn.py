@@ -28,22 +28,6 @@ if _has_torch_geometric:
 TOPOLOGY_TYPES = {"full", "empty"}
 
 
-def _get_edge_index(topology: str, self_loops: bool, n_agents: int, device: str):
-    if topology == "full":
-        adjacency = torch.ones(n_agents, n_agents, device=device, dtype=torch.long)
-    elif topology == "empty":
-        adjacency = torch.ones(n_agents, n_agents, device=device, dtype=torch.long)
-
-    edge_index, _ = torch_geometric.utils.dense_to_sparse(adjacency)
-
-    if self_loops:
-        edge_index, _ = torch_geometric.utils.add_self_loops(edge_index)
-    else:
-        edge_index, _ = torch_geometric.utils.remove_self_loops(edge_index)
-
-    return edge_index
-
-
 class Gnn(Model):
     """A GNN model.
 
@@ -254,7 +238,7 @@ class Gnn(Model):
 
         batch_size = input.shape[:-2]
 
-        graph = batch_from_dense_to_ptg(
+        graph = _batch_from_dense_to_ptg(
             x=input, edge_index=self.edge_index, pos=pos, vel=vel
         )
         forward_gnn_params = {
@@ -305,7 +289,28 @@ class Gnn(Model):
         return tensordict
 
 
-def batch_from_dense_to_ptg(
+def _get_edge_index(topology: str, self_loops: bool, n_agents: int, device: str):
+    if topology == "full":
+        adjacency = torch.ones(n_agents, n_agents, device=device, dtype=torch.long)
+        edge_index, _ = torch_geometric.utils.dense_to_sparse(adjacency)
+        if not self_loops:
+            edge_index, _ = torch_geometric.utils.remove_self_loops(edge_index)
+    elif topology == "empty":
+        if self_loops:
+            edge_index = (
+                torch.arange(n_agents, device=device, dtype=torch.long)
+                .unsqueeze(0)
+                .repeat(2, 1)
+            )
+        else:
+            edge_index = torch.empty((2, 0), device=device, dtype=torch.long)
+    else:
+        raise ValueError(f"Topology {topology} not supported")
+
+    return edge_index
+
+
+def _batch_from_dense_to_ptg(
     x: Tensor,
     edge_index: Tensor,
     pos: Tensor = None,
@@ -342,7 +347,6 @@ def batch_from_dense_to_ptg(
     graphs = graphs.to(x.device)
     if pos is not None:
         graphs = torch_geometric.transforms.Cartesian(norm=False)(graphs)
-    if pos is not None:
         graphs = torch_geometric.transforms.Distance(norm=False)(graphs)
     if vel is not None:
         graphs = _RelVel()(graphs)
