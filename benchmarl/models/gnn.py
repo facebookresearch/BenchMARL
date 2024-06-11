@@ -25,6 +25,26 @@ if _has_torch_geometric:
     import torch_geometric
     from torch_geometric.transforms import BaseTransform
 
+    class _RelVel(BaseTransform):
+        """Transform that reads graph.vel and writes node1.vel - node2.vel in the edge attributes"""
+
+        def __init__(self):
+            pass
+
+        def __call__(self, data):
+            (row, col), vel, pseudo = data.edge_index, data.vel, data.edge_attr
+
+            cart = vel[row] - vel[col]
+            cart = cart.view(-1, 1) if cart.dim() == 1 else cart
+
+            if pseudo is not None:
+                pseudo = pseudo.view(-1, 1) if pseudo.dim() == 1 else pseudo
+                data.edge_attr = torch.cat([pseudo, cart.type_as(pseudo)], dim=-1)
+            else:
+                data.edge_attr = cart
+            return data
+
+
 TOPOLOGY_TYPES = {"full", "empty"}
 
 
@@ -38,6 +58,14 @@ class Gnn(Model):
         self_loops (str): Whether the resulting adjacency matrix will have self loops.
         gnn_class (Type[torch_geometric.nn.MessagePassing]): the gnn convolution class to use
         gnn_kwargs (dict, optional): the dict of arguments to pass to the gnn conv class
+        position_key (str, optional): if provided, it will need to match a leaf key in the env observation spec
+            representing the agent position. This key will not be processed as a node feature, but it will used to construct
+            edge features. In particular it be used to compute relative positions (``pos_node_1 - pos_node_2``) and a
+            one-dimensional distance for all neighbours in the graph.
+        velocity_key (str, optional): if provided, it will need to match a leaf key in the env observation spec
+            representing the agent velocity. This key will not be processed as a node feature, but it will used to construct
+            edge features. In particular it be used to compute relative velocities (``vel_node_1 - vel_node_2``) for all neighbours
+            in the graph.
 
     Examples:
 
@@ -74,8 +102,6 @@ class Gnn(Model):
                 task=VmasTask.NAVIGATION.get_from_yaml(),
             )
             experiment.run()
-
-
 
     """
 
@@ -352,26 +378,6 @@ def _batch_from_dense_to_ptg(
         graphs = _RelVel()(graphs)
 
     return graphs
-
-
-class _RelVel(BaseTransform):
-    """Transform that reads graph.vel and writes node1.vel - node2.vel in the edge attributes"""
-
-    def __init__(self):
-        pass
-
-    def __call__(self, data):
-        (row, col), vel, pseudo = data.edge_index, data.vel, data.edge_attr
-
-        cart = vel[row] - vel[col]
-        cart = cart.view(-1, 1) if cart.dim() == 1 else cart
-
-        if pseudo is not None:
-            pseudo = pseudo.view(-1, 1) if pseudo.dim() == 1 else pseudo
-            data.edge_attr = torch.cat([pseudo, cart.type_as(pseudo)], dim=-1)
-        else:
-            data.edge_attr = cart
-        return data
 
 
 @dataclass
