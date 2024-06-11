@@ -179,13 +179,13 @@ class Gnn(Model):
             raise ValueError(
                 f"Got topology: {self.topology} but only available options are {TOPOLOGY_TYPES}"
             )
-        if self.centralised:
-            raise ValueError("GNN model can only be used in non-centralised critics")
+
         if not self.input_has_agent_dim:
             raise ValueError(
                 "The GNN module is not compatible with input that does not have the agent dimension,"
                 "such as the global state in centralised critics. Please choose another critic model"
                 "if your algorithm has a centralized critic and the task has a global state."
+                "If you are using the GNN in a centralized critic, it should be the first layer."
             )
 
         input_shape = None
@@ -267,71 +267,42 @@ class Gnn(Model):
             forward_gnn_params.update({"edge_attr": graph.edge_attr})
 
         if not self.share_params:
-            res = torch.stack(
-                [
-                    gnn(**forward_gnn_params).view(
-                        *batch_size,
-                        self.n_agents,
-                        self.output_features,
-                    )[..., i, :]
-                    for i, gnn in enumerate(self.gnns)
-                ],
-                dim=-2,
-            )
+            if not self.centralised:
+                res = torch.stack(
+                    [
+                        gnn(**forward_gnn_params).view(
+                            *batch_size,
+                            self.n_agents,
+                            self.output_features,
+                        )[..., i, :]
+                        for i, gnn in enumerate(self.gnns)
+                    ],
+                    dim=-2,
+                )
+            else:
+                res = torch.stack(
+                    [
+                        gnn(**forward_gnn_params)
+                        .view(
+                            *batch_size,
+                            self.n_agents,
+                            self.output_features,
+                        )
+                        .mean(dim=-2)  # Mean pooling
+                        for i, gnn in enumerate(self.gnns)
+                    ],
+                    dim=-2,
+                )
 
         else:
             res = self.gnns[0](**forward_gnn_params).view(
                 *batch_size, self.n_agents, self.output_features
             )
+            if self.centralised:
+                res = res.mean(dim=-2)  # Mean pooling
 
         tensordict.set(self.out_key, res)
         return tensordict
-
-
-# class GnnKernel(nn.Module):
-#     def __init__(self, in_dim, out_dim, **cfg):
-#         super().__init__()
-#
-#         gnn_types = {"GraphConv", "GATv2Conv", "GINEConv"}
-#         aggr_types = {"add", "mean", "max"}
-#
-#         self.aggr = "add"
-#         self.gnn_type = "GraphConv"
-#
-#         self.in_dim = in_dim
-#         self.out_dim = out_dim
-#         self.activation_fn = nn.Tanh
-#
-#         if self.gnn_type == "GraphConv":
-#             self.gnn = GraphConv(
-#                 self.in_dim,
-#                 self.out_dim,
-#                 aggr=self.aggr,
-#             )
-#         elif self.gnn_type == "GATv2Conv":
-#             # Default adds self loops
-#             self.gnn = GATv2Conv(
-#                 self.in_dim,
-#                 self.out_dim,
-#                 edge_dim=self.edge_features,
-#                 fill_value=0.0,
-#                 share_weights=True,
-#                 add_self_loops=True,
-#                 aggr=self.aggr,
-#             )
-#         elif self.gnn_type == "GINEConv":
-#             self.gnn = GINEConv(
-#                 nn=nn.Sequential(
-#                     torch.nn.Linear(self.in_dim, self.out_dim),
-#                     self.activation_fn(),
-#                 ),
-#                 edge_dim=self.edge_features,
-#                 aggr=self.aggr,
-#             )
-#
-#     def forward(self, x, edge_index):
-#         out = self.gnn(x, edge_index)
-#         return out
 
 
 def batch_from_dense_to_ptg(
