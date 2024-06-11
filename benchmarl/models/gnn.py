@@ -25,6 +25,26 @@ if _has_torch_geometric:
     import torch_geometric
     from torch_geometric.transforms import BaseTransform
 
+    class _RelVel(BaseTransform):
+        """Transform that reads graph.vel and writes node1.vel - node2.vel in the edge attributes"""
+
+        def __init__(self):
+            pass
+
+        def __call__(self, data):
+            (row, col), vel, pseudo = data.edge_index, data.vel, data.edge_attr
+
+            cart = vel[row] - vel[col]
+            cart = cart.view(-1, 1) if cart.dim() == 1 else cart
+
+            if pseudo is not None:
+                pseudo = pseudo.view(-1, 1) if pseudo.dim() == 1 else pseudo
+                data.edge_attr = torch.cat([pseudo, cart.type_as(pseudo)], dim=-1)
+            else:
+                data.edge_attr = cart
+            return data
+
+
 TOPOLOGY_TYPES = {"full", "empty"}
 
 
@@ -348,26 +368,6 @@ def batch_from_dense_to_ptg(
         graphs = _RelVel()(graphs)
 
     return graphs
-
-
-class _RelVel(BaseTransform):
-    """Transform that reads graph.vel and writes node1.vel - node2.vel in the edge attributes"""
-
-    def __init__(self):
-        pass
-
-    def __call__(self, data):
-        (row, col), vel, pseudo = data.edge_index, data.vel, data.edge_attr
-
-        cart = vel[row] - vel[col]
-        cart = cart.view(-1, 1) if cart.dim() == 1 else cart
-
-        if pseudo is not None:
-            pseudo = pseudo.view(-1, 1) if pseudo.dim() == 1 else pseudo
-            data.edge_attr = torch.cat([pseudo, cart.type_as(pseudo)], dim=-1)
-        else:
-            data.edge_attr = cart
-        return data
 
 
 @dataclass
