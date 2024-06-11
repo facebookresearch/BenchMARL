@@ -76,8 +76,11 @@ def test_models_forward_shape(
 ):
     if not input_has_agent_dim and not centralised:
         pytest.skip()  # this combination should never happen
-    if ("gnn" in model_name) and centralised:
-        pytest.skip("gnn model is always decentralized")
+    if ("gnn" in model_name) and (
+        not input_has_agent_dim
+        or (isinstance(model_name, list) and model_name[0] != "gnn")
+    ):
+        pytest.skip("gnn model needs agent dim as input")
 
     torch.manual_seed(0)
 
