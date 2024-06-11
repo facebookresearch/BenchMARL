@@ -16,3 +16,5 @@ class TaskConfig:
     disable_ai_red: bool = MISSING
     ai_strength: float = MISSING
     observe_teammates: bool = MISSING
+    observe_adversaries: bool = MISSING
+    dict_obs: bool = MISSING

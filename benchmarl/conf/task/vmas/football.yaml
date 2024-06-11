@@ -9,3 +9,5 @@ disable_ai_red: True
 ball_mass: 0.25
 ai_strength: 0.5
 observe_teammates: True
+observe_adversaries: True
+dict_obs: False
