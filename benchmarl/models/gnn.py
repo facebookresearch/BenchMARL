@@ -7,12 +7,15 @@
 from __future__ import annotations
 
 import importlib
+import inspect
+import warnings
 from dataclasses import dataclass, MISSING
 from math import prod
 from typing import Optional, Type
 
 import torch
 from tensordict import TensorDictBase
+from tensordict.utils import _unravel_key_to_tuple
 from torch import nn, Tensor
 
 from benchmarl.models.common import Model, ModelConfig
@@ -20,6 +23,7 @@ from benchmarl.models.common import Model, ModelConfig
 _has_torch_geometric = importlib.util.find_spec("torch_geometric") is not None
 if _has_torch_geometric:
     import torch_geometric
+    from torch_geometric.transforms import BaseTransform
 
 TOPOLOGY_TYPES = {"full", "empty"}
 
@@ -96,17 +100,42 @@ class Gnn(Model):
         topology: str,
         self_loops: bool,
         gnn_class: Type[torch_geometric.nn.MessagePassing],
-        gnn_kwargs: Optional[dict] = None,
+        gnn_kwargs: Optional[dict],
+        position_key: Optional[str],
+        velocity_key: Optional[str],
         **kwargs,
     ):
         self.topology = topology
         self.self_loops = self_loops
+        self.position_key = position_key
+        self.velocity_key = velocity_key
 
         super().__init__(**kwargs)
 
+        self.pos_features = sum(
+            [
+                spec.shape[-1]
+                for key, spec in self.input_spec.items(True, True)
+                if _unravel_key_to_tuple(key)[-1] == position_key
+            ]
+        )  # Input keys ending with `position_key`
+        if self.pos_features > 0:
+            self.pos_features += 1  # We will add also 1-dimensional distance
+        self.vel_features = sum(
+            [
+                spec.shape[-1]
+                for key, spec in self.input_spec.items(True, True)
+                if _unravel_key_to_tuple(key)[-1] == velocity_key
+            ]
+        )  # Input keys ending with `velocity_key`
+        self.edge_features = self.pos_features + self.vel_features
         self.input_features = sum(
-            [spec.shape[-1] for spec in self.input_spec.values(True, True)]
-        )
+            [
+                spec.shape[-1]
+                for key, spec in self.input_spec.items(True, True)
+                if _unravel_key_to_tuple(key)[-1] not in (velocity_key, position_key)
+            ]
+        )  # Input keys not ending with `velocity_key` and `position_key`
         self.output_features = self.output_leaf_spec.shape[-1]
 
         if gnn_kwargs is None:
@@ -114,6 +143,21 @@ class Gnn(Model):
         gnn_kwargs.update(
             {"in_channels": self.input_features, "out_channels": self.output_features}
         )
+        self.gnn_supports_edge_attrs = (
+            "edge_dim" in inspect.getfullargspec(gnn_class).args
+        )
+        if (
+            self.position_key is not None or self.velocity_key is not None
+        ) and not self.gnn_supports_edge_attrs:
+            warnings.warn(
+                "Position key or velocity key provided but GNN class does not support edge attributes. "
+                "These input keys will be ignored. If instead you want to process them as node features, "
+                "just set them (position_key or velocity_key) to null."
+            )
+        if (
+            position_key is not None or velocity_key is not None
+        ) and self.gnn_supports_edge_attrs:
+            gnn_kwargs.update({"edge_dim": self.edge_features})
 
         self.gnns = nn.ModuleList(
             [
@@ -176,16 +220,56 @@ class Gnn(Model):
 
     def _forward(self, tensordict: TensorDictBase) -> TensorDictBase:
         # Gather in_key
-        input = torch.cat([tensordict.get(in_key) for in_key in self.in_keys], dim=-1)
+        input = torch.cat(
+            [
+                tensordict.get(in_key)
+                for in_key in self.in_keys
+                if _unravel_key_to_tuple(in_key)[-1]
+                not in (self.position_key, self.velocity_key)
+            ],
+            dim=-1,
+        )
+        if self.position_key is not None:
+            pos = torch.cat(
+                [
+                    tensordict.get(in_key)
+                    for in_key in self.in_keys
+                    if _unravel_key_to_tuple(in_key)[-1] == self.position_key
+                ],
+                dim=-1,
+            )
+        else:
+            pos = None
+        if self.velocity_key is not None:
+            vel = torch.cat(
+                [
+                    tensordict.get(in_key)
+                    for in_key in self.in_keys
+                    if _unravel_key_to_tuple(in_key)[-1] == self.velocity_key
+                ],
+                dim=-1,
+            )
+        else:
+            vel = None
 
         batch_size = input.shape[:-2]
 
-        graph = batch_from_dense_to_ptg(x=input, edge_index=self.edge_index)
+        graph = batch_from_dense_to_ptg(
+            x=input, edge_index=self.edge_index, pos=pos, vel=vel
+        )
+        forward_gnn_params = {
+            "x": graph.x,
+            "edge_index": graph.edge_index,
+        }
+        if (
+            self.position_key is not None or self.velocity_key is not None
+        ) and self.gnn_supports_edge_attrs:
+            forward_gnn_params.update({"edge_attr": graph.edge_attr})
 
         if not self.share_params:
             res = torch.stack(
                 [
-                    gnn(graph.x, graph.edge_index).view(
+                    gnn(**forward_gnn_params).view(
                         *batch_size,
                         self.n_agents,
                         self.output_features,
@@ -196,10 +280,9 @@ class Gnn(Model):
             )
 
         else:
-            res = self.gnns[0](
-                graph.x,
-                graph.edge_index,
-            ).view(*batch_size, self.n_agents, self.output_features)
+            res = self.gnns[0](**forward_gnn_params).view(
+                *batch_size, self.n_agents, self.output_features
+            )
 
         tensordict.set(self.out_key, res)
         return tensordict
@@ -254,10 +337,16 @@ class Gnn(Model):
 def batch_from_dense_to_ptg(
     x: Tensor,
     edge_index: Tensor,
+    pos: Tensor = None,
+    vel: Tensor = None,
 ) -> torch_geometric.data.Batch:
     batch_size = prod(x.shape[:-2])
     n_agents = x.shape[-2]
     x = x.view(-1, x.shape[-1])
+    if pos is not None:
+        pos = pos.view(-1, pos.shape[-1])
+    if vel is not None:
+        vel = vel.view(-1, vel.shape[-1])
 
     b = torch.arange(batch_size, device=x.device)
 
@@ -265,6 +354,8 @@ def batch_from_dense_to_ptg(
     graphs.ptr = torch.arange(0, (batch_size + 1) * n_agents, n_agents)
     graphs.batch = torch.repeat_interleave(b, n_agents)
     graphs.x = x
+    graphs.pos = pos
+    graphs.vel = vel
     graphs.edge_attr = None
 
     n_edges = edge_index.shape[1]
@@ -278,8 +369,34 @@ def batch_from_dense_to_ptg(
     graphs.edge_index = batch_edge_index
 
     graphs = graphs.to(x.device)
+    if pos is not None:
+        graphs = torch_geometric.transforms.Cartesian(norm=False)(graphs)
+    if pos is not None:
+        graphs = torch_geometric.transforms.Distance(norm=False)(graphs)
+    if vel is not None:
+        graphs = _RelVel()(graphs)
 
     return graphs
+
+
+class _RelVel(BaseTransform):
+    """Transform that reads graph.vel and writes node1.vel - node2.vel in the edge attributes"""
+
+    def __init__(self):
+        pass
+
+    def __call__(self, data):
+        (row, col), vel, pseudo = data.edge_index, data.vel, data.edge_attr
+
+        cart = vel[row] - vel[col]
+        cart = cart.view(-1, 1) if cart.dim() == 1 else cart
+
+        if pseudo is not None:
+            pseudo = pseudo.view(-1, 1) if pseudo.dim() == 1 else pseudo
+            data.edge_attr = torch.cat([pseudo, cart.type_as(pseudo)], dim=-1)
+        else:
+            data.edge_attr = cart
+        return data
 
 
 @dataclass
@@ -291,6 +408,9 @@ class GnnConfig(ModelConfig):
 
     gnn_class: Type[torch_geometric.nn.MessagePassing] = MISSING
     gnn_kwargs: Optional[dict] = None
+
+    position_key: Optional[str] = None
+    velocity_key: Optional[str] = None
 
     @staticmethod
     def associated_class():
