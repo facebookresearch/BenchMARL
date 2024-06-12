@@ -318,12 +318,14 @@ class _DeepsetsNet(nn.Module):
 
 @dataclass
 class DeepsetsConfig(ModelConfig):
-    """Dataclass config for a :class:`~benchmarl.models.Deppsets`."""
+    """Dataclass config for a :class:`~benchmarl.models.Deepsets`."""
 
     aggr: str = MISSING
+    out_features_local_nn: int = MISSING
+
     local_nn_num_cells: Sequence[int] = MISSING
     local_nn_activation_class: Type[nn.Module] = MISSING
-    out_features_local_nn: int = MISSING
+
     global_nn_num_cells: Sequence[int] = MISSING
     global_nn_activation_class: Type[nn.Module] = MISSING
 
