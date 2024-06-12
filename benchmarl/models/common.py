@@ -5,7 +5,7 @@
 #
 
 import pathlib
-
+import warnings
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass
 from typing import Any, Callable, Dict, List, Optional, Sequence
@@ -165,7 +165,10 @@ class Model(TensorDictModuleBase, ABC):
             or self.input_spec != other_model.input_spec
             or self.output_spec != other_model.output_spec
         ):
-            raise ValueError("Can only share params between identical models.")
+            raise warnings.warn(
+                "Sharing parameters with models that are not identical. "
+                "This might result in unintended behavior or error."
+            )
         for param, other_param in zip(self.parameters(), other_model.parameters()):
             other_param.data[:] = param.data
 
