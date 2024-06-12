@@ -157,6 +157,18 @@ class Model(TensorDictModuleBase, ABC):
         # _check_spec(tensordict, self.output_spec)
         return tensordict
 
+    def share_params_with(self, other_model):
+        if (
+            self.share_params != other_model.share_params
+            or self.centralised != other_model.centralised
+            or self.input_has_agent_dim != other_model.input_has_agent_dim
+            or self.input_spec != other_model.input_spec
+            or self.output_spec != other_model.output_spec
+        ):
+            raise ValueError("Can only share params between identical models.")
+        for param, other_param in zip(self.parameters(), other_model.parameters()):
+            other_param.data[:] = param.data
+
     ###############################
     # Abstract methods to implement
     ###############################
