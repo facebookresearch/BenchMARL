@@ -304,7 +304,7 @@ class _DeepsetsNet(nn.Module):
 
     @staticmethod
     def reduce(x: Tensor, dim: int, aggr: str) -> Tensor:
-        if aggr == "sum":
+        if aggr == "sum" or aggr == "add":
             return torch.sum(x, dim=dim)
         elif aggr == "mean":
             return torch.mean(x, dim=dim)
