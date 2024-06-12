@@ -1,0 +1,9 @@
+
+name: deepsets
+
+aggr: "sum"
+local_nn_num_cells: [128, 128]
+local_nn_activation_class: torch.nn.Tanh
+out_features_local_nn: 256
+global_nn_num_cells: [256, 256]
+global_nn_activation_class: torch.nn.Tanh

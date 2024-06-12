@@ -6,9 +6,24 @@
 
 from .cnn import Cnn, CnnConfig
 from .common import Model, ModelConfig, SequenceModel, SequenceModelConfig
+from .deepsets import Deepsets, DeepsetsConfig
 from .gnn import Gnn, GnnConfig
 from .mlp import Mlp, MlpConfig
 
-classes = ["Mlp", "MlpConfig", "Gnn", "GnnConfig", "Cnn", "CnnConfig"]
+classes = [
+    "Mlp",
+    "MlpConfig",
+    "Gnn",
+    "GnnConfig",
+    "Cnn",
+    "CnnConfig",
+    "Deepsets",
+    "DeepsetsConfig",
+]
 
-model_config_registry = {"mlp": MlpConfig, "gnn": GnnConfig, "cnn": CnnConfig}
+model_config_registry = {
+    "mlp": MlpConfig,
+    "gnn": GnnConfig,
+    "cnn": CnnConfig,
+    "deepsets": DeepsetsConfig,
+}
