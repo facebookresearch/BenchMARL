@@ -260,11 +260,12 @@ when requested, as critics. We provide a set of base models (layers) and a Seque
 different layers. All the models can be used with or without parameter sharing within an 
 agent group. Here is a table of the models implemented in BenchMARL
 
-| Name                           | Decentralized | Centralized with local inputs | Centralized with global input | 
-|--------------------------------|:-------------:|:-----------------------------:|:-----------------------------:|
-| [MLP](benchmarl/models/mlp.py) |      Yes      |              Yes              |              Yes              |
-| [GNN](benchmarl/models/gnn.py) |      Yes      |              Yes              |              No               |
-| [CNN](benchmarl/models/cnn.py) |      Yes      |              Yes              |              Yes              |
+| Name                                     | Decentralized | Centralized with local inputs | Centralized with global input | 
+|------------------------------------------|:-------------:|:-----------------------------:|:-----------------------------:|
+| [MLP](benchmarl/models/mlp.py)           |      Yes      |              Yes              |              Yes              |
+| [GNN](benchmarl/models/gnn.py)           |      Yes      |              Yes              |              No               |
+| [CNN](benchmarl/models/cnn.py)           |      Yes      |              Yes              |              Yes              |
+| [Deepsets](benchmarl/models/deepsets.py) |      Yes      |              Yes              |              Yes              |
 
 And the ones that are _work in progress_
 
