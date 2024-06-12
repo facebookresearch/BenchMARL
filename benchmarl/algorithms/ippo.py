@@ -49,6 +49,7 @@ class Ippo(Algorithm):
         lmbda: float,
         scale_mapping: str,
         use_tanh_normal: bool,
+        pre_compute_advantage: bool,
         **kwargs
     ):
         super().__init__(**kwargs)
@@ -61,6 +62,7 @@ class Ippo(Algorithm):
         self.lmbda = lmbda
         self.scale_mapping = scale_mapping
         self.use_tanh_normal = use_tanh_normal
+        self.pre_compute_advantage = pre_compute_advantage
 
     #############################
     # Overridden abstract methods
@@ -148,15 +150,17 @@ class Ippo(Algorithm):
                 spec=self.action_spec[group, "action"],
                 in_keys=[(group, "loc"), (group, "scale")],
                 out_keys=[(group, "action")],
-                distribution_class=IndependentNormal
-                if not self.use_tanh_normal
-                else TanhNormal,
-                distribution_kwargs={
-                    "min": self.action_spec[(group, "action")].space.low,
-                    "max": self.action_spec[(group, "action")].space.high,
-                }
-                if self.use_tanh_normal
-                else {},
+                distribution_class=(
+                    IndependentNormal if not self.use_tanh_normal else TanhNormal
+                ),
+                distribution_kwargs=(
+                    {
+                        "min": self.action_spec[(group, "action")].space.low,
+                        "max": self.action_spec[(group, "action")].space.high,
+                    }
+                    if self.use_tanh_normal
+                    else {}
+                ),
                 return_log_prob=True,
                 log_prob_key=(group, "log_prob"),
             )
@@ -220,14 +224,14 @@ class Ippo(Algorithm):
                 nested_reward_key,
                 batch.get(("next", "reward")).unsqueeze(-1).expand((*group_shape, 1)),
             )
-
-        with torch.no_grad():
-            loss = self.get_loss_and_updater(group)[0]
-            loss.value_estimator(
-                batch,
-                params=loss.critic_network_params,
-                target_params=loss.target_critic_network_params,
-            )
+        if self.pre_compute_advantage:
+            with torch.no_grad():
+                loss = self.get_loss_and_updater(group)[0]
+                loss.value_estimator(
+                    batch,
+                    params=loss.critic_network_params,
+                    target_params=loss.target_critic_network_params,
+                )
 
         return batch
 
@@ -285,6 +289,7 @@ class IppoConfig(AlgorithmConfig):
     lmbda: float = MISSING
     scale_mapping: str = MISSING
     use_tanh_normal: bool = MISSING
+    pre_compute_advantage: bool = MISSING
 
     @staticmethod
     def associated_class() -> Type[Algorithm]:
