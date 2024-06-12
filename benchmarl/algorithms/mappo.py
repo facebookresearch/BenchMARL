@@ -7,7 +7,6 @@
 from dataclasses import dataclass, MISSING
 from typing import Dict, Iterable, Tuple, Type
 
-import torch
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModule, TensorDictSequential
 from tensordict.nn.distributions import NormalParamExtractor
@@ -227,14 +226,6 @@ class Mappo(Algorithm):
             batch.set(
                 nested_reward_key,
                 batch.get(("next", "reward")).unsqueeze(-1).expand((*group_shape, 1)),
-            )
-
-        with torch.no_grad():
-            loss = self.get_loss_and_updater(group)[0]
-            loss.value_estimator(
-                batch,
-                params=loss.critic_network_params,
-                target_params=loss.target_critic_network_params,
             )
 
         return batch
