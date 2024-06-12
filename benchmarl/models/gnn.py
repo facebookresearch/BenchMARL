@@ -200,9 +200,7 @@ class Gnn(Model):
 
         input_shape = None
         for input_key, input_spec in self.input_spec.items(True, True):
-            if (self.input_has_agent_dim and len(input_spec.shape) == 2) or (
-                not self.input_has_agent_dim and len(input_spec.shape) == 1
-            ):
+            if self.input_has_agent_dim and len(input_spec.shape) == 2:
                 if input_shape is None:
                     input_shape = input_spec.shape[:-1]
                 else:
