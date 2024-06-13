@@ -1,0 +1,11 @@
+defaults:
+  - vmas_joint_passage_size_config
+  - _self_
+
+
+max_steps: 500
+n_passages: 3
+fixed_passage: False
+random_start_angle: False
+random_goal_angle: False
+observe_joint_angle: False

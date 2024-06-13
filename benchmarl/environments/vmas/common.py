@@ -28,6 +28,14 @@ class VmasTask(Task):
     DROPOUT = None
     GIVE_WAY = None
     WIND_FLOCKING = None
+    PASSAGE = None
+    JOINT_PASSAGE = None
+    JOINT_PASSAGE_SIZE = None
+    BALL_PASSAGE = None
+    BALL_TRAJECTORY = None
+    BUZZ_WIRE = None
+    FLOCKING = None
+    DISCOVERY = None
     SIMPLE_ADVERSARY = None
     SIMPLE_CRYPTO = None
     SIMPLE_PUSH = None

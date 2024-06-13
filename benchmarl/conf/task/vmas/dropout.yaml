@@ -1,6 +1,7 @@
 defaults:
-  - _self_
   - vmas_dropout_config
+  - _self_
+
 
 
 max_steps: 100

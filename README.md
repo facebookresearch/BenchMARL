@@ -242,7 +242,7 @@ They differ based on many aspects, here is a table with the current environments
 
 | Environment                                                        | Tasks                                | Cooperation               | Global state | Reward function               | Action space          |    Vectorized    |
 |--------------------------------------------------------------------|--------------------------------------|---------------------------|--------------|-------------------------------|-----------------------|:----------------:|
-| [VMAS](https://github.com/proroklab/VectorizedMultiAgentSimulator) | [18](benchmarl/conf/task/vmas)       | Cooperative + Competitive | No           | Shared + Independent + Global | Continuous + Discrete |       Yes        |    
+| [VMAS](https://github.com/proroklab/VectorizedMultiAgentSimulator) | [27](benchmarl/conf/task/vmas)       | Cooperative + Competitive | No           | Shared + Independent + Global | Continuous + Discrete |       Yes        |    
 | [SMACv2](https://github.com/oxwhirl/smacv2)                        | [15](benchmarl/conf/task/smacv2)     | Cooperative               | Yes          | Global                        | Discrete              |        No        |
 | [MPE](https://github.com/openai/multiagent-particle-envs)          | [8](benchmarl/conf/task/pettingzoo)  | Cooperative + Competitive | Yes          | Shared + Independent          | Continuous + Discrete |        No        |
 | [SISL](https://github.com/sisl/MADRL)                              | [2](benchmarl/conf/task/pettingzoo)  | Cooperative               | No           | Shared                        | Continuous            |        No        |
@@ -253,7 +253,7 @@ They differ based on many aspects, here is a table with the current environments
 > BenchMARL uses the [TorchRL MARL API](https://github.com/pytorch/rl/issues/1463) for grouping agents.
 > In competitive environments like MPE, for example, teams will be in different groups. Each group has its own loss,
 > models, buffers, and so on. Parameter sharing options refer to sharing within the group. See the example on [creating
-> a custom algorithm](examples/extending/algorithm/custom_algorithm.py) for more info.
+> a custom algorithm](examples/extending/algorithm/algorithms/customalgorithm.py) for more info.
 
 **Models**. Models are neural networks used to process data. They can be used as actors (policies) or, 
 when requested, as critics. We provide a set of base models (layers) and a SequenceModel to concatenate

@@ -27,7 +27,7 @@ experiment:
 
   sampling_device: "cuda"
   train_device: "cuda"
-  buffer_device: "cpu"
+  buffer_device: "cuda"
 
   share_policy_params: True
   prefer_continuous_actions: True

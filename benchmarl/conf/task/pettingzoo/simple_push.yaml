@@ -1,6 +1,7 @@
 defaults:
+  -  pettingzoo_simple_push_config
   - _self_
-  - pettingzoo_simple_push_config
+
 
 task: "simple_push_v3"
 max_cycles: 100

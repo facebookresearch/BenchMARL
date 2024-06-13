@@ -7,8 +7,8 @@
 from __future__ import annotations
 
 import importlib
-import os
-import os.path as osp
+
+import warnings
 from enum import Enum
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
@@ -20,25 +20,33 @@ from torchrl.envs import EnvBase, RewardSum, Transform
 from benchmarl.utils import _read_yaml_config, DEVICE_TYPING
 
 
-def _load_config(name: str, config: Dict[str, Any]):
-    if not name.endswith(".py"):
-        name += ".py"
+def _type_check_task_config(
+    environemnt_name: str,
+    task_name: str,
+    config: Dict[str, Any],
+    warn_on_missing_dataclass: bool = True,
+):
 
-    pathname = None
-    for dirpath, _, filenames in os.walk(osp.dirname(__file__)):
-        if pathname is None:
-            for filename in filenames:
-                if filename == name:
-                    pathname = os.path.join(dirpath, filename)
-                    break
+    task_config_class = _get_task_config_class(environemnt_name, task_name)
 
-    if pathname is None:
-        raise ValueError(f"Task {name} not found.")
+    if task_config_class is not None:
+        return task_config_class(**config).__dict__
+    else:
+        if warn_on_missing_dataclass:
+            warnings.warn(
+                "TaskConfig python dataclass not foud, task is being loaded without type checks"
+            )
+        return config
 
-    spec = importlib.util.spec_from_file_location("", pathname)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module.TaskConfig(**config).__dict__
+
+def _get_task_config_class(environemnt_name: str, task_name: str):
+    try:
+        module = importlib.import_module(
+            f"{'.'.join(__name__.split('.')[:-1])}.{environemnt_name}.{task_name}"
+        )
+        return module.TaskConfig
+    except ModuleNotFoundError:
+        return None
 
 
 class Task(Enum):
@@ -314,10 +322,12 @@ class Task(Enum):
 
         Returns: the task with the loaded config
         """
+        environment_name = self.env_name()
+        task_name = self.name.lower()
+        full_name = str(Path(environment_name) / Path(task_name))
         if path is None:
-            task_name = self.name.lower()
-            return self.update_config(
-                Task._load_from_yaml(str(Path(self.env_name()) / Path(task_name)))
-            )
+            config = Task._load_from_yaml(full_name)
         else:
-            return self.update_config(**_read_yaml_config(path))
+            config = _read_yaml_config(path)
+        config = _type_check_task_config(environment_name, task_name, config)
+        return self.update_config(config)

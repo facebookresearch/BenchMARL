@@ -16,12 +16,12 @@ permissions:
 
 jobs:
   tests:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10","3.11"]
-
+        python-version: ["3.9", "3.10","3.11"]
+        os: [ubuntu-latest, windows-latest]
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
@@ -36,7 +36,7 @@ jobs:
       run: |
         pytest test/ --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml --cov-report=html
 
-    - if: matrix.python-version == '3.10'
+    - if: matrix.python-version == '3.11' && matrix.os == 'ubuntu-latest'
       name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:

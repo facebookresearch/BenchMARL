@@ -83,7 +83,7 @@ They differ based on many aspects, here is a table with the current environments
     +-------------------------------------------------+-------+---------------------------+--------------+-------------------------------+-----------------------+------------+
     | Environment                                     | Tasks |        Cooperation        | Global state |        Reward function        |     Action space      | Vectorized |
     +=================================================+=======+===========================+==============+===============================+=======================+============+
-    |    :class:`~benchmarl.environments.VmasTask`    |  18   | Cooperative + Competitive |      No      | Shared + Independent + Global | Continuous + Discrete |    Yes     |
+    |    :class:`~benchmarl.environments.VmasTask`    |  27   | Cooperative + Competitive |      No      | Shared + Independent + Global | Continuous + Discrete |    Yes     |
     +-------------------------------------------------+-------+---------------------------+--------------+-------------------------------+-----------------------+------------+
     |   :class:`~benchmarl.environments.Smacv2Task`   |  15   |        Cooperative        |     Yes      |            Global             |       Discrete        |     No     |
     +-------------------------------------------------+-------+---------------------------+--------------+-------------------------------+-----------------------+------------+

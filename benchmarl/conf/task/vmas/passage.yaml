@@ -1,0 +1,8 @@
+defaults:
+  - vmas_passage_config
+  - _self_
+
+
+max_steps: 500
+n_passages: 1
+shared_reward: True
