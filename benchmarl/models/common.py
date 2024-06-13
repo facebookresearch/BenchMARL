@@ -173,7 +173,7 @@ class Model(TensorDictModuleBase, ABC):
             or self.input_spec != other_model.input_spec
             or self.output_spec != other_model.output_spec
         ):
-            raise warnings.warn(
+            warnings.warn(
                 "Sharing parameters with models that are not identical. "
                 "This might result in unintended behavior or error."
             )
