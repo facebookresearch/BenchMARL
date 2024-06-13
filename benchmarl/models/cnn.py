@@ -200,9 +200,9 @@ class Cnn(Model):
     def _perform_checks(self):
         super()._perform_checks()
 
-        input_shape_tensor = None
-        self.image_in_keys = []
         input_shape_image = None
+        self.image_in_keys = []
+        input_shape_tensor = None
         self.tensor_in_keys = []
         for input_key, input_spec in self.input_spec.items(True, True):
             if (self.input_has_agent_dim and len(input_spec.shape) == 4) or (
