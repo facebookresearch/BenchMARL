@@ -323,6 +323,7 @@ class TestGnn:
             gnn_class=torch_geometric.nn.GATv2Conv,
             gnn_kwargs=None,
             position_key=position_key,
+            exclude_pos_from_node_features=False,
         ).get_model(
             input_spec=input_spec,
             output_spec=output_spec,
@@ -353,6 +354,7 @@ class TestGnn:
                 gnn_class=torch_geometric.nn.GraphConv,
                 gnn_kwargs=None,
                 position_key=position_key,
+                exclude_pos_from_node_features=False,
             ).get_model(
                 input_spec=input_spec,
                 output_spec=output_spec,
