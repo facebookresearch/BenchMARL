@@ -18,10 +18,38 @@ from benchmarl.models.common import Model, ModelConfig
 
 
 class Deepsets(Model):
-    """Multi layer perceptron model.
+    """Deepsets Model from https://arxiv.org/abs/1703.06114
+
+    The BenchMARL Deepsets accepts multiple inputs of 2 types:
+
+    - sets :math:`s`: Tensors of shape ``(*batch,S,F)``
+    - arrays :math:`x`: Tensors of shape ``(*batch,F)``
+
+    The Deepsets model will check that all set inputs have the same shape (excluding the last dimension)
+    and cat them along that dimension before processing them.
+
+    It will check that all array inputs have the same shape (excluding the last dimension)
+    and cat them along that dimension.
+
+    It will then compute the output according to the following function:
+
+    .. math::
+
+       \rho \left (x, \bigoplus_{s\in S}\phi(s) \right )
+
+    Where :math:`\rho,\phi` are MLPs configurable in the model setup.
 
     Args:
-
+        aggr (str): The aggregation strategy to use in the Deepsets model.
+        local_nn_num_cells (Sequence[int]): number of cells of every layer in between the input and output in the
+            :math:`\phi` MLP.
+        local_nn_activation_class (Type[nn.Module]): activation class to be used in the
+            :math:`\phi` MLP.
+        out_features_local_nn (int): output features of the :math:`\phi` MLP.
+        global_nn_num_cells (Sequence[int]): number of cells of every layer in between the input and output in the
+            :math:`\rho` MLP.
+        global_nn_activation_class (Type[nn.Module]): activation class to be used in the
+            :math:`\prho` MLP.
     """
 
     def __init__(
