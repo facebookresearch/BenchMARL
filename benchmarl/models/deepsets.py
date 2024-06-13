@@ -37,7 +37,7 @@ class Deepsets(Model):
 
        \rho \left (x, \bigoplus_{s\in S}\phi(s) \right ),
 
-    Where :math:`\rho,\phi` are MLPs configurable in the model setup.
+    where :math:`\rho,\phi` are MLPs configurable in the model setup.
 
     The model is useful in various contexts, for example:
 
