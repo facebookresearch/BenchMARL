@@ -418,10 +418,10 @@ class GnnConfig(ModelConfig):
     self_loops: bool = MISSING
 
     gnn_class: Type[torch_geometric.nn.MessagePassing] = MISSING
-    gnn_kwargs: Optional[dict] = None
-
-    position_key: Optional[str] = None
     exclude_pos_from_node_features: bool = MISSING
+
+    gnn_kwargs: Optional[dict] = None
+    position_key: Optional[str] = None
     velocity_key: Optional[str] = None
     edge_radius: Optional[float] = None
 
