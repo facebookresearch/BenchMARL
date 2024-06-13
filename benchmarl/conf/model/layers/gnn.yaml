@@ -9,3 +9,6 @@ gnn_kwargs:
 
 position_key: null
 velocity_key: null
+
+exclude_pos_from_node_features: False
+edge_radius: null
