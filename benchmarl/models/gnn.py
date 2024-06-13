@@ -63,7 +63,7 @@ class Gnn(Model):
             representing the agent position. This key will not be processed as a node feature, but it will used to construct
             edge features. In particular it be used to compute relative positions (``pos_node_1 - pos_node_2``) and a
             one-dimensional distance for all neighbours in the graph.
-        exclude_pos_from_node_features (bool): If ``position_key`` is provided,
+        exclude_pos_from_node_features (optional, bool): If ``position_key`` is provided,
             wether to use it just to compute edge features or also include it in node features.
         velocity_key (str, optional): if provided, it will need to match a leaf key in the env observation spec
             representing the agent velocity. This key will not be processed as a node feature, but it will used to construct
@@ -117,7 +117,7 @@ class Gnn(Model):
         gnn_class: Type[torch_geometric.nn.MessagePassing],
         gnn_kwargs: Optional[dict],
         position_key: Optional[str],
-        exclude_pos_from_node_features: bool,
+        exclude_pos_from_node_features: Optional[bool],
         velocity_key: Optional[str],
         edge_radius: Optional[float],
         **kwargs,
@@ -201,6 +201,13 @@ class Gnn(Model):
             )
         if self.topology == "from_pos" and self.position_key is None:
             raise ValueError("If topology is from_pos, position_key must be provided")
+        if (
+            self.position_key is not None
+            and self.exclude_pos_from_node_features is None
+        ):
+            raise ValueError(
+                "exclude_pos_from_node_features needs to be specified when position_key is provided"
+            )
 
         if not self.input_has_agent_dim:
             raise ValueError(
@@ -416,11 +423,11 @@ class GnnConfig(ModelConfig):
     self_loops: bool = MISSING
 
     gnn_class: Type[torch_geometric.nn.MessagePassing] = MISSING
-    exclude_pos_from_node_features: bool = MISSING
-
     gnn_kwargs: Optional[dict] = None
+
     position_key: Optional[str] = None
     velocity_key: Optional[str] = None
+    exclude_pos_from_node_features: Optional[bool] = None
     edge_radius: Optional[float] = None
 
     @staticmethod
