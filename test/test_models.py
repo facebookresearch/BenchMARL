@@ -29,17 +29,21 @@ def _get_input_and_output_specs(
     out_features=4,
     x=12,
     y=12,
+    set_size=5,
 ):
 
     if model_name == "cnn":
         multi_agent_input_shape = (n_agents, x, y, in_features)
         single_agent_input_shape = (x, y, in_features)
+    elif model_name == "deepsets":
+        multi_agent_input_shape = (n_agents, set_size, in_features)
+        single_agent_input_shape = (set_size, in_features)
     else:
         multi_agent_input_shape = (n_agents, in_features)
         single_agent_input_shape = in_features
 
-    other_multi_agent_input_shape = (n_agents, in_features)
-    other_single_agent_input_shape = in_features
+    other_multi_agent_input_shape = (n_agents, in_features + 1)
+    other_single_agent_input_shape = in_features + 1
 
     if input_has_agent_dim:
         input_spec = CompositeSpec(
@@ -216,16 +220,9 @@ def test_share_params_between_models(
         or (isinstance(model_name, list) and model_name[0] != "gnn")
     ):
         pytest.skip("gnn model needs agent dim as input")
-    torch.manual_seed(0)
+    torch.manual_seed(1)
 
     input_spec, output_spec = _get_input_and_output_specs(
-        centralised=centralised,
-        input_has_agent_dim=input_has_agent_dim,
-        model_name=model_name if isinstance(model_name, str) else model_name[0],
-        share_params=share_params,
-        n_agents=n_agents,
-    )
-    input_spec2, output_spec2 = _get_input_and_output_specs(
         centralised=centralised,
         input_has_agent_dim=input_has_agent_dim,
         model_name=model_name if isinstance(model_name, str) else model_name[0],
@@ -254,8 +251,8 @@ def test_share_params_between_models(
         action_spec=None,
     )
     second_model = config.get_model(
-        input_spec=input_spec2,
-        output_spec=output_spec2,
+        input_spec=input_spec,
+        output_spec=output_spec,
         share_params=share_params,
         centralised=centralised,
         input_has_agent_dim=input_has_agent_dim,
@@ -372,3 +369,75 @@ class TestGnn:
         obs_input = input_spec.expand(batch_size).rand()
         output = gnn(obs_input)
         assert output_spec.expand(batch_size).is_in(output)
+
+
+class TestDeepsets:
+    @pytest.mark.parametrize("share_params", [True, False])
+    @pytest.mark.parametrize("batch_size", [(), (2,), (3, 2)])
+    def test_special_case_centralized_critic_from_agent_tensors(
+        self,
+        share_params,
+        batch_size,
+        centralised=True,
+        input_has_agent_dim=True,
+        model_name="deepsets",
+        n_agents=3,
+        in_features=4,
+        out_features=2,
+    ):
+
+        torch.manual_seed(0)
+
+        config = model_config_registry[model_name].get_from_yaml()
+
+        multi_agent_input_shape = (n_agents, in_features)
+        other_multi_agent_input_shape = (n_agents, in_features)
+
+        input_spec = CompositeSpec(
+            {
+                "agents": CompositeSpec(
+                    {
+                        "observation": UnboundedContinuousTensorSpec(
+                            shape=multi_agent_input_shape
+                        ),
+                        "other": UnboundedContinuousTensorSpec(
+                            shape=other_multi_agent_input_shape
+                        ),
+                    },
+                    shape=(n_agents,),
+                )
+            }
+        )
+
+        if output_has_agent_dim(centralised=centralised, share_params=share_params):
+            output_spec = CompositeSpec(
+                {
+                    "agents": CompositeSpec(
+                        {
+                            "out": UnboundedContinuousTensorSpec(
+                                shape=(n_agents, out_features)
+                            )
+                        },
+                        shape=(n_agents,),
+                    )
+                },
+            )
+        else:
+            output_spec = CompositeSpec(
+                {"out": UnboundedContinuousTensorSpec(shape=(out_features,))},
+            )
+
+        model = config.get_model(
+            input_spec=input_spec,
+            output_spec=output_spec,
+            share_params=share_params,
+            centralised=centralised,
+            input_has_agent_dim=input_has_agent_dim,
+            n_agents=n_agents,
+            device="cpu",
+            agent_group="agents",
+            action_spec=None,
+        )
+        input_td = input_spec.expand(batch_size).rand()
+        out_td = model(input_td)
+        assert output_spec.expand(batch_size).is_in(out_td)
