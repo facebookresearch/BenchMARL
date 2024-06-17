@@ -606,8 +606,10 @@ class Experiment(CallbackNotifier):
                 training_tds = []
                 for _ in range(self.config.n_optimizer_steps(self.on_policy)):
                     for _ in range(
-                        self.config.train_batch_size(self.on_policy)
-                        // self.config.train_minibatch_size(self.on_policy)
+                        -(
+                            -self.config.train_batch_size(self.on_policy)
+                            // self.config.train_minibatch_size(self.on_policy)
+                        )
                     ):
                         training_tds.append(self._optimizer_loop(group))
                 training_td = torch.stack(training_tds)
