@@ -19,7 +19,7 @@ function warnOnLatestVersion() {
     "Click <a href='/en/stable'><b>here</b></a> to access the documentation of the current stable release." +
     "</p>";
 
-  var parent = document.querySelector('#pyg-documentation');
+  var parent = document.querySelector('#benchmarl');
   if (parent)
     parent.insertBefore(note, parent.querySelector('h1'));
 }
