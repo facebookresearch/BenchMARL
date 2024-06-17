@@ -41,7 +41,10 @@ intersphinx_mapping = {
 intersphinx_disabled_domains = ["std"]
 
 templates_path = ["_templates"]
-html_static_path = [osp.join(osp.dirname(benchmarl_sphinx_theme.__file__), "static")]
+html_static_path = [
+    osp.join(osp.dirname(benchmarl_sphinx_theme.__file__), "static"),
+    "_static",
+]
 
 
 html_theme = "sphinx_rtd_theme"
