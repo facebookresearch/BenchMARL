@@ -99,7 +99,7 @@ restore_file: null
 # Set it to 0 to disable checkpointing
 checkpoint_interval: 0
 # Wether to checkpoint when the experiment is done
-checkpoint_at_end: True
+checkpoint_at_end: False
 # How many checkpoints to keep. As new checkpoints are taken, temporally older checkponts are deleted to keep this number of
 # checkpoints. The checkpoint at the end is included in this number. Set to `null` to keep all checkpoints.
 keep_checkpoints_num: 3
