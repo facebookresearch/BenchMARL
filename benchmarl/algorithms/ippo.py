@@ -36,6 +36,9 @@ class Ippo(Algorithm):
             choices: "softplus", "exp", "relu", "biased_softplus_1";
         use_tanh_normal (bool): if ``True``, use TanhNormal as the continuyous action distribution with support bound
             to the action domain. Otherwise, an IndependentNormal is used.
+        minibatch_advantage (bool): if ``True``, advantage computation is perfomend on minibatches of size
+            ``experiment.config.on_policy_minibatch_size`` instead of the full
+            ``experiment.config.on_policy_collected_frames_per_batch``, this helps not exploding memory usage
 
     """
 
@@ -49,6 +52,7 @@ class Ippo(Algorithm):
         lmbda: float,
         scale_mapping: str,
         use_tanh_normal: bool,
+        minibatch_advantage: bool,
         **kwargs
     ):
         super().__init__(**kwargs)
@@ -61,6 +65,8 @@ class Ippo(Algorithm):
         self.lmbda = lmbda
         self.scale_mapping = scale_mapping
         self.use_tanh_normal = use_tanh_normal
+        self.minibatch_advantage = minibatch_advantage
+        self.group_critics = {}
 
     #############################
     # Overridden abstract methods
@@ -69,10 +75,11 @@ class Ippo(Algorithm):
     def _get_loss(
         self, group: str, policy_for_loss: TensorDictModule, continuous: bool
     ) -> Tuple[LossModule, bool]:
+        self.group_critics[group] = self.get_critic(group)
         # Loss
         loss_module = ClipPPOLoss(
             actor=policy_for_loss,
-            critic=self.get_critic(group),
+            critic=self.group_critics[group],
             clip_epsilon=self.clip_epsilon,
             entropy_coef=self.entropy_coef,
             critic_coef=self.critic_coef,
@@ -148,15 +155,17 @@ class Ippo(Algorithm):
                 spec=self.action_spec[group, "action"],
                 in_keys=[(group, "loc"), (group, "scale")],
                 out_keys=[(group, "action")],
-                distribution_class=IndependentNormal
-                if not self.use_tanh_normal
-                else TanhNormal,
-                distribution_kwargs={
-                    "min": self.action_spec[(group, "action")].space.low,
-                    "max": self.action_spec[(group, "action")].space.high,
-                }
-                if self.use_tanh_normal
-                else {},
+                distribution_class=(
+                    IndependentNormal if not self.use_tanh_normal else TanhNormal
+                ),
+                distribution_kwargs=(
+                    {
+                        "min": self.action_spec[(group, "action")].space.low,
+                        "max": self.action_spec[(group, "action")].space.high,
+                    }
+                    if self.use_tanh_normal
+                    else {}
+                ),
                 return_log_prob=True,
                 log_prob_key=(group, "log_prob"),
             )
@@ -221,14 +230,30 @@ class Ippo(Algorithm):
                 batch.get(("next", "reward")).unsqueeze(-1).expand((*group_shape, 1)),
             )
 
-        with torch.no_grad():
-            loss = self.get_loss_and_updater(group)[0]
-            loss.value_estimator(
-                batch,
-                params=loss.critic_network_params,
-                target_params=loss.target_critic_network_params,
+        loss = self.get_loss_and_updater(group)[0]
+        if self.minibatch_advantage:
+            increment = -(
+                -self.experiment.config.train_minibatch_size(self.on_policy)
+                // batch.shape[1]
             )
+        else:
+            increment = batch.batch_size[0] + 1
+        last_start_index = 0
+        start_index = increment
+        minibatches = []
+        while last_start_index < batch.shape[0]:
+            minimbatch = batch[last_start_index:start_index]
+            minibatches.append(minimbatch)
+            with torch.no_grad():
+                loss.value_estimator(
+                    minimbatch,
+                    params=loss.critic_network_params,
+                    target_params=loss.target_critic_network_params,
+                )
+            last_start_index = start_index
+            start_index += increment
 
+        batch = torch.cat(minibatches, dim=0)
         return batch
 
     def process_loss_vals(
@@ -269,7 +294,6 @@ class Ippo(Algorithm):
             device=self.device,
             action_spec=self.action_spec,
         )
-        value_module.ciao = True
 
         return value_module
 
@@ -286,6 +310,7 @@ class IppoConfig(AlgorithmConfig):
     lmbda: float = MISSING
     scale_mapping: str = MISSING
     use_tanh_normal: bool = MISSING
+    minibatch_advantage: bool = MISSING
 
     @staticmethod
     def associated_class() -> Type[Algorithm]:

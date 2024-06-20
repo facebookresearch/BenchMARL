@@ -14,15 +14,16 @@ hydra:
 seed: 0
 
 task:
-  n_agents: 5
+  n_agents: 9
   pos_shaping_factor: 1
   final_reward: 0.005
   agent_collision_penalty: -1
-  v_range: 3
-  a_range: 3
+  v_range: 2
+  a_range: 2
 
 algorithm:
   entropy_coef: 0.001
+  minibatch_advantage: True
 
 experiment:
 
@@ -46,7 +47,7 @@ experiment:
   exploration_anneal_frames: 1_000_000
 
   max_n_iters: null
-  max_n_frames: 50_000_000
+  max_n_frames: 100_000_000
 
   on_policy_collected_frames_per_batch: 60_000
   on_policy_n_envs_per_worker: 300
