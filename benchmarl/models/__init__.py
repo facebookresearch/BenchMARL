@@ -4,11 +4,29 @@
 #  LICENSE file in the root directory of this source tree.
 #
 
+from .cnn import Cnn, CnnConfig
 from .common import Model, ModelConfig, SequenceModel, SequenceModelConfig
+from .deepsets import Deepsets, DeepsetsConfig
 from .gnn import Gnn, GnnConfig
 from .mlp import Mlp, MlpConfig
 from .robomaster_model import RmGnn, RmGnnConfig
 
-classes = ["Mlp", "MlpConfig", "Gnn", "GnnConfig", "RmGnn"]
+classes = [
+    "Mlp",
+    "MlpConfig",
+    "Gnn",
+    "GnnConfig",
+    "Cnn",
+    "CnnConfig",
+    "Deepsets",
+    "DeepsetsConfig",
+    "RmGnn",
+]
 
-model_config_registry = {"mlp": MlpConfig, "gnn": GnnConfig, "rmgnn": RmGnnConfig}
+model_config_registry = {
+    "mlp": MlpConfig,
+    "gnn": GnnConfig,
+    "cnn": CnnConfig,
+    "deepsets": DeepsetsConfig,
+    "rmgnn": RmGnnConfig,
+}
