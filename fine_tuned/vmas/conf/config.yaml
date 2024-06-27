@@ -53,7 +53,7 @@ experiment:
   exploration_anneal_frames: 1_000_000
 
   max_n_iters: null
-  max_n_frames: 100_000_000
+  max_n_frames: 150_000_000
 
   on_policy_collected_frames_per_batch: 60_000
   on_policy_n_envs_per_worker: 300
