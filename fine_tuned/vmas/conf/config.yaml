@@ -22,7 +22,7 @@ task:
   a_range: 2
 
 algorithm:
-  entropy_coef: 0.001
+  entropy_coef: 0.002
   minibatch_advantage: True
 
 experiment:
