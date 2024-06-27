@@ -10,3 +10,4 @@ final_reward: 0.005
 agent_collision_penalty: -1
 v_range: 3
 a_range: 3
+edge_radius: 1

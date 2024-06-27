@@ -22,13 +22,14 @@ task:
   a_range: 2
 
 algorithm:
-  entropy_coef: 0.002
+  entropy_coef: 0.001
   minibatch_advantage: True
 
 experiment:
 
   sampling_device: "cuda"
   train_device: "cuda"
+  buffer_device: "cuda"
 
   share_policy_params: True
   prefer_continuous_actions: True

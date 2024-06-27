@@ -1,6 +1,7 @@
 defaults:
-  - _self_
   - vmas_simple_spread_config
+  - _self_
+
 
 max_steps: 100
 n_agents: 3

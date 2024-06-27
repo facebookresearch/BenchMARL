@@ -14,9 +14,7 @@ from typing import Optional, Sequence, Type
 import torch
 from tensordict import TensorDictBase
 from torch import nn, Tensor
-from torch_geometric.nn import MessagePassing
-from torch_geometric.transforms import BaseTransform
-from torch_geometric.utils import scatter
+
 from torchrl.modules import MultiAgentMLP
 
 from benchmarl.models.common import Model, ModelConfig
@@ -24,30 +22,30 @@ from benchmarl.models.common import Model, ModelConfig
 _has_torch_geometric = importlib.util.find_spec("torch_geometric") is not None
 if _has_torch_geometric:
     import torch_geometric
+    from torch_geometric.nn import MessagePassing
+    from torch_geometric.transforms import BaseTransform
 
-TOPOLOGY_TYPES = {"full", "empty"}
+    class _RelVel(BaseTransform):
+        """Transform that reads graph.vel and writes node1.vel - node2.vel in the edge attributes"""
+
+        def __init__(self):
+            pass
+
+        def __call__(self, data):
+            (row, col), vel, pseudo = data.edge_index, data.vel, data.edge_attr
+
+            cart = vel[row] - vel[col]
+            cart = cart.view(-1, 1) if cart.dim() == 1 else cart
+
+            if pseudo is not None:
+                pseudo = pseudo.view(-1, 1) if pseudo.dim() == 1 else pseudo
+                data.edge_attr = torch.cat([pseudo, cart.type_as(pseudo)], dim=-1)
+            else:
+                data.edge_attr = cart
+            return data
 
 
-def _get_edge_index(topology: str, self_loops: bool, n_agents: int, device: str):
-    if topology == "full":
-        adjacency = torch.ones(n_agents, n_agents, device=device, dtype=torch.long)
-        edge_index, _ = torch_geometric.utils.dense_to_sparse(adjacency)
-        if not self_loops:
-            edge_index, _ = torch_geometric.utils.remove_self_loops(edge_index)
-    elif topology == "empty":
-        if self_loops:
-            edge_index = (
-                torch.arange(n_agents, device=device, dtype=torch.long)
-                .unsqueeze(0)
-                .repeat(2, 1)
-            )
-
-        else:
-            edge_index = torch.empty((2, 0), device=device, dtype=torch.long)
-    else:
-        raise ValueError(f"Topology {topology} not supported")
-
-    return edge_index
+TOPOLOGY_TYPES = {"full", "empty", "from_pos"}
 
 
 class RmGnn(Model):
@@ -74,11 +72,13 @@ class RmGnn(Model):
         self_loops: bool,
         num_cells,
         activation_class,
+        edge_radius: Optional[float],
         **kwargs,
     ):
 
         self.topology = topology
         self.self_loops = self_loops
+        self.edge_radius = edge_radius
 
         super().__init__(**kwargs)
 
@@ -124,8 +124,16 @@ class RmGnn(Model):
             raise ValueError(
                 f"Got topology: {self.topology} but only available options are {TOPOLOGY_TYPES}"
             )
-        if self.centralised:
-            raise ValueError("GNN model can only be used in non-centralised critics")
+        if self.topology == "from_pos" and self.position_key is None:
+            raise ValueError("If topology is from_pos, position_key must be provided")
+        if (
+            self.position_key is not None
+            and self.exclude_pos_from_node_features is None
+        ):
+            raise ValueError(
+                "exclude_pos_from_node_features needs to be specified when position_key is provided"
+            )
+
         if not self.input_has_agent_dim:
             raise ValueError(
                 "The GNN module is not compatible with input that does not have the agent dimension,"
@@ -133,9 +141,24 @@ class RmGnn(Model):
                 "if your algorithm has a centralized critic and the task has a global state."
             )
 
-        if self.input_leaf_spec.shape[-2] != self.n_agents:
+        input_shape = None
+        for input_key, input_spec in self.input_spec.items(True, True):
+            if len(input_spec.shape) == 2:
+                if input_shape is None:
+                    input_shape = input_spec.shape[:-1]
+                else:
+                    if input_spec.shape[:-1] != input_shape:
+                        raise ValueError(
+                            f"GNN inputs should all have the same shape up to the last dimension, got {self.input_spec}"
+                        )
+            else:
+                raise ValueError(
+                    f"GNN input value {input_key} from {self.input_spec} has an invalid shape"
+                )
+
+        if input_shape[-1] != self.n_agents:
             raise ValueError(
-                "The second to last input spec dimension should be the number of agents"
+                f"The second to last input spec dimension should be the number of agents, got {self.input_spec}"
             )
         if (
             self.output_has_agent_dim
@@ -156,13 +179,13 @@ class RmGnn(Model):
         vel = input[..., 2:4]
         input = input[..., 2:]  # exclude pos
 
-        if hasattr(self, "ciao"):
-            pass
-        else:
-            pass
-
-        graph = batch_from_dense_to_ptg(
-            x=input, edge_index=self.edge_index, pos=pos, vel=vel
+        graph = _batch_from_dense_to_ptg(
+            x=input,
+            edge_index=self.edge_index,
+            pos=pos,
+            vel=vel,
+            self_loops=self.self_loops,
+            edge_radius=self.edge_radius,
         )
 
         if not self.share_params:
@@ -223,6 +246,29 @@ class MatPosConv(MessagePassing):
         return inputs
 
 
+def _get_edge_index(topology: str, self_loops: bool, n_agents: int, device: str):
+    if topology == "full":
+        adjacency = torch.ones(n_agents, n_agents, device=device, dtype=torch.long)
+        edge_index, _ = torch_geometric.utils.dense_to_sparse(adjacency)
+        if not self_loops:
+            edge_index, _ = torch_geometric.utils.remove_self_loops(edge_index)
+    elif topology == "empty":
+        if self_loops:
+            edge_index = (
+                torch.arange(n_agents, device=device, dtype=torch.long)
+                .unsqueeze(0)
+                .repeat(2, 1)
+            )
+        else:
+            edge_index = torch.empty((2, 0), device=device, dtype=torch.long)
+    elif topology == "from_pos":
+        edge_index = None
+    else:
+        raise ValueError(f"Topology {topology} not supported")
+
+    return edge_index
+
+
 class RelVel(BaseTransform):
     def __init__(self):
         pass
@@ -242,13 +288,14 @@ class RelVel(BaseTransform):
         return data
 
 
-def batch_from_dense_to_ptg(
+def _batch_from_dense_to_ptg(
     x: Tensor,
-    edge_index: Tensor,
+    edge_index: Optional[Tensor],
+    self_loops: bool,
     pos: Tensor = None,
     vel: Tensor = None,
+    edge_radius: Optional[float] = None,
 ) -> torch_geometric.data.Batch:
-
     batch_size = prod(x.shape[:-2])
     n_agents = x.shape[-2]
     x = x.view(-1, x.shape[-1])
@@ -267,24 +314,29 @@ def batch_from_dense_to_ptg(
     graphs.vel = vel
     graphs.edge_attr = None
 
-    n_edges = edge_index.shape[1]
-    # Tensor of shape [batch_size * n_edges]
-    # in which edges corresponding to the same graph have the same index.
-    batch = torch.repeat_interleave(b, n_edges)
-    # Edge index for the batched graphs of shape [2, n_edges * batch_size]
-    # we sum to each batch an offset of batch_num * n_agents to make sure that
-    # the adjacency matrices remain independent
-    batch_edge_index = edge_index.repeat(1, batch_size) + batch * n_agents
-    graphs.edge_index = batch_edge_index
+    if edge_index is not None:
+        n_edges = edge_index.shape[1]
+        # Tensor of shape [batch_size * n_edges]
+        # in which edges corresponding to the same graph have the same index.
+        batch = torch.repeat_interleave(b, n_edges)
+        # Edge index for the batched graphs of shape [2, n_edges * batch_size]
+        # we sum to each batch an offset of batch_num * n_agents to make sure that
+        # the adjacency matrices remain independent
+        batch_edge_index = edge_index.repeat(1, batch_size) + batch * n_agents
+        graphs.edge_index = batch_edge_index
+    else:
+        if pos is None:
+            raise RuntimeError("from_pos topology needs positions as input")
+        graphs.edge_index = torch_geometric.nn.pool.radius_graph(
+            graphs.pos, batch=graphs.batch, r=edge_radius, loop=self_loops
+        )
 
     graphs = graphs.to(x.device)
-
     if pos is not None:
         graphs = torch_geometric.transforms.Cartesian(norm=False)(graphs)
-    if pos is not None:
         graphs = torch_geometric.transforms.Distance(norm=False)(graphs)
     if vel is not None:
-        graphs = RelVel()(graphs)
+        graphs = _RelVel()(graphs)
 
     return graphs
 
@@ -298,6 +350,7 @@ class RmGnnConfig(ModelConfig):
 
     num_cells: Sequence[int] = MISSING
     activation_class: Type[nn.Module] = MISSING
+    edge_radius: Optional[float] = None
 
     @staticmethod
     def associated_class():

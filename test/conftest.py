@@ -83,7 +83,6 @@ def mlp_gnn_sequence_config() -> ModelConfig:
                 topology="full",
                 self_loops=False,
                 gnn_class=torch_geometric.nn.conv.GATv2Conv,
-                gnn_kwargs={},
             ),
             MlpConfig(num_cells=[4], activation_class=nn.Tanh, layer_class=nn.Linear),
         ],

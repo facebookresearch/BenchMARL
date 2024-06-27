@@ -5,3 +5,5 @@ self_loops: False
 
 num_cells: [256, 256]
 activation_class: torch.nn.Tanh
+
+edge_radius: 1

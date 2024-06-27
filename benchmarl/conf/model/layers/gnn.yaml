@@ -6,3 +6,9 @@ self_loops: False
 gnn_class: torch_geometric.nn.conv.GraphConv
 gnn_kwargs:
   aggr: "add"
+
+position_key: null
+velocity_key: null
+
+exclude_pos_from_node_features: False
+edge_radius: null

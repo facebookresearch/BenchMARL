@@ -17,10 +17,10 @@ from torchrl.envs.libs import YourTorchRLEnvConstructor
 
 class CustomEnvTask(Task):
     # Your task names.
-    # Their config will be loaded from benchmarl/conf/task/customenv
+    # Their config will be loaded from conf/task/customenv
 
-    TASK_1 = None  # Loaded automatically from benchmarl/conf/task/customenv/task_1
-    TASK_2 = None  # Loaded automatically from benchmarl/conf/task/customenv/task_2
+    TASK_1 = None  # Loaded automatically from conf/task/customenv/task_1
+    TASK_2 = None  # Loaded automatically from conf/task/customenv/task_2
 
     def get_env_fun(
         self,

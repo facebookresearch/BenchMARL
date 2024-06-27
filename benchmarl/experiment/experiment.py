@@ -11,7 +11,7 @@ import importlib
 
 import os
 import time
-from collections import OrderedDict
+from collections import deque, OrderedDict
 from dataclasses import dataclass, MISSING
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -22,7 +22,7 @@ from tensordict.nn import TensorDictSequential
 from torchrl.collectors import SyncDataCollector
 from torchrl.envs import SerialEnv, TransformedEnv
 from torchrl.envs.transforms import Compose
-from torchrl.envs.utils import ExplorationType, set_exploration_type
+from torchrl.envs.utils import ExplorationType, set_exploration_type, step_mdp
 from torchrl.record.loggers import generate_exp_name
 from tqdm import tqdm
 
@@ -50,9 +50,11 @@ class ExperimentConfig:
 
     sampling_device: str = MISSING
     train_device: str = MISSING
+    buffer_device: str = MISSING
 
     share_policy_params: bool = MISSING
     prefer_continuous_actions: bool = MISSING
+    collect_with_grad: bool = MISSING
 
     gamma: float = MISSING
     lr: float = MISSING
@@ -94,7 +96,9 @@ class ExperimentConfig:
 
     save_folder: Optional[str] = MISSING
     restore_file: Optional[str] = MISSING
-    checkpoint_interval: float = MISSING
+    checkpoint_interval: int = MISSING
+    checkpoint_at_end: bool = MISSING
+    keep_checkpoints_num: Optional[int] = MISSING
 
     def train_batch_size(self, on_policy: bool) -> int:
         """
@@ -278,6 +282,8 @@ class ExperimentConfig:
                 f"checkpoint_interval ({self.checkpoint_interval}) "
                 f"is not a multiple of the collected_frames_per_batch ({self.collected_frames_per_batch(on_policy)})"
             )
+        if self.keep_checkpoints_num is not None and self.keep_checkpoints_num <= 0:
+            raise ValueError("keep_checkpoints_num must be greater than zero or null")
         if self.max_n_frames is None and self.max_n_iters is None:
             raise ValueError("n_iters and total_frames are both not set")
 
@@ -387,14 +393,6 @@ class Experiment(CallbackNotifier):
                 device=self.config.sampling_device,
             )
         )
-        self.observation_spec = self.task.observation_spec(test_env)
-        self.info_spec = self.task.info_spec(test_env)
-        self.state_spec = self.task.state_spec(test_env)
-        self.action_mask_spec = self.task.action_mask_spec(test_env)
-        self.action_spec = self.task.action_spec(test_env)
-        self.group_map = self.task.group_map(test_env)
-        self.train_group_map = copy.deepcopy(self.group_map)
-        self.max_steps = self.task.max_steps(test_env)
 
         transforms_env = self.task.get_env_transforms(test_env)
         transforms_training = transforms_env + [
@@ -417,6 +415,15 @@ class Experiment(CallbackNotifier):
         self.test_env = TransformedEnv(test_env, transforms_env.clone()).to(
             self.config.sampling_device
         )
+
+        self.observation_spec = self.task.observation_spec(self.test_env)
+        self.info_spec = self.task.info_spec(self.test_env)
+        self.state_spec = self.task.state_spec(self.test_env)
+        self.action_mask_spec = self.task.action_mask_spec(self.test_env)
+        self.action_spec = self.task.action_spec(self.test_env)
+        self.group_map = self.task.group_map(self.test_env)
+        self.train_group_map = copy.deepcopy(self.group_map)
+        self.max_steps = self.task.max_steps(self.test_env)
 
     def _setup_algorithm(self):
         self.algorithm = self.algorithm_config.get_algorithm(experiment=self)
@@ -454,23 +461,33 @@ class Experiment(CallbackNotifier):
             assert len(group_policy) == 1
             self.group_policies.update({group: group_policy[0]})
 
-        self.collector = SyncDataCollector(
-            self.env_func,
-            self.policy,
-            device=self.config.sampling_device,
-            storing_device=self.config.train_device,
-            frames_per_batch=self.config.collected_frames_per_batch(self.on_policy),
-            total_frames=self.config.get_max_n_frames(self.on_policy),
-            init_random_frames=self.config.off_policy_init_random_frames
-            if not self.on_policy
-            else 0,
-        )
+        if not self.config.collect_with_grad:
+            self.collector = SyncDataCollector(
+                self.env_func,
+                self.policy,
+                device=self.config.sampling_device,
+                storing_device=self.config.train_device,
+                frames_per_batch=self.config.collected_frames_per_batch(self.on_policy),
+                total_frames=self.config.get_max_n_frames(self.on_policy),
+                init_random_frames=(
+                    self.config.off_policy_init_random_frames
+                    if not self.on_policy
+                    else 0
+                ),
+            )
+        else:
+            if self.config.off_policy_init_random_frames and not self.on_policy:
+                raise TypeError(
+                    "Collection via rollouts does not support initial random frames as of now."
+                )
+            self.rollout_env = self.env_func().to(self.config.sampling_device)
 
     def _setup_name(self):
         self.algorithm_name = self.algorithm_config.associated_class().__name__.lower()
         self.model_name = self.model_config.associated_class().__name__.lower()
         self.environment_name = self.task.env_name().lower()
         self.task_name = self.task.name.lower()
+        self._checkpointed_files = deque([])
 
         if self.config.restore_file is not None and self.config.save_folder is not None:
             raise ValueError(
@@ -542,8 +559,31 @@ class Experiment(CallbackNotifier):
         )
         sampling_start = time.time()
 
+        if not self.config.collect_with_grad:
+            iterator = iter(self.collector)
+        else:
+            reset_batch = self.rollout_env.reset()
+
         # Training/collection iterations
-        for batch in self.collector:
+        for _ in range(
+            self.n_iters_performed, self.config.get_max_n_iters(self.on_policy)
+        ):
+            if not self.config.collect_with_grad:
+                batch = next(iterator)
+            else:
+                with set_exploration_type(ExplorationType.RANDOM):
+                    batch = self.rollout_env.rollout(
+                        max_steps=-(
+                            -self.config.collected_frames_per_batch(self.on_policy)
+                            // self.rollout_env.batch_size.numel()
+                        ),
+                        policy=self.policy,
+                        break_when_any_done=False,
+                        auto_reset=False,
+                        tensordict=reset_batch,
+                    )
+                    reset_batch = step_mdp(batch[..., -1])
+
             # Logging collection
             collection_time = time.time() - sampling_start
             current_frames = batch.numel()
@@ -558,6 +598,7 @@ class Experiment(CallbackNotifier):
 
             # Callback
             self._on_batch_collected(batch)
+            batch = batch.detach()
 
             # Loop over groups
             training_start = time.time()
@@ -570,8 +611,10 @@ class Experiment(CallbackNotifier):
                 training_tds = []
                 for _ in range(self.config.n_optimizer_steps(self.on_policy)):
                     for _ in range(
-                        self.config.train_batch_size(self.on_policy)
-                        // self.config.train_minibatch_size(self.on_policy)
+                        -(
+                            -self.config.train_batch_size(self.on_policy)
+                            // self.config.train_minibatch_size(self.on_policy)
+                        )
                     ):
                         training_tds.append(self._optimizer_loop(group))
                 training_td = torch.stack(training_tds)
@@ -591,7 +634,8 @@ class Experiment(CallbackNotifier):
                     explore_layer.step(current_frames)
 
             # Update policy in collector
-            self.collector.update_policy_weights_()
+            if not self.config.collect_with_grad:
+                self.collector.update_policy_weights_()
 
             # Timers
             training_time = time.time() - training_start
@@ -629,11 +673,16 @@ class Experiment(CallbackNotifier):
             pbar.update()
             sampling_start = time.time()
 
+        if self.config.checkpoint_at_end:
+            self._save_experiment()
         self.close()
 
     def close(self):
         """Close the experiment."""
-        self.collector.shutdown()
+        if not self.config.collect_with_grad:
+            self.collector.shutdown()
+        else:
+            self.rollout_env.close()
         self.test_env.close()
         self.logger.finish()
 
@@ -646,7 +695,7 @@ class Experiment(CallbackNotifier):
         return excluded_keys
 
     def _optimizer_loop(self, group: str) -> TensorDictBase:
-        subdata = self.replay_buffers[group].sample()
+        subdata = self.replay_buffers[group].sample().to(self.config.train_device)
         loss_vals = self.losses[group](subdata)
         training_td = loss_vals.detach()
         loss_vals = self.algorithm.process_loss_vals(group, loss_vals)
@@ -764,13 +813,14 @@ class Experiment(CallbackNotifier):
         )
         state_dict = OrderedDict(
             state=state,
-            collector=self.collector.state_dict(),
             **{f"loss_{k}": item.state_dict() for k, item in self.losses.items()},
             **{
                 f"buffer_{k}": item.state_dict()
                 for k, item in self.replay_buffers.items()
             },
         )
+        if not self.config.collect_with_grad:
+            state_dict.update({"collector": self.collector.state_dict()})
         return state_dict
 
     def load_state_dict(self, state_dict: Dict) -> None:
@@ -783,7 +833,8 @@ class Experiment(CallbackNotifier):
         for group in self.group_map.keys():
             self.losses[group].load_state_dict(state_dict[f"loss_{group}"])
             self.replay_buffers[group].load_state_dict(state_dict[f"buffer_{group}"])
-        self.collector.load_state_dict(state_dict["collector"])
+        if not self.config.collect_with_grad:
+            self.collector.load_state_dict(state_dict["collector"])
         self.total_time = state_dict["state"]["total_time"]
         self.total_frames = state_dict["state"]["total_frames"]
         self.n_iters_performed = state_dict["state"]["n_iters_performed"]
@@ -791,10 +842,16 @@ class Experiment(CallbackNotifier):
 
     def _save_experiment(self) -> None:
         """Checkpoint trainer"""
+        if self.config.keep_checkpoints_num is not None:
+            while len(self._checkpointed_files) >= self.config.keep_checkpoints_num:
+                file_to_delete = self._checkpointed_files.popleft()
+                file_to_delete.unlink(missing_ok=False)
+
         checkpoint_folder = self.folder_name / "checkpoints"
         checkpoint_folder.mkdir(parents=False, exist_ok=True)
         checkpoint_file = checkpoint_folder / f"checkpoint_{self.total_frames}.pt"
         torch.save(self.state_dict(), checkpoint_file)
+        self._checkpointed_files.append(checkpoint_file)
 
     def _load_experiment(self) -> Experiment:
         """Load trainer from checkpoint"""

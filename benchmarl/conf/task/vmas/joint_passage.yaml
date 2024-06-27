@@ -1,0 +1,15 @@
+defaults:
+  - vmas_joint_passage_config
+  - _self_
+
+
+max_steps: 500
+n_passages: 1
+fixed_passage: True
+joint_length: 0.5
+random_start_angle: True
+random_goal_angle: True
+observe_joint_angle: False
+asym_package: True
+mass_ratio: 5
+mass_position: 0.75

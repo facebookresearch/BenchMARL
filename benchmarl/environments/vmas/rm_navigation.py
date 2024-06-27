@@ -5,6 +5,7 @@
 #
 
 from dataclasses import dataclass, MISSING
+from typing import Optional
 
 
 @dataclass
@@ -16,3 +17,4 @@ class TaskConfig:
     agent_collision_penalty: float = MISSING
     v_range: float = MISSING
     a_range: float = MISSING
+    edge_radius: Optional[float] = MISSING

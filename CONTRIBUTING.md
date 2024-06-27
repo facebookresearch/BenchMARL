@@ -2,6 +2,9 @@
 We want to make contributing to this project as easy and transparent as
 possible.
 
+**We have an open issue listing all the features we would like to integrate in the library,
+this is a very good starting point for contributing!**
+
 ## Pull Requests
 We actively welcome your pull requests.
 
