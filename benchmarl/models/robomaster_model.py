@@ -124,15 +124,6 @@ class RmGnn(Model):
             raise ValueError(
                 f"Got topology: {self.topology} but only available options are {TOPOLOGY_TYPES}"
             )
-        if self.topology == "from_pos" and self.position_key is None:
-            raise ValueError("If topology is from_pos, position_key must be provided")
-        if (
-            self.position_key is not None
-            and self.exclude_pos_from_node_features is None
-        ):
-            raise ValueError(
-                "exclude_pos_from_node_features needs to be specified when position_key is provided"
-            )
 
         if not self.input_has_agent_dim:
             raise ValueError(

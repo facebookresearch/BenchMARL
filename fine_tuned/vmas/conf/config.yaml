@@ -20,6 +20,11 @@ task:
   agent_collision_penalty: -1
   v_range: 2
   a_range: 2
+  edge_radius: 2
+
+model:
+  edge_radius: 2
+  topology: from_pos
 
 algorithm:
   entropy_coef: 0.001
