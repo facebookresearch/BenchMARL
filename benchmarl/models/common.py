@@ -5,7 +5,7 @@
 #
 
 import pathlib
-
+import warnings
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass
 from typing import Any, Callable, Dict, List, Optional, Sequence
@@ -157,6 +157,29 @@ class Model(TensorDictModuleBase, ABC):
         # _check_spec(tensordict, self.output_spec)
         return tensordict
 
+    def share_params_with(self, other_model):
+        """Share paramters with another identical model model.
+
+        This function modifies in-place the parameters of ``other_model`` to reference the parameters of ``self``
+
+        Args:
+            other_model (Model): the model that will share the parameters of ``self``.
+
+        """
+        if (
+            self.share_params != other_model.share_params
+            or self.centralised != other_model.centralised
+            or self.input_has_agent_dim != other_model.input_has_agent_dim
+            or self.input_spec != other_model.input_spec
+            or self.output_spec != other_model.output_spec
+        ):
+            warnings.warn(
+                "Sharing parameters with models that are not identical. "
+                "This might result in unintended behavior or error."
+            )
+        for param, other_param in zip(self.parameters(), other_model.parameters()):
+            other_param.data[:] = param.data
+
     ###############################
     # Abstract methods to implement
     ###############################
@@ -295,8 +318,7 @@ class ModelConfig(ABC):
             / "layers"
             / f"{name.lower()}.yaml"
         )
-        cfg = _read_yaml_config(str(yaml_path.resolve()))
-        return parse_model_config(cfg)
+        return _read_yaml_config(str(yaml_path.resolve()))
 
     @classmethod
     def get_from_yaml(cls, path: Optional[str] = None):
@@ -311,13 +333,11 @@ class ModelConfig(ABC):
         Returns: the loaded AlgorithmConfig
         """
         if path is None:
-            return cls(
-                **ModelConfig._load_from_yaml(
-                    name=cls.associated_class().__name__,
-                )
-            )
+            config = ModelConfig._load_from_yaml(name=cls.associated_class().__name__)
         else:
-            return cls(**parse_model_config(_read_yaml_config(path)))
+            config = _read_yaml_config(path)
+        config = parse_model_config(config)
+        return cls(**config)
 
 
 @dataclass

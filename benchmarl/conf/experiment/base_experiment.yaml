@@ -6,11 +6,15 @@ defaults:
 sampling_device: "cpu"
 # The device for training (e.g. cuda)
 train_device: "cpu"
+# The device for the replay buffer of off-policy algorithms (e.g. cuda)
+buffer_device: "cpu"
 
 # Whether to share the parameters of the policy within agent groups
 share_policy_params: True
 # If an algorithm and an env support both continuous and discrete actions, what should be preferred
 prefer_continuous_actions: True
+# If False collection is done using a collector (under no grad). If True, collection is done with gradients.
+collect_with_grad: False
 
 # Discount factor
 gamma: 0.9
@@ -94,3 +98,8 @@ restore_file: null
 # Interval for experiment saving in terms of collected frames (this should be a multiple of on/off_policy_collected_frames_per_batch).
 # Set it to 0 to disable checkpointing
 checkpoint_interval: 0
+# Wether to checkpoint when the experiment is done
+checkpoint_at_end: False
+# How many checkpoints to keep. As new checkpoints are taken, temporally older checkpoints are deleted to keep this number of
+# checkpoints. The checkpoint at the end is included in this number. Set to `null` to keep all checkpoints.
+keep_checkpoints_num: 3
