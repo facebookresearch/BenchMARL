@@ -17,13 +17,13 @@ task:
   n_agents: 9
   pos_shaping_factor: 1
   final_reward: 0.005
-  agent_collision_penalty: -1
+  agent_collision_penalty: -2
   v_range: 2
   a_range: 2
-  edge_radius: 2
+  edge_radius: 10
 
 model:
-  edge_radius: 2
+  edge_radius: 10
   topology: from_pos
 
 algorithm:
