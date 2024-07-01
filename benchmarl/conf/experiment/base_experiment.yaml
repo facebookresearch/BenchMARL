@@ -102,4 +102,4 @@ checkpoint_interval: 0
 checkpoint_at_end: False
 # How many checkpoints to keep. As new checkpoints are taken, temporally older checkpoints are deleted to keep this number of
 # checkpoints. The checkpoint at the end is included in this number. Set to `null` to keep all checkpoints.
-keep_checkpoints_num: 3
+keep_checkpoints_num: null
