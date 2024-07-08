@@ -53,3 +53,4 @@ command:
   - python
   - ${program}
   - ${args_no_hyphens}
+  
