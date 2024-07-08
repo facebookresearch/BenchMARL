@@ -1,23 +1,5 @@
-'''
-Read this blog post for more details
-https://wandb.ai/adrishd/hydra-example/reports/Configuring-W-B-Projects-with-Hydra--VmlldzoxNTA2MzQw?galleryTag=posts&utm_source=fully_connected&utm_medium=blog&utm_campaign=hydra
-
-Also you need to change the config.yaml like following: 
-
-# defaults:
-#   - experiment: base_experiment
-#   - algorithm: ippo
-#   - task: customenv/task_1
-#   - model: layers/mlp
-#   - model@critic_model: layers/mlp
-#   - _self_
-
-# seed: 0
-
-'''
-
 program: PATH_TO_YOUR_DIRECTORY\benchmarl\run.py
-project: "sweep_benchmarl"
+project: "YOUR_PROJECT_NAME"
 entity: "YOUR_ENTITY_NAME"
 
 method: bayes 
@@ -57,7 +39,6 @@ parameters:
     # distribution: categorical
 
         
-
 early_terminate:
   type: hyperband
   max_iter: 27

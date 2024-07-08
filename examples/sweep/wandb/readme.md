@@ -4,8 +4,21 @@ You can improve the performance of your RL agents with hyperparameter tuning. It
 
 ## Prerequisites
 
-Ensure you have Weights & Biases: `pip install wandb` installed on top of benchmarl requirements.
+- Ensure you have Weights & Biases: `pip install wandb` installed on top of benchmarl requirements.
 
+- Update the `benchmarl/conf/config.yaml` with your desired experiment setup, e.g.:
+
+```yaml
+defaults:
+  - experiment: base_experiment
+  - algorithm: ippo
+  - task: customenv/task_1
+  - model: layers/mlp
+  - model@critic_model: layers/mlp
+  - _self_
+
+seed: 0
+```
 
 ## Step 1: Define Your Sweep Configuration
 
