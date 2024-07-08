@@ -1,0 +1,74 @@
+'''
+Read this blog post for more details
+https://wandb.ai/adrishd/hydra-example/reports/Configuring-W-B-Projects-with-Hydra--VmlldzoxNTA2MzQw?galleryTag=posts&utm_source=fully_connected&utm_medium=blog&utm_campaign=hydra
+
+Also you need to change the config.yaml like following: 
+
+# defaults:
+#   - experiment: base_experiment
+#   - algorithm: ippo
+#   - task: customenv/task_1
+#   - model: layers/mlp
+#   - model@critic_model: layers/mlp
+#   - _self_
+
+# seed: 0
+
+'''
+
+program: PATH_TO_YOUR_DIRECTORY\benchmarl\run.py
+project: "sweep_benchmarl"
+entity: "YOUR_ENTITY_NAME"
+
+method: bayes 
+
+metric:
+  name: eval/agent/reward/episode_reward_mean
+  goal: maximize
+
+parameters:
+
+  # experiment hyperparameters 
+
+  experiment.lr:
+    max: 0.003
+    min: 0.000025
+    # distribution: uniform
+
+  experiment.max_n_iters:
+   value: 321
+  experiment.on_policy_collected_frames_per_batch: 
+    value: 4040
+  experiment.on_policy_n_minibatch_iters:
+    values: [1, 2]
+
+  experiment.on_policy_minibatch_size:
+    values: [64, 128, 256]
+
+  # algorithm hyperparameters 
+  algorithm.entropy_coef:
+      max: 0.05
+      min: 0
+      distribution: uniform
+
+  # task hyperparameters
+  task.goal_type:
+    value: "corr"
+    # distribution: categorical
+
+        
+
+early_terminate:
+  type: hyperband
+  max_iter: 27
+  s: 3
+  # seed:
+  #   max: 84
+  #   min: 0
+  #   distribution: int_uniform
+
+command:
+  - ${env}
+  - python
+  - ${program}
+  - ${args_no_hyphens}
