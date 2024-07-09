@@ -657,7 +657,10 @@ class Experiment(CallbackNotifier):
             # Evaluation
             if (
                 self.config.evaluation
-                and (self.total_frames % self.config.evaluation_interval == 0)
+                and (
+                    self.total_frames % self.config.evaluation_interval == 0
+                    or self.n_iters_performed == 0
+                )
                 and (len(self.config.loggers) or self.config.create_json)
             ):
                 self._evaluation_loop()
