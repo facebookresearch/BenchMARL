@@ -33,6 +33,8 @@ class TestSmacv2:
                 task=task,
             )
             experiment.run()
+        else:
+            pytest.skip("No support for discrete actions")
 
     @pytest.mark.parametrize("algo_config", [QmixConfig, MappoConfig])
     @pytest.mark.parametrize(
