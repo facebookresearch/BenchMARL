@@ -37,7 +37,7 @@ def get_policy():
 
 
 def run_policy(policy, obs):
-    n_agents = 5
+    n_agents = 9
 
     # These are he input args
     # pos = torch.zeros((1, n_agents, 2), dtype=torch.float)
@@ -59,7 +59,7 @@ def run_policy(policy, obs):
 
 
 if __name__ == "__main__":
-    n_agents = 5
+    n_agents = 9
     policy = get_policy()
 
     env = vmas.make_env(
@@ -68,12 +68,12 @@ if __name__ == "__main__":
         continuous_actions=True,
         # Environment specific variables
         n_agents=n_agents,
-        v_range=3,
-        a_range=3,
+        v_range=2,
+        a_range=2,
     )
     obs = torch.stack(env.reset(), dim=-2)
     frame_list = []
-    for _ in range(100):
+    for _ in range(200):
 
         actions = run_policy(policy, obs).unbind(-2)
 

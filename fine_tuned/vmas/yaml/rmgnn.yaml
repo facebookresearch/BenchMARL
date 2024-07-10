@@ -1,6 +1,6 @@
 name: rm_gnn
 
-topology: full
+topology: from_pos
 self_loops: False
 
 num_cells: [256, 256]
