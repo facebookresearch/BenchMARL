@@ -1,0 +1,56 @@
+program: PATH_TO_YOUR_DIRECTORY\benchmarl\run.py
+project: "YOUR_PROJECT_NAME"
+entity: "YOUR_ENTITY_NAME"
+
+method: bayes 
+
+metric:
+  name: eval/agent/reward/episode_reward_mean
+  goal: maximize
+
+parameters:
+
+  # experiment hyperparameters 
+
+  experiment.lr:
+    max: 0.003
+    min: 0.000025
+    # distribution: uniform
+
+  experiment.max_n_iters:
+   value: 321
+  experiment.on_policy_collected_frames_per_batch: 
+    value: 4040
+  experiment.on_policy_n_minibatch_iters:
+    values: [1, 2]
+
+  experiment.on_policy_minibatch_size:
+    values: [64, 128, 256]
+
+  # algorithm hyperparameters 
+  algorithm.entropy_coef:
+      max: 0.05
+      min: 0
+      distribution: uniform
+
+  # task hyperparameters
+  task.goal_type:
+    value: "corr"
+    # distribution: categorical
+
+        
+early_terminate:
+  type: hyperband
+  max_iter: 27
+  s: 3
+  # seed:
+  #   max: 84
+  #   min: 0
+  #   distribution: int_uniform
+
+command:
+  - ${env}
+  - python
+  - ${program}
+  - ${args_no_hyphens}
+  
