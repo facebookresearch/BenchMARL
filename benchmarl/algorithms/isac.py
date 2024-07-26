@@ -203,8 +203,8 @@ class Isac(Algorithm):
                 if not self.use_tanh_normal
                 else TanhNormal,
                 distribution_kwargs={
-                    "min": self.action_spec[(group, "action")].space.low,
-                    "max": self.action_spec[(group, "action")].space.high,
+                    "low": self.action_spec[(group, "action")].space.low,
+                    "high": self.action_spec[(group, "action")].space.high,
                 }
                 if self.use_tanh_normal
                 else {},

@@ -582,7 +582,12 @@ class Experiment(CallbackNotifier):
                         auto_reset=False,
                         tensordict=reset_batch,
                     )
-                    reset_batch = step_mdp(batch[..., -1])
+                    reset_batch = step_mdp(
+                        batch[..., -1],
+                        reward_keys=self.rollout_env.reward_keys,
+                        action_keys=self.rollout_env.action_keys,
+                        done_keys=self.rollout_env.done_keys,
+                    )
 
             # Logging collection
             collection_time = time.time() - iteration_start
@@ -753,7 +758,7 @@ class Experiment(CallbackNotifier):
     def _evaluation_loop(self):
         evaluation_start = time.time()
         with set_exploration_type(
-            ExplorationType.MODE
+            ExplorationType.DETERMINISTIC
             if self.config.evaluation_deterministic_actions
             else ExplorationType.RANDOM
         ):

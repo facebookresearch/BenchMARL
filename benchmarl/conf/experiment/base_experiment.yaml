@@ -82,7 +82,7 @@ render: True
 evaluation_interval: 120_000
 # Number of episodes that evaluation is run on
 evaluation_episodes: 10
-# If True, when stochastic policies are evaluated, their mode is taken, otherwise, if False, they are sampled
+# If True, when stochastic policies are evaluated, their deterministic value is taken, otherwise, if False, they are sampled
 evaluation_deterministic_actions: True
 
 # List of loggers to use, options are: wandb, csv, tensorboard, mflow
