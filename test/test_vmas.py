@@ -74,6 +74,24 @@ class TestVmas:
         )
         experiment.run()
 
+    def test_collect_with_grad(
+        self,
+        experiment_config,
+        mlp_sequence_config,
+        algo_config: AlgorithmConfig = IppoConfig,
+        task: Task = VmasTask.BALANCE,
+    ):
+        task = task.get_from_yaml()
+        experiment_config.collect_with_grad = True
+        experiment = Experiment(
+            algorithm_config=algo_config.get_from_yaml(),
+            model_config=mlp_sequence_config,
+            seed=0,
+            config=experiment_config,
+            task=task,
+        )
+        experiment.run()
+
     @pytest.mark.parametrize(
         "algo_config", [IppoConfig, QmixConfig, IsacConfig, IddpgConfig]
     )
