@@ -158,8 +158,8 @@ class Ippo(Algorithm):
                 ),
                 distribution_kwargs=(
                     {
-                        "low": self.action_spec[(group, "action")].space.low,
-                        "high": self.action_spec[(group, "action")].space.high,
+                        "min": self.action_spec[(group, "action")].space.low,
+                        "max": self.action_spec[(group, "action")].space.high,
                     }
                     if self.use_tanh_normal
                     else {}
