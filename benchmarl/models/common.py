@@ -298,16 +298,26 @@ class ModelConfig(ABC):
         """
         raise NotImplementedError
 
-    def process_env_fun(self, env_fun: Callable[[], EnvBase]) -> Callable[[], EnvBase]:
+    def process_env_fun(
+        self,
+        env_fun: Callable[[], EnvBase],
+        task,
+        model_index: int = 0,
+    ) -> Callable[[], EnvBase]:
         """
         This function can be used to wrap env_fun
         Args:
             env_fun (callable): a function that takes no args and creates an enviornment
+            task (Task): the task
 
         Returns: a function that takes no args and creates an enviornment
 
         """
         return env_fun
+
+    @property
+    def is_rnn(self) -> bool:
+        return False
 
     @staticmethod
     def _load_from_yaml(name: str) -> Dict[str, Any]:
@@ -451,10 +461,22 @@ class SequenceModelConfig(ModelConfig):
     def associated_class():
         return SequenceModel
 
-    def process_env_fun(self, env_fun: Callable[[], EnvBase]) -> Callable[[], EnvBase]:
-        for model_config in self.model_configs:
-            env_fun = model_config.process_env_fun(env_fun)
+    def process_env_fun(
+        self,
+        env_fun: Callable[[], EnvBase],
+        task,
+        model_index: int = 0,
+    ) -> Callable[[], EnvBase]:
+        for i, model_config in enumerate(self.model_configs):
+            env_fun = model_config.process_env_fun(env_fun, task, i)
         return env_fun
+
+    @property
+    def is_rnn(self) -> bool:
+        is_rnn = False
+        for model_config in self.model_configs:
+            is_rnn += model_config.is_rnn
+        return is_rnn
 
     @classmethod
     def get_from_yaml(cls, path: Optional[str] = None):

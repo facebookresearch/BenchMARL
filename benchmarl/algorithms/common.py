@@ -142,6 +142,17 @@ class Algorithm(ABC):
         """
         memory_size = self.experiment_config.replay_buffer_memory_size(self.on_policy)
         sampling_size = self.experiment_config.train_minibatch_size(self.on_policy)
+        if (
+            self.experiment.model_config.is_rnn
+            or self.experiment.critic_model_config.is_rnn
+        ):
+            sequence_length = -(
+                -self.experiment_config.collected_frames_per_batch(self.on_policy)
+                // self.experiment_config.n_envs_per_worker(self.on_policy)
+            )
+            memory_size = -(-memory_size // sequence_length)
+            sampling_size = -(-sampling_size // sequence_length)
+
         sampler = SamplerWithoutReplacement() if self.on_policy else RandomSampler()
         return TensorDictReplayBuffer(
             storage=LazyTensorStorage(

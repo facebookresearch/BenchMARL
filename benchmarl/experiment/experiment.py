@@ -383,7 +383,8 @@ class Experiment(CallbackNotifier):
                 continuous_actions=self.continuous_actions,
                 seed=self.seed,
                 device=self.config.sampling_device,
-            )
+            ),
+            self.task,
         )()
         env_func = self.model_config.process_env_fun(
             self.task.get_env_fun(
@@ -391,7 +392,8 @@ class Experiment(CallbackNotifier):
                 continuous_actions=self.continuous_actions,
                 seed=self.seed,
                 device=self.config.sampling_device,
-            )
+            ),
+            self.task,
         )
 
         transforms_env = self.task.get_env_transforms(test_env)
@@ -610,7 +612,8 @@ class Experiment(CallbackNotifier):
             for group in self.train_group_map.keys():
                 group_batch = batch.exclude(*self._get_excluded_keys(group))
                 group_batch = self.algorithm.process_batch(group, group_batch)
-                group_batch = group_batch.reshape(-1)
+                if not (self.model_config.is_rnn or self.critic_model_config.is_rnn):
+                    group_batch = group_batch.reshape(-1)
                 self.replay_buffers[group].extend(group_batch)
 
                 training_tds = []
