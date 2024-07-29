@@ -24,22 +24,74 @@ from torchrl.envs import Compose, EnvBase, InitTracker, TensorDictPrimer, Transf
 from torchrl.modules import GRUCell, MLP, MultiAgentMLP
 
 from benchmarl.models.common import Model, ModelConfig
+from benchmarl.utils import DEVICE_TYPING
+
+
+class GRU(torch.nn.Module):
+    def __init__(
+        self,
+        input_size: int,
+        hidden_size: int,
+        device: DEVICE_TYPING,
+        time_dim: int = -2,
+    ):
+        super().__init__()
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.device = device
+        self.time_dim = time_dim
+
+        self.gru = GRUCell(input_size, hidden_size, device=self.device)
+
+    def forward(
+        self,
+        input,
+        is_init,
+        h,
+    ):
+        hs = []
+        for in_t, init_t in zip(
+            input.unbind(self.time_dim), is_init.unbind(self.time_dim)
+        ):
+            h = torch.where(init_t, 0, h)
+            h = self.gru(in_t, h)
+            hs.append(h)
+        h_n = h
+        output = torch.stack(hs, self.time_dim)
+
+        return output, h_n
 
 
 class MultiAgentGRU(torch.nn.Module):
-    def __init__(self, input_size, hidden_size, n_agents, device):
+    def __init__(
+        self,
+        input_size: int,
+        hidden_size: int,
+        n_agents: int,
+        device: DEVICE_TYPING,
+        compile: bool,
+        centralised: bool,
+    ):
         super().__init__()
         self.input_size = input_size
         self.n_agents = n_agents
         self.hidden_size = hidden_size
         self.device = device
+        self.compile = compile
+        self.centralised = centralised
 
-        self.gru = GRUCell(input_size, hidden_size, device=self.device)
+        if self.centralised:
+            self.input_size = self.input_size * self.n_agents
 
-        self.vmap_rnn = self.get_for_loop(self.gru)
-        # self.vmap_rnn_compiled = torch.compile(
-        #     self.vmap_rnn, mode="reduce-overhead", fullgraph=True
-        # )
+        self.gru = GRU(
+            input_size,
+            hidden_size,
+            device=self.device,
+        )
+        if self.compile:
+            self.gru = torch.compile(self.gru, mode="reduce-overhead", fullgraph=True)
+        if not self.centralised:
+            self.gru = torch.vmap(self.gru, in_dims=-2, out_dims=-2)
 
     def forward(
         self,
@@ -81,33 +133,29 @@ class MultiAgentGRU(torch.nn.Module):
                 device=self.device,
                 dtype=torch.float,
             )
-        output = self.vmap_rnn(input, is_init, h_0)
-        h_n = output[..., -1, :, :]
+        if self.centralised:
+            input = input.view(batch, seq, self.n_agents * self.input_size)
+            h_0 = h_0[..., 0, :]
+            is_init = is_init.view(batch, seq, self.n_agents)
+
+        output, h_n = self.vmap_gru(input, is_init, h_0)
+
+        if self.centralised:
+            output = output.unsqueeze(-2).expand(
+                batch, seq, self.n_agents, self.hidden_size
+            )
+            h_n = h_n.unsqueeze(-2).expand(batch, self.n_agents, self.hidden_size)
 
         if not training:
             output = output.squeeze(1)
         return output, h_n
-
-    # @torch.compile(mode="reduce-overhead", fullgraph=True)
-
-    @staticmethod
-    def get_for_loop(rnn):
-        def for_loop(input, is_init, h, time_dim=-3):
-            hs = []
-            for in_t, init_t in zip(input.unbind(time_dim), is_init.unbind(time_dim)):
-                h = torch.where(init_t, 0, h)
-                h = rnn(in_t, h)
-                hs.append(h)
-            output = torch.stack(hs, time_dim)
-            return output
-
-        return torch.vmap(for_loop)
 
 
 class Gru(Model):
     def __init__(
         self,
         hidden_size: int,
+        compile: bool,
         **kwargs,
     ):
 
@@ -124,6 +172,7 @@ class Gru(Model):
         )
 
         self.hidden_size = hidden_size
+        self.compile = compile
 
         self.input_features = sum(
             [spec.shape[-1] for spec in self.input_spec.values(True, True)]
@@ -132,7 +181,12 @@ class Gru(Model):
 
         if self.input_has_agent_dim:
             self.gru = MultiAgentGRU(
-                self.input_features, self.hidden_size, self.n_agents, self.device
+                self.input_features,
+                self.hidden_size,
+                self.n_agents,
+                self.device,
+                centralised=self.centralised,
+                compile=self.compile,
             )
 
         mlp_net_kwargs = {
@@ -204,8 +258,10 @@ class Gru(Model):
         is_init = tensordict.get("is_init")
 
         # Has multi-agent input dimension
-        if self.input_has_agent_dim and self.share_params and not self.centralised:
+        if self.input_has_agent_dim:
             output, h_n = self.gru(input, is_init, h_0)
+            if not self.output_has_agent_dim:
+                output = output[..., 0, :]
         else:
             pass
 
@@ -232,6 +288,7 @@ class GruConfig(ModelConfig):
     """Dataclass config for a :class:`~benchmarl.models.Gru`."""
 
     hidden_size: int = MISSING
+    compile: bool = MISSING
 
     mlp_num_cells: Sequence[int] = MISSING
     mlp_layer_class: Type[nn.Module] = MISSING

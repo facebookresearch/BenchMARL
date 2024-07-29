@@ -2,6 +2,7 @@
 name: gru
 
 hidden_size: 128
+compile: True
 
 mlp_num_cells: [256, 256]
 mlp_layer_class: torch.nn.Linear
