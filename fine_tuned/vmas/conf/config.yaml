@@ -1,9 +1,9 @@
 defaults:
   - experiment: base_experiment
-  - algorithm: mappo
-  - task: vmas/repeat_last
+  - algorithm: ???
+  - task: ???
   - model: layers/mlp
-  - model@critic_model: layers/gru
+  - model@critic_model: layers/mlp
   - _self_
 
 hydra:
@@ -15,9 +15,9 @@ seed: 0
 
 experiment:
 
-  sampling_device: "cpu"
-  train_device: "cpu"
-  buffer_device: "cpu"
+  sampling_device: "cuda"
+  train_device: "cuda"
+  buffer_device: "cuda"
 
   share_policy_params: True
   prefer_continuous_actions: True
@@ -54,7 +54,7 @@ experiment:
   evaluation_interval: 120_000
   evaluation_episodes: 200
 
-  loggers: []
+  loggers: [wandb]
   create_json: True
 
   save_folder: null
