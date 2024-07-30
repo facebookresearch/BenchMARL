@@ -71,6 +71,7 @@ class MultiAgentGRU(torch.nn.Module):
         device: DEVICE_TYPING,
         compile: bool,
         centralised: bool,
+        share_params: bool,
     ):
         super().__init__()
         self.input_size = input_size
@@ -79,6 +80,9 @@ class MultiAgentGRU(torch.nn.Module):
         self.device = device
         self.compile = compile
         self.centralised = centralised
+
+        if not share_params:
+            raise NotImplementedError
 
         if self.centralised:
             input_size = input_size * self.n_agents
@@ -216,6 +220,7 @@ class Gru(Model):
                 self.n_agents,
                 self.device,
                 centralised=self.centralised,
+                share_params=self.share_params,
                 compile=self.compile,
             )
         else:
