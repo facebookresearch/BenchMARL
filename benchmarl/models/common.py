@@ -313,7 +313,7 @@ class ModelConfig(ABC):
     @property
     def is_critic(self):
         if not hasattr(self, "_is_critic"):
-            raise AttributeError()
+            self._is_critic = False
         return self._is_critic
 
     @is_critic.setter
@@ -443,7 +443,6 @@ class SequenceModelConfig(ModelConfig):
                 device=device,
                 action_spec=action_spec,
                 model_index=0,
-                is_critic=self.is_critic,
             )
         ]
 
@@ -459,7 +458,6 @@ class SequenceModelConfig(ModelConfig):
                 device=device,
                 action_spec=action_spec,
                 model_index=i,
-                is_critic=self.is_critic,
             )
             for i in range(1, n_models)
         ]
@@ -473,7 +471,7 @@ class SequenceModelConfig(ModelConfig):
     @property
     def is_critic(self):
         if not hasattr(self, "_is_critic"):
-            raise AttributeError()
+            self._is_critic = False
         return self._is_critic
 
     @is_critic.setter

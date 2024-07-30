@@ -328,7 +328,6 @@ class Experiment(CallbackNotifier):
             if critic_model_config is not None
             else copy.deepcopy(model_config)
         )
-        self.model_config.is_critic = False
         self.critic_model_config.is_critic = True
 
         self.algorithm_config = algorithm_config
