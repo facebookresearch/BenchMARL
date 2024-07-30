@@ -271,22 +271,6 @@ class Algorithm(ABC):
                         for group, agents in self.group_map.items()
                     }
                 )
-                # if self.has_critic and self.critic_model_config.is_rnn and False:
-                #     spec_critic = self.critic_model_config.get_model_state_spec()
-                #     if (
-                #         self.has_independent_critic
-                #         or not self.critic_model_config.share_param_critic
-                #     ):
-                #         spec_critic = CompositeSpec(
-                #             {
-                #                 group: CompositeSpec(
-                #                     spec_critic.expand(len(agents), *spec_critic.shape),
-                #                     shape=(len(agents),),
-                #                 )
-                #                 for group, agents in self.group_map.items()
-                #             }
-                #         )
-                #     spec_actor.update(spec_critic)
 
                 env = TransformedEnv(
                     env,
@@ -294,7 +278,7 @@ class Algorithm(ABC):
                         *(
                             [InitTracker(init_key="is_init")]
                             + (
-                                [TensorDictPrimer(spec_actor)]
+                                [TensorDictPrimer(spec_actor, reset_key="_reset")]
                                 if len(spec_actor.keys(True, True)) > 0
                                 else []
                             )
