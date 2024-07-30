@@ -176,6 +176,8 @@ def test_models_forward_shape(
         n_agents=n_agents,
     )
 
+    if centralised:
+        config.is_critic = True
     model = config.get_model(
         input_spec=input_spec,
         output_spec=output_spec,
@@ -187,8 +189,23 @@ def test_models_forward_shape(
         agent_group="agents",
         action_spec=None,
     )
-    input_td = input_spec.expand(batch_size).rand()
-    out_td = model(input_td)
+    input_td = input_spec.rand()
+    if model_name == "gru":
+        if len(batch_size) < 2:
+            if centralised:
+                pytest.skip("gru model with this batch sizes is a policy")
+            hidden_spec = config.get_model_state_spec()
+            hidden_spec = CompositeSpec(
+                {
+                    "agents": CompositeSpec(
+                        hidden_spec.expand(n_agents, *hidden_spec.shape),
+                        shape=(n_agents,),
+                    )
+                }
+            )
+            input_td.update(hidden_spec.rand())
+        input_td["is_init"] = torch.randint(0, 2, (1,), dtype=torch.bool)
+    out_td = model(input_td.expand(batch_size))
     assert output_spec.expand(batch_size).is_in(out_td)
 
 
@@ -239,6 +256,8 @@ def test_share_params_between_models(
         )
     else:
         config = model_config_registry[model_name].get_from_yaml()
+    if centralised:
+        config.is_critic = True
     model = config.get_model(
         input_spec=input_spec,
         output_spec=output_spec,
