@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 #
 
-
 import pytest
 
 from benchmarl.algorithms import (
@@ -13,6 +12,7 @@ from benchmarl.algorithms import (
     IppoConfig,
     IsacConfig,
     MaddpgConfig,
+    MappoConfig,
     MasacConfig,
     QmixConfig,
 )
@@ -108,6 +108,34 @@ class TestVmas:
             algorithm_config=algo_config.get_from_yaml(),
             model_config=mlp_gnn_sequence_config,
             critic_model_config=mlp_gnn_sequence_config,
+            seed=0,
+            config=experiment_config,
+            task=task,
+        )
+        experiment.run()
+
+    @pytest.mark.parametrize(
+        "algo_config", [IddpgConfig, MaddpgConfig, IppoConfig, MappoConfig, QmixConfig]
+    )
+    @pytest.mark.parametrize("share_params", [True, False])
+    @pytest.mark.parametrize("task", [VmasTask.NAVIGATION])
+    def test_gru(
+        self,
+        algo_config: AlgorithmConfig,
+        share_params: bool,
+        task: Task,
+        experiment_config,
+        gru_mlp_sequence_config,
+    ):
+        algo_config = algo_config.get_from_yaml()
+        if algo_config.has_critic():
+            algo_config.share_param_critic = share_params
+        experiment_config.share_policy_params = share_params
+        task = task.get_from_yaml()
+        experiment = Experiment(
+            algorithm_config=algo_config,
+            model_config=gru_mlp_sequence_config,
+            critic_model_config=gru_mlp_sequence_config,
             seed=0,
             config=experiment_config,
             task=task,

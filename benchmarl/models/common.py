@@ -227,6 +227,8 @@ class SequenceModel(Model):
             is_critic=models[0].is_critic,
         )
         self.models = TensorDictSequential(*models)
+        self.in_keys = self.models.in_keys
+        self.out_keys = self.models.out_keys
 
     def _forward(self, tensordict: TensorDictBase) -> TensorDictBase:
         return self.models(tensordict)

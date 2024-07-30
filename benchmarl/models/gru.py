@@ -16,7 +16,7 @@ from dataclasses import dataclass, MISSING
 from typing import Optional, Sequence, Type
 
 import torch
-from tensordict import TensorDictBase
+from tensordict import TensorDict, TensorDictBase
 from tensordict.utils import expand_as_right, unravel_key_list
 from torch import nn
 from torchrl.data.tensor_specs import CompositeSpec, UnboundedContinuousTensorSpec
@@ -69,7 +69,6 @@ class MultiAgentGRU(torch.nn.Module):
         hidden_size: int,
         n_agents: int,
         device: DEVICE_TYPING,
-        compile: bool,
         centralised: bool,
         share_params: bool,
     ):
@@ -78,29 +77,31 @@ class MultiAgentGRU(torch.nn.Module):
         self.n_agents = n_agents
         self.hidden_size = hidden_size
         self.device = device
-        self.compile = compile
         self.centralised = centralised
-
-        if not share_params:
-            raise NotImplementedError
+        self.share_params = share_params
 
         if self.centralised:
             input_size = input_size * self.n_agents
 
-        self.base_gru = GRU(
-            input_size,
-            hidden_size,
-            device=self.device,
-        )
-
-        if self.compile:
-            self.base_gru = torch.compile(
-                self.base_gru, mode="reduce-overhead", fullgraph=True
+        def get_net(device):
+            return GRU(
+                input_size,
+                hidden_size,
+                device=device,
             )
-        if not self.centralised:
-            self.gru = torch.vmap(self.base_gru, in_dims=-2, out_dims=-2)
-        else:
-            self.gru = self.base_gru
+
+        agent_networks = [
+            get_net(device=self.device)
+            for _ in range(self.n_agents if not self.share_params else 1)
+        ]
+        self._make_params(agent_networks)
+
+        with torch.device("meta"):
+            self._empty_gru = get_net(device="meta")
+            # Remove all parameters
+            TensorDict.from_module(self._empty_gru).data.to("meta").to_module(
+                self._empty_gru
+            )
 
     def forward(
         self,
@@ -164,9 +165,9 @@ class MultiAgentGRU(torch.nn.Module):
             input = input.view(batch, seq, self.n_agents * self.input_size)
             is_init = is_init[..., 0, :]
 
-        output, h_n = self.gru(input, is_init, h_0)
+        output, h_n = self.run_net(input, is_init, h_0)
 
-        if self.centralised:
+        if self.centralised and self.share_params:
             output = output.unsqueeze(-2).expand(
                 batch, seq, self.n_agents, self.hidden_size
             )
@@ -178,12 +179,49 @@ class MultiAgentGRU(torch.nn.Module):
             h_n = h_n.squeeze(0)
         return output, h_n
 
+    def run_net(self, input, is_init, h_0):
+        if not self.share_params:
+            if self.centralised:
+                output, h_n = self.vmap_func_module(
+                    self._empty_gru,
+                    (0, None, None, None),
+                    (-2, -2),
+                )(self.params, input, is_init, h_0)
+            else:
+                output, h_n = self.vmap_func_module(
+                    self._empty_gru,
+                    (0, -2, -2, -2),
+                    (-2, -2),
+                )(self.params, input, is_init, h_0)
+        else:
+            with self.params.to_module(self._empty_gru):
+                if self.centralised:
+                    output, h_n = self._empty_gru(input, is_init, h_0)
+                else:
+                    output, h_n = torch.vmap(self._empty_gru, in_dims=-2, out_dims=-2)(
+                        input, is_init, h_0
+                    )
+
+        return output, h_n
+
+    def vmap_func_module(self, module, *args, **kwargs):
+        def exec_module(params, *input):
+            with params.to_module(module):
+                return module(*input)
+
+        return torch.vmap(exec_module, *args, **kwargs)
+
+    def _make_params(self, agent_networks):
+        if self.share_params:
+            self.params = TensorDict.from_module(agent_networks[0], as_module=True)
+        else:
+            self.params = TensorDict.from_modules(*agent_networks, as_module=True)
+
 
 class Gru(Model):
     def __init__(
         self,
         hidden_size: int,
-        compile: bool,
         **kwargs,
     ):
 
@@ -206,7 +244,6 @@ class Gru(Model):
         self.in_keys += self.rnn_keys
 
         self.hidden_size = hidden_size
-        self.compile = compile
 
         self.input_features = sum(
             [spec.shape[-1] for spec in self.input_spec.values(True, True)]
@@ -221,7 +258,6 @@ class Gru(Model):
                 self.device,
                 centralised=self.centralised,
                 share_params=self.share_params,
-                compile=self.compile,
             )
         else:
             self.gru = nn.ModuleList(
@@ -361,7 +397,6 @@ class GruConfig(ModelConfig):
     """Dataclass config for a :class:`~benchmarl.models.Gru`."""
 
     hidden_size: int = MISSING
-    compile: bool = MISSING
 
     mlp_num_cells: Sequence[int] = MISSING
     mlp_layer_class: Type[nn.Module] = MISSING
