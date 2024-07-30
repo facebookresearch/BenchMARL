@@ -361,3 +361,7 @@ class MappoConfig(AlgorithmConfig):
     @staticmethod
     def on_policy() -> bool:
         return True
+
+    @staticmethod
+    def has_centralized_critic() -> bool:
+        return True

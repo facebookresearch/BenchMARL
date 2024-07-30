@@ -13,14 +13,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, MISSING
-from typing import Callable, Optional, Sequence, Type
+from typing import Optional, Sequence, Type
 
 import torch
 from tensordict import TensorDictBase
 from tensordict.utils import expand_as_right
 from torch import nn
 from torchrl.data.tensor_specs import CompositeSpec, UnboundedContinuousTensorSpec
-from torchrl.envs import Compose, EnvBase, InitTracker, TensorDictPrimer, TransformedEnv
+
 from torchrl.modules import GRUCell, MLP, MultiAgentMLP
 
 from benchmarl.models.common import Model, ModelConfig
@@ -83,15 +83,20 @@ class MultiAgentGRU(torch.nn.Module):
         if self.centralised:
             self.input_size = self.input_size * self.n_agents
 
-        self.gru = GRU(
+        self.base_gru = GRU(
             input_size,
             hidden_size,
             device=self.device,
         )
+
         if self.compile:
-            self.gru = torch.compile(self.gru, mode="reduce-overhead", fullgraph=True)
+            self.base_gru = torch.compile(
+                self.base_gru, mode="reduce-overhead", fullgraph=True
+            )
         if not self.centralised:
-            self.gru = torch.vmap(self.gru, in_dims=-2, out_dims=-2)
+            self.gru = torch.vmap(self.base_gru, in_dims=-2, out_dims=-2)
+        else:
+            self.gru = self.base_gru
 
     def forward(
         self,
@@ -99,6 +104,10 @@ class MultiAgentGRU(torch.nn.Module):
         is_init,
         h_0=None,
     ):
+        # Input and output always have the multiagent dimension
+        # Hidden state only has it when not centralised
+        # is_init never has it
+
         assert is_init is not None, "We need to pass is_init"
         training = h_0 is None
         if (
@@ -112,13 +121,8 @@ class MultiAgentGRU(torch.nn.Module):
         assert input.shape == (batch, seq, self.n_agents, self.input_size)
 
         if h_0 is not None:  # Collection
-            assert h_0.shape == (
-                batch,
-                self.n_agents,
-                self.hidden_size,
-            )
-            if is_init is not None:  # Set hidden to 0 when is_init
-                h_0 = torch.where(expand_as_right(is_init, h_0), 0, h_0)
+            # Set hidden to 0 when is_init
+            h_0 = torch.where(expand_as_right(is_init, h_0), 0, h_0)
 
         if not training:  # If in collection emulate the sequence dimension
             is_init = is_init.unsqueeze(1)
@@ -126,25 +130,32 @@ class MultiAgentGRU(torch.nn.Module):
         is_init = is_init.unsqueeze(-2).expand(batch, seq, self.n_agents, 1)
 
         if h_0 is None:
+            if self.centralised:
+                shape = (
+                    batch,
+                    self.hidden_size,
+                )
+            else:
+                shape = (
+                    batch,
+                    self.n_agents,
+                    self.hidden_size,
+                )
             h_0 = torch.zeros(
-                batch,
-                self.n_agents,
-                self.hidden_size,
+                shape,
                 device=self.device,
                 dtype=torch.float,
             )
         if self.centralised:
             input = input.view(batch, seq, self.n_agents * self.input_size)
-            h_0 = h_0[..., 0, :]
             is_init = is_init.view(batch, seq, self.n_agents)
 
-        output, h_n = self.vmap_gru(input, is_init, h_0)
+        output, h_n = self.gru(input, is_init, h_0)
 
         if self.centralised:
             output = output.unsqueeze(-2).expand(
                 batch, seq, self.n_agents, self.hidden_size
             )
-            h_n = h_n.unsqueeze(-2).expand(batch, self.n_agents, self.hidden_size)
 
         if not training:
             output = output.squeeze(1)
@@ -169,7 +180,14 @@ class Gru(Model):
             share_params=kwargs.pop("share_params"),
             device=kwargs.pop("device"),
             action_spec=kwargs.pop("action_spec"),
+            model_index=kwargs.pop("model_index"),
+            is_critic=kwargs.pop("is_critic"),
         )
+        self.hidden_state_name = (f"_hidden_gru_{self.model_index}",)
+        if not self.centralised:
+            self.hidden_state_name = (self.agent_group, *self.hidden_state_name)
+        self.rnn_keys = ["is_init", self.hidden_state_name]
+        self.in_keys += self.rnn_keys
 
         self.hidden_size = hidden_size
         self.compile = compile
@@ -187,6 +205,17 @@ class Gru(Model):
                 self.device,
                 centralised=self.centralised,
                 compile=self.compile,
+            )
+        else:
+            self.gru = nn.ModuleList(
+                [
+                    GRU(
+                        self.input_features,
+                        self.hidden_size,
+                        device=self.device,
+                    )
+                    for _ in range(self.n_agents if not self.share_params else 1)
+                ]
             )
 
         mlp_net_kwargs = {
@@ -253,17 +282,67 @@ class Gru(Model):
 
     def _forward(self, tensordict: TensorDictBase) -> TensorDictBase:
         # Gather in_key
-        input = torch.cat([tensordict.get(in_key) for in_key in self.in_keys], dim=-1)
-        h_0 = tensordict.get((self.agent_group, "_hidden_gru"), None)
+        input = torch.cat(
+            [
+                tensordict.get(in_key)
+                for in_key in self.in_keys
+                if in_key not in self.rnn_keys
+            ],
+            dim=-1,
+        )
+        h_0 = tensordict.get(self.hidden_state_name, None)
         is_init = tensordict.get("is_init")
+        training = h_0 is None
 
         # Has multi-agent input dimension
         if self.input_has_agent_dim:
             output, h_n = self.gru(input, is_init, h_0)
             if not self.output_has_agent_dim:
                 output = output[..., 0, :]
-        else:
-            pass
+        else:  # Is a global input
+            if (
+                not training
+            ):  # In collection we emulate the sequence dimension and we have the hidden state
+                input = input.unsqueeze(1)
+            # Check input
+            batch = input.shape[0]
+            seq = input.shape[1]
+            assert input.shape == (batch, seq, self.input_size)
+
+            if h_0 is not None:  # Collection
+                # Set hidden to 0 when is_init
+                h_0 = torch.where(expand_as_right(is_init, h_0), 0, h_0)
+
+            if not training:  # If in collection emulate the sequence dimension
+                is_init = is_init.unsqueeze(1)
+            assert is_init.shape == (batch, seq, 1)
+
+            if h_0 is None:
+                h_0 = torch.zeros(
+                    (
+                        batch,
+                        self.hidden_size,
+                    ),
+                    device=self.device,
+                    dtype=torch.float,
+                )
+            if self.share_params:
+                output, h_n = self.gru[0](input, is_init, h_0)
+            else:
+                outputs = []
+                h_ns = []
+                for i, net in enumerate(self.mlp):
+                    if h_0 is not None:
+                        h_i = h_0[..., i, :]
+                    else:
+                        h_i = None
+                    output, h_n = net(input, is_init, h_i)
+                    outputs.append(output)
+                    h_ns.append(h_n)
+                output = torch.stack(outputs, dim=-2)
+                h_n = torch.stack(h_ns, dim=-2)
+            if not training:
+                output = output.squeeze(1)
 
         # Mlp
         if self.output_has_agent_dim:
@@ -278,8 +357,8 @@ class Gru(Model):
                 output = self.mlp[0](output)
 
         tensordict.set(self.out_key, output)
-        if h_0 is not None:
-            tensordict.set(("next", self.agent_group, "_hidden_gru"), h_n)
+        if not training:
+            tensordict.set(("next", *self.hidden_state_name), h_n)
         return tensordict
 
 
@@ -306,42 +385,9 @@ class GruConfig(ModelConfig):
     def is_rnn(self) -> bool:
         return True
 
-    def process_env_fun(
-        self,
-        env_fun: Callable[[], EnvBase],
-        task,
-        model_index: int = 0,
-    ) -> Callable[[], EnvBase]:
-        """
-        This function can be used to wrap env_fun
-        Args:
-            env_fun (callable): a function that takes no args and creates an enviornment
-
-        Returns: a function that takes no args and creates an enviornment
-
-        """
-
-        def model_fun():
-            env = env_fun()
-            env = TransformedEnv(
-                env,
-                Compose(
-                    InitTracker(init_key="is_init"),
-                    TensorDictPrimer(
-                        {
-                            group: CompositeSpec(
-                                {
-                                    "_hidden_gru": UnboundedContinuousTensorSpec(
-                                        shape=(len(agents), self.hidden_size)
-                                    )
-                                },
-                                shape=(len(agents),),
-                            )
-                            for group, agents in task.group_map(env).items()
-                        }
-                    ),
-                ),
-            )
-            return env
-
-        return model_fun
+    def get_model_state_spec(self, model_index: int = 0) -> CompositeSpec:
+        name = f"_hidden_gru_{model_index}"
+        spec = CompositeSpec(
+            {name: UnboundedContinuousTensorSpec(shape=(self.hidden_size,))}
+        )
+        return spec

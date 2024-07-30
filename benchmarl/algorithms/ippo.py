@@ -325,3 +325,7 @@ class IppoConfig(AlgorithmConfig):
     @staticmethod
     def on_policy() -> bool:
         return True
+
+    @staticmethod
+    def has_independent_critic() -> bool:
+        return True

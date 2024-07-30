@@ -322,8 +322,13 @@ class Experiment(CallbackNotifier):
         self.task = task
         self.model_config = model_config
         self.critic_model_config = (
-            critic_model_config if critic_model_config is not None else model_config
+            critic_model_config
+            if critic_model_config is not None
+            else copy.deepcopy(model_config)
         )
+        self.model_config.is_critic = False
+        self.critic_model_config.is_critic = True
+
         self.algorithm_config = algorithm_config
         self.seed = seed
 
@@ -377,23 +382,17 @@ class Experiment(CallbackNotifier):
             )
 
     def _setup_task(self):
-        test_env = self.model_config.process_env_fun(
-            self.task.get_env_fun(
-                num_envs=self.config.evaluation_episodes,
-                continuous_actions=self.continuous_actions,
-                seed=self.seed,
-                device=self.config.sampling_device,
-            ),
-            self.task,
+        test_env = self.task.get_env_fun(
+            num_envs=self.config.evaluation_episodes,
+            continuous_actions=self.continuous_actions,
+            seed=self.seed,
+            device=self.config.sampling_device,
         )()
-        env_func = self.model_config.process_env_fun(
-            self.task.get_env_fun(
-                num_envs=self.config.n_envs_per_worker(self.on_policy),
-                continuous_actions=self.continuous_actions,
-                seed=self.seed,
-                device=self.config.sampling_device,
-            ),
-            self.task,
+        env_func = self.task.get_env_fun(
+            num_envs=self.config.n_envs_per_worker(self.on_policy),
+            continuous_actions=self.continuous_actions,
+            seed=self.seed,
+            device=self.config.sampling_device,
         )
 
         transforms_env = self.task.get_env_transforms(test_env)
@@ -429,6 +428,10 @@ class Experiment(CallbackNotifier):
 
     def _setup_algorithm(self):
         self.algorithm = self.algorithm_config.get_algorithm(experiment=self)
+
+        self.test_env = self.algorithm.process_env_fun(lambda: self.test_env)()
+        self.env_func = self.algorithm.process_env_fun(self.env_func)
+
         self.replay_buffers = {
             group: self.algorithm.get_replay_buffer(
                 group=group,
@@ -612,7 +615,7 @@ class Experiment(CallbackNotifier):
             for group in self.train_group_map.keys():
                 group_batch = batch.exclude(*self._get_excluded_keys(group))
                 group_batch = self.algorithm.process_batch(group, group_batch)
-                if not (self.model_config.is_rnn or self.critic_model_config.is_rnn):
+                if not self.algorithm.has_rnn:
                     group_batch = group_batch.reshape(-1)
                 self.replay_buffers[group].extend(group_batch)
 

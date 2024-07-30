@@ -8,13 +8,12 @@ import pathlib
 import warnings
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass
-from typing import Any, Callable, Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence
 
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModuleBase, TensorDictSequential
 from tensordict.utils import NestedKey
 from torchrl.data import CompositeSpec, TensorSpec, UnboundedContinuousTensorSpec
-from torchrl.envs import EnvBase
 
 from benchmarl.utils import _class_from_name, _read_yaml_config, DEVICE_TYPING
 
@@ -88,6 +87,8 @@ class Model(TensorDictModuleBase, ABC):
         share_params: bool,
         device: DEVICE_TYPING,
         action_spec: CompositeSpec,
+        model_index: int,
+        is_critic: bool,
     ):
         TensorDictModuleBase.__init__(self)
 
@@ -100,6 +101,8 @@ class Model(TensorDictModuleBase, ABC):
         self.device = device
         self.n_agents = n_agents
         self.action_spec = action_spec
+        self.model_index = model_index
+        self.is_critic = is_critic
 
         self.in_keys = list(self.input_spec.keys(True, True))
         self.out_keys = list(self.output_spec.keys(True, True))
@@ -220,6 +223,8 @@ class SequenceModel(Model):
             agent_group=models[0].agent_group,
             input_has_agent_dim=models[0].input_has_agent_dim,
             action_spec=models[0].action_spec,
+            model_index=models[0].model_index,
+            is_critic=models[0].is_critic,
         )
         self.models = TensorDictSequential(*models)
 
@@ -250,6 +255,7 @@ class ModelConfig(ABC):
         share_params: bool,
         device: DEVICE_TYPING,
         action_spec: CompositeSpec,
+        model_index: int = 0,
     ) -> Model:
         """
         Creates the model from the config.
@@ -288,6 +294,8 @@ class ModelConfig(ABC):
             share_params=share_params,
             device=device,
             action_spec=action_spec,
+            model_index=model_index,
+            is_critic=self.is_critic,
         )
 
     @staticmethod
@@ -298,26 +306,22 @@ class ModelConfig(ABC):
         """
         raise NotImplementedError
 
-    def process_env_fun(
-        self,
-        env_fun: Callable[[], EnvBase],
-        task,
-        model_index: int = 0,
-    ) -> Callable[[], EnvBase]:
-        """
-        This function can be used to wrap env_fun
-        Args:
-            env_fun (callable): a function that takes no args and creates an enviornment
-            task (Task): the task
-
-        Returns: a function that takes no args and creates an enviornment
-
-        """
-        return env_fun
-
     @property
     def is_rnn(self) -> bool:
         return False
+
+    @property
+    def is_critic(self):
+        if not hasattr(self, "_is_critic"):
+            raise AttributeError()
+        return self._is_critic
+
+    @is_critic.setter
+    def is_critic(self, value):
+        self._is_critic = value
+
+    def get_model_state_spec(self, model_index: int = 0) -> CompositeSpec:
+        return CompositeSpec()
 
     @staticmethod
     def _load_from_yaml(name: str) -> Dict[str, Any]:
@@ -402,6 +406,7 @@ class SequenceModelConfig(ModelConfig):
         share_params: bool,
         device: DEVICE_TYPING,
         action_spec: CompositeSpec,
+        model_index: int = 0,
     ) -> Model:
         n_models = len(self.model_configs)
         if not n_models > 0:
@@ -418,7 +423,7 @@ class SequenceModelConfig(ModelConfig):
         intermediate_specs = [
             CompositeSpec(
                 {
-                    f"_{agent_group}_intermediate_{i}": UnboundedContinuousTensorSpec(
+                    f"_{agent_group}{'_critic' if self.is_critic else ''}_intermediate_{i}": UnboundedContinuousTensorSpec(
                         shape=(n_agents, size) if out_has_agent_dim else (size,)
                     )
                 }
@@ -437,6 +442,8 @@ class SequenceModelConfig(ModelConfig):
                 share_params=share_params,
                 device=device,
                 action_spec=action_spec,
+                model_index=0,
+                is_critic=self.is_critic,
             )
         ]
 
@@ -451,6 +458,8 @@ class SequenceModelConfig(ModelConfig):
                 share_params=share_params,
                 device=device,
                 action_spec=action_spec,
+                model_index=i,
+                is_critic=self.is_critic,
             )
             for i in range(1, n_models)
         ]
@@ -461,15 +470,23 @@ class SequenceModelConfig(ModelConfig):
     def associated_class():
         return SequenceModel
 
-    def process_env_fun(
-        self,
-        env_fun: Callable[[], EnvBase],
-        task,
-        model_index: int = 0,
-    ) -> Callable[[], EnvBase]:
+    @property
+    def is_critic(self):
+        if not hasattr(self, "_is_critic"):
+            raise AttributeError()
+        return self._is_critic
+
+    @is_critic.setter
+    def is_critic(self, value):
+        self._is_critic = value
+        for model_config in self.model_configs:
+            model_config.is_critic = value
+
+    def get_model_state_spec(self, model_index: int = 0) -> CompositeSpec:
+        spec = CompositeSpec()
         for i, model_config in enumerate(self.model_configs):
-            env_fun = model_config.process_env_fun(env_fun, task, i)
-        return env_fun
+            spec.update(model_config.get_model_state_spec(model_index=i))
+        return spec
 
     @property
     def is_rnn(self) -> bool:
