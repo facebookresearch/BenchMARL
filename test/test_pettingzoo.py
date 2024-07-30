@@ -9,9 +9,11 @@ import pytest
 
 from benchmarl.algorithms import (
     algorithm_config_registry,
+    IddpgConfig,
     IppoConfig,
     IsacConfig,
     MaddpgConfig,
+    MappoConfig,
     MasacConfig,
     QmixConfig,
 )
@@ -98,6 +100,32 @@ class TestPettingzoo:
             algorithm_config=algo_config.get_from_yaml(),
             model_config=mlp_gnn_sequence_config,
             critic_model_config=mlp_gnn_sequence_config,
+            seed=0,
+            config=experiment_config,
+            task=task,
+        )
+        experiment.run()
+
+    @pytest.mark.parametrize(
+        "algo_config", [IddpgConfig, MaddpgConfig, IppoConfig, MappoConfig, QmixConfig]
+    )
+    @pytest.mark.parametrize("task", [PettingZooTask.SIMPLE_TAG])
+    def test_gru(
+        self,
+        algo_config: AlgorithmConfig,
+        task: Task,
+        experiment_config,
+        gru_mlp_sequence_config,
+    ):
+        algo_config = algo_config.get_from_yaml()
+        if algo_config.has_critic():
+            algo_config.share_param_critic = False
+        experiment_config.share_policy_params = False
+        task = task.get_from_yaml()
+        experiment = Experiment(
+            algorithm_config=algo_config,
+            model_config=gru_mlp_sequence_config,
+            critic_model_config=gru_mlp_sequence_config,
             seed=0,
             config=experiment_config,
             task=task,
