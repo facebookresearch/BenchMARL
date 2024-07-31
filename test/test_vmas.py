@@ -122,7 +122,7 @@ class TestVmas:
     @pytest.mark.parametrize("task", [VmasTask.NAVIGATION])
     @pytest.mark.skipif(
         packaging.version.parse(torchrl.__version__).local is None,
-        "gru model needs torchrl from github",
+        reason="gru model needs torchrl from github",
     )
     def test_gru(
         self,

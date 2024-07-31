@@ -83,7 +83,7 @@ class TestSmacv2:
     @pytest.mark.parametrize("task", [Smacv2Task.PROTOSS_5_VS_5])
     @pytest.mark.skipif(
         packaging.version.parse(torchrl.__version__).local is None,
-        "gru model needs torchrl from github",
+        reason="gru model needs torchrl from github",
     )
     def test_gru(
         self,
