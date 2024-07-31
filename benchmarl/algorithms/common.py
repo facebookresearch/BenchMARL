@@ -250,6 +250,7 @@ class Algorithm(ABC):
     ) -> Callable[[], EnvBase]:
         """
         This function can be used to wrap env_fun
+
         Args:
             env_fun (callable): a function that takes no args and creates an enviornment
 

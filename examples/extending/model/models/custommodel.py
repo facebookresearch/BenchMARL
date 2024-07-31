@@ -176,6 +176,7 @@ class CustomModel(Model):
 
 @dataclass
 class CustomModelConfig(ModelConfig):
+
     # The config parameters for this class, these will be loaded from yaml
     custom_param: int = MISSING
     activation_class: Type[nn.Module] = MISSING
@@ -184,3 +185,10 @@ class CustomModelConfig(ModelConfig):
     def associated_class():
         # The associated algorithm class
         return CustomModel
+
+    @property
+    def is_rnn(self) -> bool:
+        """
+        Whether the model is an RNN
+        """
+        return False

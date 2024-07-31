@@ -74,6 +74,8 @@ class Model(TensorDictModuleBase, ABC):
             This is independent of the other options as it is possible to have different parameters
             for centralized critics with global input.
         action_spec (CompositeSpec): The action spec of the environment
+        model_index (int): the index of the model in a sequence
+        is_critic (bool): Whether the model is a critic
     """
 
     def __init__(
@@ -281,6 +283,7 @@ class ModelConfig(ABC):
                 This is independent of the other options as it is possible to have different parameters
                 for centralized critics with global input.
             action_spec (CompositeSpec): The action spec of the environment
+            model_index (int): the index of the model in a sequence. Defaults to 0.
 
         Returns: the Model
 
@@ -310,19 +313,40 @@ class ModelConfig(ABC):
 
     @property
     def is_rnn(self) -> bool:
+        """
+        Whether the model is an RNN
+        """
         return False
 
     @property
     def is_critic(self):
+        """
+        Whether the model is a critic
+        """
         if not hasattr(self, "_is_critic"):
             self._is_critic = False
         return self._is_critic
 
     @is_critic.setter
     def is_critic(self, value):
+        """
+        Set whether the model is a critic
+        """
         self._is_critic = value
 
     def get_model_state_spec(self, model_index: int = 0) -> CompositeSpec:
+        """Get additional specs needed by the model as input.
+
+        This method is useful for adding recurrent states.
+
+        The returned value should be key: spec with the desired ending shape.
+
+        The batch and agent dimensions will automatically be added to the spec.
+
+        Args:
+            model_index (int, optional): the index of the model. Defaults to 0.:
+
+        """
         return CompositeSpec()
 
     @staticmethod
