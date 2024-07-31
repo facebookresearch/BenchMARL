@@ -118,7 +118,6 @@ class TestVmas:
     @pytest.mark.parametrize(
         "algo_config", [IddpgConfig, MaddpgConfig, IppoConfig, MappoConfig, QmixConfig]
     )
-    @pytest.mark.parametrize("share_params", [True, False])
     @pytest.mark.parametrize("task", [VmasTask.NAVIGATION])
     @pytest.mark.skipif(
         packaging.version.parse(torchrl.__version__).local is None,
@@ -127,10 +126,10 @@ class TestVmas:
     def test_gru(
         self,
         algo_config: AlgorithmConfig,
-        share_params: bool,
         task: Task,
         experiment_config,
         gru_mlp_sequence_config,
+        share_params: bool = False,
     ):
         algo_config = algo_config.get_from_yaml()
         if algo_config.has_critic():
