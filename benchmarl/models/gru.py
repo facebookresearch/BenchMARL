@@ -455,7 +455,6 @@ class Gru(Model):
                 output = output[..., 0, :]
         else:  # Is a global input, this is a critic
             # Check input
-            assert training and self.is_critic
             batch = input.shape[0]
             seq = input.shape[1]
             assert input.shape == (batch, seq, self.input_features)
