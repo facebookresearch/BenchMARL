@@ -111,7 +111,10 @@ class TestPettingzoo:
         "algo_config", [IddpgConfig, MaddpgConfig, IppoConfig, MappoConfig, QmixConfig]
     )
     @pytest.mark.parametrize("task", [PettingZooTask.SIMPLE_TAG])
-    @pytest.mark.skipif(packaging.version.parse(torchrl.__version__).local is None)
+    @pytest.mark.skipif(
+        packaging.version.parse(torchrl.__version__).local is None,
+        "gru model needs torchrl from github",
+    )
     def test_gru(
         self,
         algo_config: AlgorithmConfig,
