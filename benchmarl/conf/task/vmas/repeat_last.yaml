@@ -5,4 +5,4 @@ defaults:
 max_steps: 100
 horizon: 100
 n_agents: 4
-k: 1
+k: 4
