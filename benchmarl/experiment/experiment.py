@@ -775,7 +775,7 @@ class Experiment(CallbackNotifier):
     def _evaluation_loop(self):
         evaluation_start = time.time()
         with set_exploration_type(
-            ExplorationType.MODE
+            ExplorationType.DETERMINISTIC
             if self.config.evaluation_deterministic_actions
             else ExplorationType.RANDOM
         ):
