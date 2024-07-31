@@ -1,8 +1,8 @@
 defaults:
   - experiment: base_experiment
-  - algorithm: ippo
-  - task: vmas/repeat_last
-  - model: layers/gru
+  - algorithm: ???
+  - task: ???
+  - model: layers/mlp
   - model@critic_model: layers/mlp
   - _self_
 
