@@ -5,8 +5,9 @@
 #
 
 
+import packaging
 import pytest
-
+import torchrl
 from benchmarl.algorithms import (
     algorithm_config_registry,
     IddpgConfig,
@@ -110,6 +111,9 @@ class TestPettingzoo:
         "algo_config", [IddpgConfig, MaddpgConfig, IppoConfig, MappoConfig, QmixConfig]
     )
     @pytest.mark.parametrize("task", [PettingZooTask.SIMPLE_TAG])
+    @pytest.mark.skipif(
+        packaging.version.parse(torchrl.__version__).base_version <= "0.5.0"
+    )
     def test_gru(
         self,
         algo_config: AlgorithmConfig,

@@ -4,8 +4,9 @@
 #  LICENSE file in the root directory of this source tree.
 #
 
+import packaging
 import pytest
-
+import torchrl
 from benchmarl.algorithms import (
     algorithm_config_registry,
     IddpgConfig,
@@ -119,6 +120,9 @@ class TestVmas:
     )
     @pytest.mark.parametrize("share_params", [True, False])
     @pytest.mark.parametrize("task", [VmasTask.NAVIGATION])
+    @pytest.mark.skipif(
+        packaging.version.parse(torchrl.__version__).base_version <= "0.5.0"
+    )
     def test_gru(
         self,
         algo_config: AlgorithmConfig,

@@ -6,9 +6,11 @@
 import contextlib
 from typing import List
 
+import packaging
 import pytest
 import torch
 import torch_geometric.nn
+import torchrl
 
 from benchmarl.hydra_config import load_model_config_from_hydra
 from benchmarl.models import GnnConfig, model_config_registry
@@ -155,6 +157,11 @@ def test_models_forward_shape(
         or (isinstance(model_name, list) and model_name[0] != "gnn")
     ):
         pytest.skip("gnn model needs agent dim as input")
+    if (
+        packaging.version.parse(torchrl.__version__).base_version <= "0.5.0"
+        and "gru" in model_name
+    ):
+        pytest.skip("gru model needs torchrl > 0.5.0")
 
     torch.manual_seed(0)
 
@@ -237,6 +244,11 @@ def test_share_params_between_models(
         or (isinstance(model_name, list) and model_name[0] != "gnn")
     ):
         pytest.skip("gnn model needs agent dim as input")
+    if (
+        packaging.version.parse(torchrl.__version__).base_version <= "0.5.0"
+        and "gru" in model_name
+    ):
+        pytest.skip("gru model needs torchrl > 0.5.0")
     torch.manual_seed(1)
 
     input_spec, output_spec = _get_input_and_output_specs(
