@@ -281,13 +281,10 @@ class Gru(Model):
     r"""A multi-layer Gated Recurrent Unit (GRU) RNN like the one from
     `torch <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`__ .
 
-    The BenchMARL GRU accepts multiple inputs of 2 types:
+    The BenchMARL GRU accepts multiple inputs of type array: Tensors of shape ``(*batch,F)``
 
-    - multi-agent arrays: Tensors of shape ``(*batch,A,F)``
-    - arrays: Tensors of shape ``(*batch,F)``
-
-    Where `A` is the number of agents and `F` is the number of features.
-    The features `F` will be processed in features of `hidden_size`
+    Where `F` is the number of features.
+    The features `F` will be processed to features of `hidden_size` by the GRU.
 
     Args:
         hidden_size (int): The number of features in the hidden state.

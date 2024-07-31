@@ -344,7 +344,7 @@ class ModelConfig(ABC):
         The batch and agent dimensions will automatically be added to the spec.
 
         Args:
-            model_index (int, optional): the index of the model. Defaults to 0.:
+            model_index (int, optional): the index of the model. Defaults to 0.
 
         """
         return CompositeSpec()
