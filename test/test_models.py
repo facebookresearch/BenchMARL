@@ -145,6 +145,9 @@ def test_loading_sequence_models(model_name, intermediate_size=10):
         ["cnn", "gnn", "mlp"],
         ["cnn", "mlp", "gnn"],
         ["cnn", "mlp"],
+        ["cnn", "gru", "gnn", "mlp"],
+        ["cnn", "gru", "mlp"],
+        ["gru", "mlp"],
     ],
 )
 def test_models_forward_shape(
@@ -197,7 +200,7 @@ def test_models_forward_shape(
         action_spec=None,
     )
     input_td = input_spec.rand()
-    if model_name == "gru":
+    if "gru" in model_name:
         if len(batch_size) < 2:
             if centralised:
                 pytest.skip("gru model with this batch sizes is a policy")
@@ -226,6 +229,9 @@ def test_models_forward_shape(
         ["cnn", "gnn", "mlp"],
         ["cnn", "mlp", "gnn"],
         ["cnn", "mlp"],
+        ["cnn", "gru", "gnn", "mlp"],
+        ["cnn", "gru", "mlp"],
+        ["gru", "mlp"],
     ],
 )
 @pytest.mark.parametrize("batch_size", [(), (2,), (3, 2)])
