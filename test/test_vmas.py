@@ -120,9 +120,7 @@ class TestVmas:
     )
     @pytest.mark.parametrize("share_params", [True, False])
     @pytest.mark.parametrize("task", [VmasTask.NAVIGATION])
-    @pytest.mark.skipif(
-        packaging.version.parse(torchrl.__version__).base_version <= "0.5.0"
-    )
+    @pytest.mark.skipif(packaging.version.parse(torchrl.__version__).local is None)
     def test_gru(
         self,
         algo_config: AlgorithmConfig,

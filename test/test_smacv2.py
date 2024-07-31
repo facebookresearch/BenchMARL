@@ -81,9 +81,7 @@ class TestSmacv2:
 
     @pytest.mark.parametrize("algo_config", [QmixConfig])
     @pytest.mark.parametrize("task", [Smacv2Task.PROTOSS_5_VS_5])
-    @pytest.mark.skipif(
-        packaging.version.parse(torchrl.__version__).base_version <= "0.5.0"
-    )
+    @pytest.mark.skipif(packaging.version.parse(torchrl.__version__).local is None)
     def test_gru(
         self,
         algo_config,
