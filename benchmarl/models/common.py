@@ -8,13 +8,12 @@ import pathlib
 import warnings
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass
-from typing import Any, Callable, Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence
 
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModuleBase, TensorDictSequential
 from tensordict.utils import NestedKey
 from torchrl.data import CompositeSpec, TensorSpec, UnboundedContinuousTensorSpec
-from torchrl.envs import EnvBase
 
 from benchmarl.utils import _class_from_name, _read_yaml_config, DEVICE_TYPING
 
@@ -75,6 +74,8 @@ class Model(TensorDictModuleBase, ABC):
             This is independent of the other options as it is possible to have different parameters
             for centralized critics with global input.
         action_spec (CompositeSpec): The action spec of the environment
+        model_index (int): the index of the model in a sequence
+        is_critic (bool): Whether the model is a critic
     """
 
     def __init__(
@@ -88,6 +89,8 @@ class Model(TensorDictModuleBase, ABC):
         share_params: bool,
         device: DEVICE_TYPING,
         action_spec: CompositeSpec,
+        model_index: int,
+        is_critic: bool,
     ):
         TensorDictModuleBase.__init__(self)
 
@@ -100,6 +103,8 @@ class Model(TensorDictModuleBase, ABC):
         self.device = device
         self.n_agents = n_agents
         self.action_spec = action_spec
+        self.model_index = model_index
+        self.is_critic = is_critic
 
         self.in_keys = list(self.input_spec.keys(True, True))
         self.out_keys = list(self.output_spec.keys(True, True))
@@ -220,8 +225,12 @@ class SequenceModel(Model):
             agent_group=models[0].agent_group,
             input_has_agent_dim=models[0].input_has_agent_dim,
             action_spec=models[0].action_spec,
+            model_index=models[0].model_index,
+            is_critic=models[0].is_critic,
         )
         self.models = TensorDictSequential(*models)
+        self.in_keys = self.models.in_keys
+        self.out_keys = self.models.out_keys
 
     def _forward(self, tensordict: TensorDictBase) -> TensorDictBase:
         return self.models(tensordict)
@@ -250,6 +259,7 @@ class ModelConfig(ABC):
         share_params: bool,
         device: DEVICE_TYPING,
         action_spec: CompositeSpec,
+        model_index: int = 0,
     ) -> Model:
         """
         Creates the model from the config.
@@ -273,6 +283,7 @@ class ModelConfig(ABC):
                 This is independent of the other options as it is possible to have different parameters
                 for centralized critics with global input.
             action_spec (CompositeSpec): The action spec of the environment
+            model_index (int): the index of the model in a sequence. Defaults to 0.
 
         Returns: the Model
 
@@ -288,6 +299,8 @@ class ModelConfig(ABC):
             share_params=share_params,
             device=device,
             action_spec=action_spec,
+            model_index=model_index,
+            is_critic=self.is_critic,
         )
 
     @staticmethod
@@ -298,16 +311,43 @@ class ModelConfig(ABC):
         """
         raise NotImplementedError
 
-    def process_env_fun(self, env_fun: Callable[[], EnvBase]) -> Callable[[], EnvBase]:
+    @property
+    def is_rnn(self) -> bool:
         """
-        This function can be used to wrap env_fun
+        Whether the model is an RNN
+        """
+        return False
+
+    @property
+    def is_critic(self):
+        """
+        Whether the model is a critic
+        """
+        if not hasattr(self, "_is_critic"):
+            self._is_critic = False
+        return self._is_critic
+
+    @is_critic.setter
+    def is_critic(self, value):
+        """
+        Set whether the model is a critic
+        """
+        self._is_critic = value
+
+    def get_model_state_spec(self, model_index: int = 0) -> CompositeSpec:
+        """Get additional specs needed by the model as input.
+
+        This method is useful for adding recurrent states.
+
+        The returned value should be key: spec with the desired ending shape.
+
+        The batch and agent dimensions will automatically be added to the spec.
+
         Args:
-            env_fun (callable): a function that takes no args and creates an enviornment
-
-        Returns: a function that takes no args and creates an enviornment
+            model_index (int, optional): the index of the model. Defaults to 0.
 
         """
-        return env_fun
+        return CompositeSpec()
 
     @staticmethod
     def _load_from_yaml(name: str) -> Dict[str, Any]:
@@ -392,6 +432,7 @@ class SequenceModelConfig(ModelConfig):
         share_params: bool,
         device: DEVICE_TYPING,
         action_spec: CompositeSpec,
+        model_index: int = 0,
     ) -> Model:
         n_models = len(self.model_configs)
         if not n_models > 0:
@@ -408,7 +449,7 @@ class SequenceModelConfig(ModelConfig):
         intermediate_specs = [
             CompositeSpec(
                 {
-                    f"_{agent_group}_intermediate_{i}": UnboundedContinuousTensorSpec(
+                    f"_{agent_group}{'_critic' if self.is_critic else ''}_intermediate_{i}": UnboundedContinuousTensorSpec(
                         shape=(n_agents, size) if out_has_agent_dim else (size,)
                     )
                 }
@@ -427,6 +468,7 @@ class SequenceModelConfig(ModelConfig):
                 share_params=share_params,
                 device=device,
                 action_spec=action_spec,
+                model_index=0,
             )
         ]
 
@@ -441,6 +483,7 @@ class SequenceModelConfig(ModelConfig):
                 share_params=share_params,
                 device=device,
                 action_spec=action_spec,
+                model_index=i,
             )
             for i in range(1, n_models)
         ]
@@ -451,10 +494,30 @@ class SequenceModelConfig(ModelConfig):
     def associated_class():
         return SequenceModel
 
-    def process_env_fun(self, env_fun: Callable[[], EnvBase]) -> Callable[[], EnvBase]:
+    @property
+    def is_critic(self):
+        if not hasattr(self, "_is_critic"):
+            self._is_critic = False
+        return self._is_critic
+
+    @is_critic.setter
+    def is_critic(self, value):
+        self._is_critic = value
         for model_config in self.model_configs:
-            env_fun = model_config.process_env_fun(env_fun)
-        return env_fun
+            model_config.is_critic = value
+
+    def get_model_state_spec(self, model_index: int = 0) -> CompositeSpec:
+        spec = CompositeSpec()
+        for i, model_config in enumerate(self.model_configs):
+            spec.update(model_config.get_model_state_spec(model_index=i))
+        return spec
+
+    @property
+    def is_rnn(self) -> bool:
+        is_rnn = False
+        for model_config in self.model_configs:
+            is_rnn += model_config.is_rnn
+        return is_rnn
 
     @classmethod
     def get_from_yaml(cls, path: Optional[str] = None):

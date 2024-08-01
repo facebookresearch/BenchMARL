@@ -251,3 +251,7 @@ class IddpgConfig(AlgorithmConfig):
     @staticmethod
     def on_policy() -> bool:
         return False
+
+    @staticmethod
+    def has_independent_critic() -> bool:
+        return True

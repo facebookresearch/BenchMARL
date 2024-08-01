@@ -463,3 +463,7 @@ class MasacConfig(AlgorithmConfig):
     @staticmethod
     def on_policy() -> bool:
         return False
+
+    @staticmethod
+    def has_centralized_critic() -> bool:
+        return True

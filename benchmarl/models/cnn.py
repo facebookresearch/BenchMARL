@@ -114,6 +114,8 @@ class Cnn(Model):
             share_params=kwargs.pop("share_params"),
             device=kwargs.pop("device"),
             action_spec=kwargs.pop("action_spec"),
+            model_index=kwargs.pop("model_index"),
+            is_critic=kwargs.pop("is_critic"),
         )
 
         self.x = self.input_spec[self.image_in_keys[0]].shape[-3]

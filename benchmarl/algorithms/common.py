@@ -7,11 +7,12 @@
 import pathlib
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Type
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
 
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModule, TensorDictSequential
 from torchrl.data import (
+    CompositeSpec,
     DiscreteTensorSpec,
     LazyTensorStorage,
     OneHotDiscreteTensorSpec,
@@ -19,7 +20,14 @@ from torchrl.data import (
     TensorDictReplayBuffer,
 )
 from torchrl.data.replay_buffers import RandomSampler, SamplerWithoutReplacement
-from torchrl.envs import Compose, Transform
+from torchrl.envs import (
+    Compose,
+    EnvBase,
+    InitTracker,
+    TensorDictPrimer,
+    Transform,
+    TransformedEnv,
+)
 from torchrl.objectives import LossModule
 from torchrl.objectives.utils import HardUpdate, SoftUpdate, TargetNetUpdater
 
@@ -51,6 +59,16 @@ class Algorithm(ABC):
         self.action_spec = experiment.action_spec
         self.state_spec = experiment.state_spec
         self.action_mask_spec = experiment.action_mask_spec
+        self.has_independent_critic = (
+            experiment.algorithm_config.has_independent_critic()
+        )
+        self.has_centralized_critic = (
+            experiment.algorithm_config.has_centralized_critic()
+        )
+        self.has_critic = experiment.algorithm_config.has_critic
+        self.has_rnn = self.model_config.is_rnn or (
+            self.critic_model_config.is_rnn and self.has_critic
+        )
 
         # Cached values that will be instantiated only once and then remain fixed
         self._losses_and_updaters = {}
@@ -142,6 +160,14 @@ class Algorithm(ABC):
         """
         memory_size = self.experiment_config.replay_buffer_memory_size(self.on_policy)
         sampling_size = self.experiment_config.train_minibatch_size(self.on_policy)
+        if self.has_rnn:
+            sequence_length = -(
+                -self.experiment_config.collected_frames_per_batch(self.on_policy)
+                // self.experiment_config.n_envs_per_worker(self.on_policy)
+            )
+            memory_size = -(-memory_size // sequence_length)
+            sampling_size = -(-sampling_size // sequence_length)
+
         sampler = SamplerWithoutReplacement() if self.on_policy else RandomSampler()
         return TensorDictReplayBuffer(
             storage=LazyTensorStorage(
@@ -217,6 +243,54 @@ class Algorithm(ABC):
             group=group,
             loss=self.get_loss_and_updater(group)[0],
         )
+
+    def process_env_fun(
+        self,
+        env_fun: Callable[[], EnvBase],
+    ) -> Callable[[], EnvBase]:
+        """
+        This function can be used to wrap env_fun
+
+        Args:
+            env_fun (callable): a function that takes no args and creates an enviornment
+
+        Returns: a function that takes no args and creates an enviornment
+
+        """
+        if self.has_rnn:
+
+            def model_fun():
+                env = env_fun()
+
+                spec_actor = self.model_config.get_model_state_spec()
+                spec_actor = CompositeSpec(
+                    {
+                        group: CompositeSpec(
+                            spec_actor.expand(len(agents), *spec_actor.shape),
+                            shape=(len(agents),),
+                        )
+                        for group, agents in self.group_map.items()
+                    }
+                )
+
+                env = TransformedEnv(
+                    env,
+                    Compose(
+                        *(
+                            [InitTracker(init_key="is_init")]
+                            + (
+                                [TensorDictPrimer(spec_actor, reset_key="_reset")]
+                                if len(spec_actor.keys(True, True)) > 0
+                                else []
+                            )
+                        )
+                    ),
+                )
+                return env
+
+            return model_fun
+
+        return env_fun
 
     ###############################
     # Abstract methods to implement
@@ -399,3 +473,27 @@ class AlgorithmConfig:
         If the algorithm supports discrete actions
         """
         raise NotImplementedError
+
+    @staticmethod
+    def has_independent_critic() -> bool:
+        """
+        If the algorithm uses an independent critic
+        """
+        return False
+
+    @staticmethod
+    def has_centralized_critic() -> bool:
+        """
+        If the algorithm uses a centralized critic
+        """
+        return False
+
+    def has_critic(self) -> bool:
+        """
+        If the algorithm uses a critic
+        """
+        if self.has_centralized_critic() and self.has_independent_critic():
+            raise ValueError(
+                "Algorithm can either have a centralized critic or an indpendent one"
+            )
+        return self.has_centralized_critic() or self.has_independent_critic()

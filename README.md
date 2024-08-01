@@ -263,15 +263,10 @@ agent group. Here is a table of the models implemented in BenchMARL
 | Name                                     | Decentralized | Centralized with local inputs | Centralized with global input | 
 |------------------------------------------|:-------------:|:-----------------------------:|:-----------------------------:|
 | [MLP](benchmarl/models/mlp.py)           |      Yes      |              Yes              |              Yes              |
+| [GRU](benchmarl/models/gru.py)           |      Yes      |              Yes              |              Yes              |
 | [GNN](benchmarl/models/gnn.py)           |      Yes      |              Yes              |              No               |
 | [CNN](benchmarl/models/cnn.py)           |      Yes      |              Yes              |              Yes              |
 | [Deepsets](benchmarl/models/deepsets.py) |      Yes      |              Yes              |              Yes              |
-
-And the ones that are _work in progress_
-
-| Name               | Decentralized | Centralized with local inputs | Centralized with global input | 
-|--------------------|:-------------:|:-----------------------------:|:-----------------------------:|
-| RNN (GRU and LSTM) |      Yes      |              Yes              |              Yes              | 
 
 
 ## Fine-tuned public benchmarks

@@ -26,6 +26,8 @@ from torchrl.envs.utils import ExplorationType, set_exploration_type, step_mdp
 from torchrl.record.loggers import generate_exp_name
 from tqdm import tqdm
 
+from benchmarl.algorithms import IsacConfig, MasacConfig
+
 from benchmarl.algorithms.common import AlgorithmConfig
 from benchmarl.environments import Task
 from benchmarl.experiment.callback import Callback, CallbackNotifier
@@ -322,8 +324,12 @@ class Experiment(CallbackNotifier):
         self.task = task
         self.model_config = model_config
         self.critic_model_config = (
-            critic_model_config if critic_model_config is not None else model_config
+            critic_model_config
+            if critic_model_config is not None
+            else copy.deepcopy(model_config)
         )
+        self.critic_model_config.is_critic = True
+
         self.algorithm_config = algorithm_config
         self.seed = seed
 
@@ -345,6 +351,7 @@ class Experiment(CallbackNotifier):
     def _setup(self):
         self.config.validate(self.on_policy)
         seed_everything(self.seed)
+        self._perfrom_checks()
         self._set_action_type()
         self._setup_task()
         self._setup_algorithm()
@@ -352,6 +359,15 @@ class Experiment(CallbackNotifier):
         self._setup_name()
         self._setup_logger()
         self._on_setup()
+
+    def _perfrom_checks(self):
+        if isinstance(self.algorithm_config, (MasacConfig, IsacConfig)) and (
+            self.model_config.is_rnn or self.critic_model_config.is_rnn
+        ):
+            raise ValueError(
+                "SAC based losses not compatible with RNNs due to https://github.com/pytorch/rl/issues/2338."
+                " Please leave a comment on the issue if you would like this feature."
+            )
 
     def _set_action_type(self):
         if (
@@ -377,21 +393,17 @@ class Experiment(CallbackNotifier):
             )
 
     def _setup_task(self):
-        test_env = self.model_config.process_env_fun(
-            self.task.get_env_fun(
-                num_envs=self.config.evaluation_episodes,
-                continuous_actions=self.continuous_actions,
-                seed=self.seed,
-                device=self.config.sampling_device,
-            )
+        test_env = self.task.get_env_fun(
+            num_envs=self.config.evaluation_episodes,
+            continuous_actions=self.continuous_actions,
+            seed=self.seed,
+            device=self.config.sampling_device,
         )()
-        env_func = self.model_config.process_env_fun(
-            self.task.get_env_fun(
-                num_envs=self.config.n_envs_per_worker(self.on_policy),
-                continuous_actions=self.continuous_actions,
-                seed=self.seed,
-                device=self.config.sampling_device,
-            )
+        env_func = self.task.get_env_fun(
+            num_envs=self.config.n_envs_per_worker(self.on_policy),
+            continuous_actions=self.continuous_actions,
+            seed=self.seed,
+            device=self.config.sampling_device,
         )
 
         transforms_env = self.task.get_env_transforms(test_env)
@@ -427,6 +439,10 @@ class Experiment(CallbackNotifier):
 
     def _setup_algorithm(self):
         self.algorithm = self.algorithm_config.get_algorithm(experiment=self)
+
+        self.test_env = self.algorithm.process_env_fun(lambda: self.test_env)()
+        self.env_func = self.algorithm.process_env_fun(self.env_func)
+
         self.replay_buffers = {
             group: self.algorithm.get_replay_buffer(
                 group=group,
@@ -610,7 +626,8 @@ class Experiment(CallbackNotifier):
             for group in self.train_group_map.keys():
                 group_batch = batch.exclude(*self._get_excluded_keys(group))
                 group_batch = self.algorithm.process_batch(group, group_batch)
-                group_batch = group_batch.reshape(-1)
+                if not self.algorithm.has_rnn:
+                    group_batch = group_batch.reshape(-1)
                 self.replay_buffers[group].extend(group_batch)
 
                 training_tds = []

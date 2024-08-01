@@ -6,9 +6,11 @@
 import contextlib
 from typing import List
 
+import packaging
 import pytest
 import torch
 import torch_geometric.nn
+import torchrl
 
 from benchmarl.hydra_config import load_model_config_from_hydra
 from benchmarl.models import GnnConfig, model_config_registry
@@ -143,6 +145,9 @@ def test_loading_sequence_models(model_name, intermediate_size=10):
         ["cnn", "gnn", "mlp"],
         ["cnn", "mlp", "gnn"],
         ["cnn", "mlp"],
+        ["cnn", "gru", "gnn", "mlp"],
+        ["cnn", "gru", "mlp"],
+        ["gru", "mlp"],
     ],
 )
 def test_models_forward_shape(
@@ -155,6 +160,11 @@ def test_models_forward_shape(
         or (isinstance(model_name, list) and model_name[0] != "gnn")
     ):
         pytest.skip("gnn model needs agent dim as input")
+    if (
+        packaging.version.parse(torchrl.__version__).local is None
+        and "gru" in model_name
+    ):
+        pytest.skip("gru model needs torchrl from github")
 
     torch.manual_seed(0)
 
@@ -176,6 +186,8 @@ def test_models_forward_shape(
         n_agents=n_agents,
     )
 
+    if centralised:
+        config.is_critic = True
     model = config.get_model(
         input_spec=input_spec,
         output_spec=output_spec,
@@ -187,8 +199,23 @@ def test_models_forward_shape(
         agent_group="agents",
         action_spec=None,
     )
-    input_td = input_spec.expand(batch_size).rand()
-    out_td = model(input_td)
+    input_td = input_spec.rand()
+    if "gru" in model_name:
+        if len(batch_size) < 2:
+            if centralised:
+                pytest.skip("gru model with this batch sizes is a policy")
+            hidden_spec = config.get_model_state_spec()
+            hidden_spec = CompositeSpec(
+                {
+                    "agents": CompositeSpec(
+                        hidden_spec.expand(n_agents, *hidden_spec.shape),
+                        shape=(n_agents,),
+                    )
+                }
+            )
+            input_td.update(hidden_spec.rand())
+        input_td["is_init"] = torch.randint(0, 2, (1,), dtype=torch.bool)
+    out_td = model(input_td.expand(batch_size))
     assert output_spec.expand(batch_size).is_in(out_td)
 
 
@@ -202,6 +229,9 @@ def test_models_forward_shape(
         ["cnn", "gnn", "mlp"],
         ["cnn", "mlp", "gnn"],
         ["cnn", "mlp"],
+        ["cnn", "gru", "gnn", "mlp"],
+        ["cnn", "gru", "mlp"],
+        ["gru", "mlp"],
     ],
 )
 @pytest.mark.parametrize("batch_size", [(), (2,), (3, 2)])
@@ -220,6 +250,11 @@ def test_share_params_between_models(
         or (isinstance(model_name, list) and model_name[0] != "gnn")
     ):
         pytest.skip("gnn model needs agent dim as input")
+    if (
+        packaging.version.parse(torchrl.__version__).local is None
+        and "gru" in model_name
+    ):
+        pytest.skip("gru model needs torchrl from github")
     torch.manual_seed(1)
 
     input_spec, output_spec = _get_input_and_output_specs(
@@ -239,6 +274,8 @@ def test_share_params_between_models(
         )
     else:
         config = model_config_registry[model_name].get_from_yaml()
+    if centralised:
+        config.is_critic = True
     model = config.get_model(
         input_spec=input_spec,
         output_spec=output_spec,
