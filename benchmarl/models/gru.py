@@ -250,7 +250,7 @@ class MultiAgentGRU(torch.nn.Module):
                 output, h_n = self.vmap_func_module(
                     self._empty_gru,
                     (0, -2, -2, -3),
-                    (-2, -2),
+                    (-2, -3),
                 )(self.params, input, is_init, h_0)
         else:
             with self.params.to_module(self._empty_gru):
