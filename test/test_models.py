@@ -163,11 +163,6 @@ def test_models_forward_shape(
         or (isinstance(model_name, list) and model_name[0] != "gnn")
     ):
         pytest.skip("gnn model needs agent dim as input")
-    if (
-        packaging.version.parse(torchrl.__version__).local is None
-        and "gru" in model_name
-    ):
-        pytest.skip("gru model needs torchrl from github")
 
     torch.manual_seed(0)
 
