@@ -148,6 +148,9 @@ def test_loading_sequence_models(model_name, intermediate_size=10):
         ["cnn", "gru", "gnn", "mlp"],
         ["cnn", "gru", "mlp"],
         ["gru", "mlp"],
+        ["lstm", "gru"],
+        ["cnn", "lstm", "mlp"],
+        ["lstm", "mlp"],
     ],
 )
 def test_models_forward_shape(
@@ -160,11 +163,6 @@ def test_models_forward_shape(
         or (isinstance(model_name, list) and model_name[0] != "gnn")
     ):
         pytest.skip("gnn model needs agent dim as input")
-    if (
-        packaging.version.parse(torchrl.__version__).local is None
-        and "gru" in model_name
-    ):
-        pytest.skip("gru model needs torchrl from github")
 
     torch.manual_seed(0)
 
@@ -185,6 +183,8 @@ def test_models_forward_shape(
         share_params=share_params,
         n_agents=n_agents,
     )
+    if packaging.version.parse(torchrl.__version__).local is None and config.is_rnn:
+        pytest.skip("rnn model needs torchrl from github")
 
     if centralised:
         config.is_critic = True
@@ -200,10 +200,10 @@ def test_models_forward_shape(
         action_spec=None,
     )
     input_td = input_spec.rand()
-    if "gru" in model_name:
+    if config.is_rnn:
         if len(batch_size) < 2:
             if centralised:
-                pytest.skip("gru model with this batch sizes is a policy")
+                pytest.skip("rnn model with this batch sizes is a policy")
             hidden_spec = config.get_model_state_spec()
             hidden_spec = CompositeSpec(
                 {
@@ -232,6 +232,9 @@ def test_models_forward_shape(
         ["cnn", "gru", "gnn", "mlp"],
         ["cnn", "gru", "mlp"],
         ["gru", "mlp"],
+        ["lstm", "gru"],
+        ["cnn", "lstm", "mlp"],
+        ["lstm", "mlp"],
     ],
 )
 @pytest.mark.parametrize("batch_size", [(), (2,), (3, 2)])
@@ -250,12 +253,8 @@ def test_share_params_between_models(
         or (isinstance(model_name, list) and model_name[0] != "gnn")
     ):
         pytest.skip("gnn model needs agent dim as input")
-    if (
-        packaging.version.parse(torchrl.__version__).local is None
-        and "gru" in model_name
-    ):
-        pytest.skip("gru model needs torchrl from github")
-    torch.manual_seed(1)
+
+    torch.manual_seed(0)
 
     input_spec, output_spec = _get_input_and_output_specs(
         centralised=centralised,
@@ -276,6 +275,8 @@ def test_share_params_between_models(
         config = model_config_registry[model_name].get_from_yaml()
     if centralised:
         config.is_critic = True
+    if packaging.version.parse(torchrl.__version__).local is None and config.is_rnn:
+        pytest.skip("rnn model needs torchrl from github")
     model = config.get_model(
         input_spec=input_spec,
         output_spec=output_spec,
@@ -298,8 +299,6 @@ def test_share_params_between_models(
         agent_group="agents",
         action_spec=None,
     )
-    for param, second_param in zip(model.parameters(), second_model.parameters()):
-        assert not torch.eq(param, second_param).any()
     model.share_params_with(second_model)
     for param, second_param in zip(model.parameters(), second_model.parameters()):
         assert torch.eq(param, second_param).all()

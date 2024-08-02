@@ -146,6 +146,37 @@ class TestVmas:
         )
         experiment.run()
 
+    @pytest.mark.parametrize(
+        "algo_config", [IddpgConfig, MaddpgConfig, IppoConfig, MappoConfig, QmixConfig]
+    )
+    @pytest.mark.parametrize("task", [VmasTask.NAVIGATION])
+    @pytest.mark.skipif(
+        packaging.version.parse(torchrl.__version__).local is None,
+        reason="lstm model needs torchrl from github",
+    )
+    def test_lstm(
+        self,
+        algo_config: AlgorithmConfig,
+        task: Task,
+        experiment_config,
+        lstm_mlp_sequence_config,
+        share_params: bool = False,
+    ):
+        algo_config = algo_config.get_from_yaml()
+        if algo_config.has_critic():
+            algo_config.share_param_critic = share_params
+        experiment_config.share_policy_params = share_params
+        task = task.get_from_yaml()
+        experiment = Experiment(
+            algorithm_config=algo_config,
+            model_config=lstm_mlp_sequence_config,
+            critic_model_config=lstm_mlp_sequence_config,
+            seed=0,
+            config=experiment_config,
+            task=task,
+        )
+        experiment.run()
+
     @pytest.mark.parametrize("algo_config", algorithm_config_registry.values())
     @pytest.mark.parametrize("task", [VmasTask.BALANCE])
     def test_reloading_trainer(

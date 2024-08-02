@@ -16,13 +16,13 @@ from tensordict.utils import expand_as_right, unravel_key_list
 from torch import nn
 from torchrl.data.tensor_specs import CompositeSpec, UnboundedContinuousTensorSpec
 
-from torchrl.modules import GRUCell, MLP, MultiAgentMLP
+from torchrl.modules import LSTMCell, MLP, MultiAgentMLP
 
 from benchmarl.models.common import Model, ModelConfig
 from benchmarl.utils import DEVICE_TYPING
 
 
-class GRU(torch.nn.Module):
+class LSTM(torch.nn.Module):
     def __init__(
         self,
         input_size: int,
@@ -42,9 +42,9 @@ class GRU(torch.nn.Module):
         self.dropout = dropout
         self.bias = bias
 
-        self.grus = torch.nn.ModuleList(
+        self.lstms = torch.nn.ModuleList(
             [
-                GRUCell(
+                LSTMCell(
                     input_size if i == 0 else hidden_size,
                     hidden_size,
                     device=self.device,
@@ -54,21 +54,20 @@ class GRU(torch.nn.Module):
             ]
         )
 
-    def forward(
-        self,
-        input,
-        is_init,
-        h,
-    ):
+    def forward(self, input, is_init, h, c):
         hs = []
+
         h = list(h.unbind(dim=-2))
+        c = list(c.unbind(dim=-2))
+
         for in_t, init_t in zip(
             input.unbind(self.time_dim), is_init.unbind(self.time_dim)
         ):
             for layer in range(self.n_layers):
                 h[layer] = torch.where(init_t, 0, h[layer])
+                c[layer] = torch.where(init_t, 0, c[layer])
 
-                h[layer] = self.grus[layer](in_t, h[layer])
+                h[layer], c[layer] = self.lstms[layer](in_t, (h[layer], c[layer]))
 
                 if layer < self.n_layers - 1 and self.dropout:
                     in_t = F.dropout(h[layer], p=self.dropout, training=self.training)
@@ -77,13 +76,14 @@ class GRU(torch.nn.Module):
 
             hs.append(in_t)
         h_n = torch.stack(h, dim=-2)
+        c_n = torch.stack(c, dim=-2)
         output = torch.stack(hs, self.time_dim)
 
-        return output, h_n
+        return output, h_n, c_n
 
 
 def get_net(input_size, hidden_size, n_layers, bias, device, dropout, compile):
-    gru = GRU(
+    lstm = LSTM(
         input_size,
         hidden_size,
         n_layers=n_layers,
@@ -92,11 +92,11 @@ def get_net(input_size, hidden_size, n_layers, bias, device, dropout, compile):
         dropout=dropout,
     )
     if compile:
-        gru = torch.compile(gru, mode="reduce-overhead")
-    return gru
+        lstm = torch.compile(lstm, mode="reduce-overhead")
+    return lstm
 
 
-class MultiAgentGRU(torch.nn.Module):
+class MultiAgentLSTM(torch.nn.Module):
     def __init__(
         self,
         input_size: int,
@@ -140,7 +140,7 @@ class MultiAgentGRU(torch.nn.Module):
         self._make_params(agent_networks)
 
         with torch.device("meta"):
-            self._empty_gru = get_net(
+            self._empty_lstm = get_net(
                 input_size=input_size,
                 hidden_size=self.hidden_size,
                 n_layers=self.n_layers,
@@ -150,8 +150,8 @@ class MultiAgentGRU(torch.nn.Module):
                 compile=self.compile,
             )
             # Remove all parameters
-            TensorDict.from_module(self._empty_gru).data.to("meta").to_module(
-                self._empty_gru
+            TensorDict.from_module(self._empty_lstm).data.to("meta").to_module(
+                self._empty_lstm
             )
 
     def forward(
@@ -159,6 +159,7 @@ class MultiAgentGRU(torch.nn.Module):
         input,
         is_init,
         h_0=None,
+        c_0=None,
     ):
         # Input and output always have the multiagent dimension
         # Hidden states always have it apart from when it is centralized and share params
@@ -174,6 +175,7 @@ class MultiAgentGRU(torch.nn.Module):
             missing_batch = True
             input = input.unsqueeze(0)
             h_0 = h_0.unsqueeze(0)
+            c_0 = c_0.unsqueeze(0)
             is_init = is_init.unsqueeze(0)
 
         if (
@@ -189,6 +191,7 @@ class MultiAgentGRU(torch.nn.Module):
         if h_0 is not None:  # Collection
             # Set hidden to 0 when is_init
             h_0 = torch.where(expand_as_right(is_init, h_0), 0, h_0)
+            c_0 = torch.where(expand_as_right(is_init, c_0), 0, c_0)
 
         if not training:  # If in collection emulate the sequence dimension
             is_init = is_init.unsqueeze(1)
@@ -214,11 +217,12 @@ class MultiAgentGRU(torch.nn.Module):
                 device=self.device,
                 dtype=torch.float,
             )
+            c_0 = h_0.clone()
         if self.centralised:
             input = input.view(batch, seq, self.n_agents * self.input_size)
             is_init = is_init[..., 0, :]
 
-        output, h_n = self.run_net(input, is_init, h_0)
+        output, h_n, c_n = self.run_net(input, is_init, h_0, c_0)
 
         if self.centralised and self.share_params:
             output = output.unsqueeze(-2).expand(
@@ -230,32 +234,35 @@ class MultiAgentGRU(torch.nn.Module):
         if missing_batch:
             output = output.squeeze(0)
             h_n = h_n.squeeze(0)
-        return output, h_n
+            c_n = c_n.squeeze(0)
+        return output, h_n, c_n
 
-    def run_net(self, input, is_init, h_0):
+    def run_net(self, input, is_init, h_0, c_0):
         if not self.share_params:
             if self.centralised:
-                output, h_n = self.vmap_func_module(
-                    self._empty_gru,
-                    (0, None, None, -3),
-                    (-2, -3),
-                )(self.params, input, is_init, h_0)
+                output, h_n, c_n = self.vmap_func_module(
+                    self._empty_lstm,
+                    (0, None, None, -3, -3),
+                    (-2, -3, -3),
+                )(self.params, input, is_init, h_0, c_0)
             else:
-                output, h_n = self.vmap_func_module(
-                    self._empty_gru,
-                    (0, -2, -2, -3),
-                    (-2, -3),
-                )(self.params, input, is_init, h_0)
+                output, h_n, c_n = self.vmap_func_module(
+                    self._empty_lstm,
+                    (0, -2, -2, -3, -3),
+                    (-2, -3, -3),
+                )(self.params, input, is_init, h_0, c_0)
         else:
-            with self.params.to_module(self._empty_gru):
+            with self.params.to_module(self._empty_lstm):
                 if self.centralised:
-                    output, h_n = self._empty_gru(input, is_init, h_0)
+                    output, h_n, c_n = self._empty_lstm(input, is_init, h_0, c_0)
                 else:
-                    output, h_n = torch.vmap(
-                        self._empty_gru, in_dims=(-2, -2, -3), out_dims=(-2, -3)
-                    )(input, is_init, h_0)
+                    output, h_n, c_n = torch.vmap(
+                        self._empty_lstm,
+                        in_dims=(-2, -2, -3, -3),
+                        out_dims=(-2, -3, -3),
+                    )(input, is_init, h_0, c_0)
 
-        return output, h_n
+        return output, h_n, c_n
 
     def vmap_func_module(self, module, *args, **kwargs):
         def exec_module(params, *input):
@@ -271,27 +278,27 @@ class MultiAgentGRU(torch.nn.Module):
             self.params = TensorDict.from_modules(*agent_networks, as_module=True)
 
 
-class Gru(Model):
-    r"""A multi-layer Gated Recurrent Unit (GRU) RNN like the one from
-    `torch <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`__ .
+class Lstm(Model):
+    r"""A multi-layer Long Short-Term Memory (LSTM) RNN like the one from
+    `torch <https://pytorch.org/docs/stable/generated/torch.nn.LSTM.html>`__ .
 
-    The BenchMARL GRU accepts multiple inputs of type array: Tensors of shape ``(*batch,F)``
+    The BenchMARL LSTM accepts multiple inputs of type array: Tensors of shape ``(*batch,F)``
 
     Where `F` is the number of features. These arrays will be concatenated along the F dimensions,
-    which will be processed to features of `hidden_size` by the GRU.
+    which will be processed to features of `hidden_size` by the LSTM.
 
     Args:
         hidden_size (int): The number of features in the hidden state.
         num_layers (int): Number of recurrent layers. E.g., setting ``num_layers=2``
-            would mean stacking two GRUs together to form a `stacked GRU`,
-            with the second GRU taking in outputs of the first GRU and
+            would mean stacking two lstms together to form a `stacked LSTM`,
+            with the second LSTM taking in outputs of the first LSTM and
             computing the final results. Default: 1
-        bias (bool): If ``False``, then the GRU layers do not use bias.
+        bias (bool): If ``False``, then the LSTM layers do not use bias.
             Default: ``True``
         dropout (float): If non-zero, introduces a `Dropout` layer on the outputs of each
-            GRU layer except the last layer, with dropout probability equal to
+            LSTM layer except the last layer, with dropout probability equal to
             :attr:`dropout`. Default: 0
-        compile (bool): If ``True``, compiles underlying gru model. Default: ``False``
+        compile (bool): If ``True``, compiles underlying LSTM model. Default: ``False``
 
     """
 
@@ -319,8 +326,18 @@ class Gru(Model):
             is_critic=kwargs.pop("is_critic"),
         )
 
-        self.hidden_state_name = (self.agent_group, f"_hidden_gru_{self.model_index}")
-        self.rnn_keys = unravel_key_list(["is_init", self.hidden_state_name])
+        self.hidden_state_name_h = (
+            self.agent_group,
+            f"_hidden_lstm_h_{self.model_index}",
+        )
+        self.hidden_state_name_c = (
+            self.agent_group,
+            f"_hidden_lstm_c_{self.model_index}",
+        )
+
+        self.rnn_keys = unravel_key_list(
+            ["is_init", self.hidden_state_name_c, self.hidden_state_name_h]
+        )
         self.in_keys += self.rnn_keys
 
         self.hidden_size = hidden_size
@@ -335,7 +352,7 @@ class Gru(Model):
         self.output_features = self.output_leaf_spec.shape[-1]
 
         if self.input_has_agent_dim:
-            self.gru = MultiAgentGRU(
+            self.lstm = MultiAgentLSTM(
                 self.input_features,
                 self.hidden_size,
                 self.n_agents,
@@ -348,7 +365,7 @@ class Gru(Model):
                 compile=self.compile,
             )
         else:
-            self.gru = nn.ModuleList(
+            self.lstm = nn.ModuleList(
                 [
                     get_net(
                         input_size=self.input_features,
@@ -404,16 +421,16 @@ class Gru(Model):
                 else:
                     if input_spec.shape[:-1] != input_shape:
                         raise ValueError(
-                            f"GRU inputs should all have the same shape up to the last dimension, got {self.input_spec}"
+                            f"LSTM inputs should all have the same shape up to the last dimension, got {self.input_spec}"
                         )
             else:
                 raise ValueError(
-                    f"GRU input value {input_key} from {self.input_spec} has an invalid shape, maybe you need a CNN?"
+                    f"LSTM input value {input_key} from {self.input_spec} has an invalid shape, maybe you need a CNN?"
                 )
         if self.input_has_agent_dim:
             if input_shape[-1] != self.n_agents:
                 raise ValueError(
-                    "If the GRU input has the agent dimension,"
+                    "If the LSTM input has the agent dimension,"
                     f" the second to last spec dimension should be the number of agents, got {self.input_spec}"
                 )
         if (
@@ -421,7 +438,7 @@ class Gru(Model):
             and self.output_leaf_spec.shape[-2] != self.n_agents
         ):
             raise ValueError(
-                "If the GRU output has the agent dimension,"
+                "If the LSTM output has the agent dimension,"
                 " the second to last spec dimension should be the number of agents"
             )
 
@@ -435,13 +452,15 @@ class Gru(Model):
             ],
             dim=-1,
         )
-        h_0 = tensordict.get(self.hidden_state_name, None)
+        h_0 = tensordict.get(self.hidden_state_name_h, None)
+        c_0 = tensordict.get(self.hidden_state_name_c, None)
         is_init = tensordict.get("is_init")
+
         training = h_0 is None
 
         # Has multi-agent input dimension
         if self.input_has_agent_dim:
-            output, h_n = self.gru(input, is_init, h_0)
+            output, h_n, c_n = self.lstm(input, is_init, h_0, c_0)
             if not self.output_has_agent_dim:
                 output = output[..., 0, :]
         else:  # Is a global input, this is a critic
@@ -456,12 +475,13 @@ class Gru(Model):
                 device=self.device,
                 dtype=torch.float,
             )
+            c_0 = h_0.clone()
             if self.share_params:
-                output, _ = self.gru[0](input, is_init, h_0)
+                output, _, _ = self.lstm[0](input, is_init, h_0, c_0)
             else:
                 outputs = []
-                for net in self.gru:
-                    output, _ = net(input, is_init, h_0)
+                for net in self.lstm:
+                    output, _, _ = net(input, is_init, h_0, c_0)
                     outputs.append(output)
                 output = torch.stack(outputs, dim=-2)
 
@@ -479,13 +499,14 @@ class Gru(Model):
 
         tensordict.set(self.out_key, output)
         if not training:
-            tensordict.set(("next", *self.hidden_state_name), h_n)
+            tensordict.set(("next", *self.hidden_state_name_h), h_n)
+            tensordict.set(("next", *self.hidden_state_name_c), c_n)
         return tensordict
 
 
 @dataclass
-class GruConfig(ModelConfig):
-    """Dataclass config for a :class:`~benchmarl.models.Gru`."""
+class LstmConfig(ModelConfig):
+    """Dataclass config for a :class:`~benchmarl.models.LSTM`."""
 
     hidden_size: int = MISSING
     n_layers: int = MISSING
@@ -503,7 +524,7 @@ class GruConfig(ModelConfig):
 
     @staticmethod
     def associated_class():
-        return Gru
+        return Lstm
 
     @property
     def is_rnn(self) -> bool:
@@ -512,9 +533,12 @@ class GruConfig(ModelConfig):
     def get_model_state_spec(self, model_index: int = 0) -> CompositeSpec:
         spec = CompositeSpec(
             {
-                f"_hidden_gru_{model_index}": UnboundedContinuousTensorSpec(
+                f"_hidden_lstm_c_{model_index}": UnboundedContinuousTensorSpec(
                     shape=(self.n_layers, self.hidden_size)
-                )
+                ),
+                f"_hidden_lstm_h_{model_index}": UnboundedContinuousTensorSpec(
+                    shape=(self.n_layers, self.hidden_size)
+                ),
             }
         )
         return spec

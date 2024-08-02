@@ -264,6 +264,7 @@ agent group. Here is a table of the models implemented in BenchMARL
 |------------------------------------------|:-------------:|:-----------------------------:|:-----------------------------:|
 | [MLP](benchmarl/models/mlp.py)           |      Yes      |              Yes              |              Yes              |
 | [GRU](benchmarl/models/gru.py)           |      Yes      |              Yes              |              Yes              |
+| [LSTM](benchmarl/models/lstm.py)         |      Yes      |              Yes              |              Yes              |
 | [GNN](benchmarl/models/gnn.py)           |      Yes      |              Yes              |              No               |
 | [CNN](benchmarl/models/cnn.py)           |      Yes      |              Yes              |              Yes              |
 | [Deepsets](benchmarl/models/deepsets.py) |      Yes      |              Yes              |              Yes              |
