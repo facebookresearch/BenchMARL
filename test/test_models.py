@@ -148,6 +148,9 @@ def test_loading_sequence_models(model_name, intermediate_size=10):
         ["cnn", "gru", "gnn", "mlp"],
         ["cnn", "gru", "mlp"],
         ["gru", "mlp"],
+        ["lstm", "gru"],
+        ["cnn", "lstm", "mlp"],
+        ["lstm", "mlp"],
     ],
 )
 def test_models_forward_shape(
@@ -200,10 +203,10 @@ def test_models_forward_shape(
         action_spec=None,
     )
     input_td = input_spec.rand()
-    if "gru" in model_name:
+    if config.is_rnn:
         if len(batch_size) < 2:
             if centralised:
-                pytest.skip("gru model with this batch sizes is a policy")
+                pytest.skip("rnn model with this batch sizes is a policy")
             hidden_spec = config.get_model_state_spec()
             hidden_spec = CompositeSpec(
                 {
@@ -232,6 +235,9 @@ def test_models_forward_shape(
         ["cnn", "gru", "gnn", "mlp"],
         ["cnn", "gru", "mlp"],
         ["gru", "mlp"],
+        ["lstm", "gru"],
+        ["cnn", "lstm", "mlp"],
+        ["lstm", "mlp"],
     ],
 )
 @pytest.mark.parametrize("batch_size", [(), (2,), (3, 2)])
