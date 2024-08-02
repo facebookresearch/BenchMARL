@@ -161,7 +161,7 @@ class MultiAgentGRU(torch.nn.Module):
         h_0=None,
     ):
         # Input and output always have the multiagent dimension
-        # Hidden state only has it when not centralised
+        # Hidden states always have it apart from when it is centralized and share params
         # is_init never has it
 
         assert is_init is not None, "We need to pass is_init"
@@ -196,7 +196,7 @@ class MultiAgentGRU(torch.nn.Module):
         is_init = is_init.unsqueeze(-2).expand(batch, seq, self.n_agents, 1)
 
         if h_0 is None:
-            if self.centralised:
+            if self.centralised and self.share_params:
                 shape = (
                     batch,
                     self.n_layers,
@@ -237,7 +237,7 @@ class MultiAgentGRU(torch.nn.Module):
             if self.centralised:
                 output, h_n = self.vmap_func_module(
                     self._empty_gru,
-                    (0, None, None, None),
+                    (0, None, None, -3),
                     (-2, -3),
                 )(self.params, input, is_init, h_0)
             else:

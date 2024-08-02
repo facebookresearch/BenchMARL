@@ -188,6 +188,8 @@ def test_models_forward_shape(
         share_params=share_params,
         n_agents=n_agents,
     )
+    if packaging.version.parse(torchrl.__version__).local is None and config.is_rnn:
+        pytest.skip("rnn model needs torchrl from github")
 
     if centralised:
         config.is_critic = True
@@ -282,6 +284,8 @@ def test_share_params_between_models(
         config = model_config_registry[model_name].get_from_yaml()
     if centralised:
         config.is_critic = True
+    if packaging.version.parse(torchrl.__version__).local is None and config.is_rnn:
+        pytest.skip("rnn model needs torchrl from github")
     model = config.get_model(
         input_spec=input_spec,
         output_spec=output_spec,
