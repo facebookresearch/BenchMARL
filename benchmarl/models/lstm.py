@@ -284,8 +284,8 @@ class Lstm(Model):
 
     The BenchMARL LSTM accepts multiple inputs of type array: Tensors of shape ``(*batch,F)``
 
-    Where `F` is the number of features.
-    The features `F` will be processed to features of `hidden_size` by the LSTM.
+    Where `F` is the number of features. These arrays will be concatenated along the F dimensions,
+    which will be processed to features of `hidden_size` by the LSTM.
 
     Args:
         hidden_size (int): The number of features in the hidden state.
