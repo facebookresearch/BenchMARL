@@ -583,6 +583,7 @@ class Experiment(CallbackNotifier):
         for _ in range(
             self.n_iters_performed, self.config.get_max_n_iters(self.on_policy)
         ):
+
             iteration_start = time.time()
             if not self.config.collect_with_grad:
                 batch = next(iterator)
