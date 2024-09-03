@@ -299,7 +299,7 @@ class Gnn(Model):
                 vel = tensordict.get(self._full_velocity_key)
                 if vel.shape[-1] != self.vel_features:
                     raise ValueError(
-                        f"Position key in tensordict is {vel.shape[-1]}-dimensional, "
+                        f"Velocity key in tensordict is {vel.shape[-1]}-dimensional, "
                         f"while model was configured with vel_features={self.vel_features}"
                     )
             else:
