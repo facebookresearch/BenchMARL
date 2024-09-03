@@ -8,7 +8,9 @@ gnn_kwargs:
   aggr: "add"
 
 position_key: null
+pos_features: 0
 velocity_key: null
+vel_features: 0
 
 exclude_pos_from_node_features: False
 edge_radius: null
