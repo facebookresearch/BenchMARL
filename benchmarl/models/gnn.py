@@ -266,7 +266,12 @@ class Gnn(Model):
 
     def _forward(self, tensordict: TensorDictBase) -> TensorDictBase:
         # Gather in_key
-        input = [tensordict.get(in_key) for in_key in self.in_keys]
+        input = [
+            tensordict.get(in_key)
+            for in_key in self.in_keys
+            if _unravel_key_to_tuple(in_key)[-1]
+            not in (self.position_key, self.velocity_key)
+        ]
 
         # Retrieve position
         if self.position_key is not None:
@@ -282,10 +287,7 @@ class Gnn(Model):
                     )
             else:
                 pos = tensordict.get(self._full_position_key)
-            if (
-                not self.exclude_pos_from_node_features
-                and self._full_position_key not in self.in_keys
-            ):
+            if not self.exclude_pos_from_node_features:
                 input.append(pos)
         else:
             pos = None
@@ -304,8 +306,7 @@ class Gnn(Model):
                     )
             else:
                 vel = tensordict.get(self._full_velocity_key)
-            if self._full_velocity_key not in self.in_keys:
-                input.append(vel)
+            input.append(vel)
         else:
             vel = None
 
