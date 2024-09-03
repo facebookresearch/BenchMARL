@@ -332,7 +332,7 @@ class TestGnn:
                             shape=multi_agent_obs.shape[len(batch_size) :]
                         ),
                         "pos": UnboundedContinuousTensorSpec(
-                            shape=multi_agent_obs.shape[len(batch_size) :]
+                            shape=multi_agent_pos.shape[len(batch_size) :]
                         ),
                     },
                     shape=(n_agents,),
@@ -361,6 +361,7 @@ class TestGnn:
             gnn_kwargs=None,
             position_key=position_key,
             exclude_pos_from_node_features=False,
+            pos_features=pos_size if position_key is not None else 0,
         ).get_model(
             input_spec=input_spec,
             output_spec=output_spec,
@@ -392,6 +393,7 @@ class TestGnn:
                 gnn_kwargs=None,
                 position_key=position_key,
                 exclude_pos_from_node_features=False,
+                pos_features=pos_size if position_key is not None else 0,
             ).get_model(
                 input_spec=input_spec,
                 output_spec=output_spec,
