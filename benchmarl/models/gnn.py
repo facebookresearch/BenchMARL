@@ -458,14 +458,13 @@ class GnnConfig(ModelConfig):
     topology: str = MISSING
     self_loops: bool = MISSING
 
-    pos_features: int = MISSING
-    vel_features: int = MISSING
-
     gnn_class: Type[torch_geometric.nn.MessagePassing] = MISSING
     gnn_kwargs: Optional[dict] = None
 
     position_key: Optional[str] = None
+    pos_features: Optional[int] = 0
     velocity_key: Optional[str] = None
+    vel_features: Optional[int] = 0
     exclude_pos_from_node_features: Optional[bool] = None
     edge_radius: Optional[float] = None
 
