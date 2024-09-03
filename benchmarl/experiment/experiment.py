@@ -715,7 +715,6 @@ class Experiment(CallbackNotifier):
         for other_group in self.group_map.keys():
             if other_group != group:
                 excluded_keys += [other_group, ("next", other_group)]
-        excluded_keys += ["info", (group, "info"), ("next", group, "info")]
         return excluded_keys
 
     def _optimizer_loop(self, group: str) -> TensorDictBase:
