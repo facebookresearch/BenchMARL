@@ -221,7 +221,7 @@ class Gnn(Model):
             )
         if self.velocity_key is not None and self.vel_features <= 0:
             raise ValueError(
-                f"Position key specified but vel_features is {self.vel_features}"
+                f"Velocity key specified but vel_features is {self.vel_features}"
             )
         elif self.velocity_key is None and self.vel_features > 0:
             raise ValueError(
