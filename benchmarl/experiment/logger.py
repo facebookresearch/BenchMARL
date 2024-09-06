@@ -33,6 +33,7 @@ class Logger:
         model_name: str,
         group_map: Dict[str, List[str]],
         seed: int,
+        project_name: str,
     ):
         self.experiment_config = experiment_config
         self.algorithm_name = algorithm_name
@@ -63,7 +64,7 @@ class Logger:
                     experiment_name=experiment_name,
                     wandb_kwargs={
                         "group": task_name,
-                        "project": "benchmarl",
+                        "project": project_name,
                         "id": experiment_name,
                     },
                 )
