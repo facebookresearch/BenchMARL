@@ -166,10 +166,11 @@ class Logger:
             return
         to_log = {}
         json_metrics = {}
+        max_length_rollout_0 = 0
         for group in self.group_map.keys():
             # Cut the rollouts at the first done
             rollouts_group = []
-            for r in rollouts:
+            for i, r in enumerate(rollouts):
                 next_done = self._get_done(group, r)
                 # Reduce it to batch size
                 next_done = next_done.sum(
@@ -181,6 +182,8 @@ class Logger:
                 if done_index.numel() > 0:
                     done_index = done_index[0]
                     r = r[: done_index + 1]
+                if i == 0:
+                    max_length_rollout_0 = max(r.batch_size[0], max_length_rollout_0)
                 rollouts_group.append(r)
 
             returns = [
@@ -227,10 +230,8 @@ class Logger:
                     )
 
         self.log(to_log, step=step)
-        if video_frames is not None and rollouts[0].batch_size[0] > 1:
-            video_frames = np.stack(
-                video_frames[: rollouts[0].batch_size[0] - 1], axis=0
-            )
+        if video_frames is not None and max_length_rollout_0 > 1:
+            video_frames = np.stack(video_frames[: max_length_rollout_0 - 1], axis=0)
             vid = torch.tensor(
                 np.transpose(video_frames, (0, 3, 1, 2)),
                 dtype=torch.uint8,
