@@ -87,6 +87,8 @@ evaluation_deterministic_actions: True
 
 # List of loggers to use, options are: wandb, csv, tensorboard, mflow
 loggers: []
+# Wandb project name
+project_name: "benchmarl"
 # Create a json folder as part of the output in the format of marl-eval
 create_json: True
 

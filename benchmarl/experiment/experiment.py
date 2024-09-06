@@ -94,6 +94,7 @@ class ExperimentConfig:
     evaluation_deterministic_actions: bool = MISSING
 
     loggers: List[str] = MISSING
+    project_name: str = MISSING
     create_json: bool = MISSING
 
     save_folder: Optional[str] = MISSING
@@ -535,6 +536,7 @@ class Experiment(CallbackNotifier):
 
     def _setup_logger(self):
         self.logger = Logger(
+            project_name=self.config.project_name,
             experiment_name=self.name,
             folder_name=str(self.folder_name),
             experiment_config=self.config,
