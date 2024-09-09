@@ -578,6 +578,11 @@ class Experiment(CallbackNotifier):
             self.close()
             raise err
 
+    def evaluate(self):
+        """Run just the evaluation loop once."""
+        self._evaluation_loop()
+        self.logger.commit()
+
     def _collection_loop(self):
         pbar = tqdm(
             initial=self.n_iters_performed,
