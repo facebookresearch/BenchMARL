@@ -38,7 +38,7 @@ if __name__ == "__main__":
     )
     experiment.run()
 
-    # Now we tell it where to restore  from
+    # Now we tell it where to restore from
     experiment_config.restore_file = (
         experiment.folder_name
         / "checkpoints"
