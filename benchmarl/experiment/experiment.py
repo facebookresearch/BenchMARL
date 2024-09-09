@@ -14,7 +14,7 @@ import time
 from collections import deque, OrderedDict
 from dataclasses import dataclass, MISSING
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import torch
 from tensordict import TensorDictBase
@@ -99,6 +99,7 @@ class ExperimentConfig:
 
     save_folder: Optional[str] = MISSING
     restore_file: Optional[str] = MISSING
+    restore_map_location: Optional[Any] = MISSING
     checkpoint_interval: int = MISSING
     checkpoint_at_end: bool = MISSING
     keep_checkpoints_num: Optional[int] = MISSING
@@ -890,6 +891,8 @@ class Experiment(CallbackNotifier):
 
     def _load_experiment(self) -> Experiment:
         """Load trainer from checkpoint"""
-        loaded_dict: OrderedDict = torch.load(self.config.restore_file)
+        loaded_dict: OrderedDict = torch.load(
+            self.config.restore_file, map_location=self.config.restore_map_location
+        )
         self.load_state_dict(loaded_dict)
         return self
