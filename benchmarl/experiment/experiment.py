@@ -582,6 +582,10 @@ class Experiment(CallbackNotifier):
         """Run just the evaluation loop once."""
         self._evaluation_loop()
         self.logger.commit()
+        print(
+            f"Evaluation results logged to loggers={self.config.loggers}"
+            f"{' and to a json file in the experiment folder.' if self.config.create_json else ''}"
+        )
 
     def _collection_loop(self):
         pbar = tqdm(

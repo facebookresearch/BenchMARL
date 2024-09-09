@@ -5,6 +5,7 @@
 #
 import importlib
 from dataclasses import is_dataclass
+from pathlib import Path
 
 from benchmarl.algorithms.common import AlgorithmConfig
 from benchmarl.environments import Task, task_config_registry
@@ -16,6 +17,7 @@ from benchmarl.models.common import ModelConfig, parse_model_config, SequenceMod
 _has_hydra = importlib.util.find_spec("hydra") is not None
 
 if _has_hydra:
+    from hydra import compose, initialize, initialize_config_dir
     from omegaconf import DictConfig, OmegaConf
 
 
@@ -121,3 +123,57 @@ def load_model_config_from_hydra(cfg: DictConfig) -> ModelConfig:
                 OmegaConf.to_container(cfg, resolve=True, throw_on_missing=True)
             )
         )
+
+
+def _find_hydra_folder(restore_file: str) -> str:
+    """Given the restore file, look for the .hydra folder max three levels above it."""
+    current_folder = Path(restore_file).parent.resolve()
+    for _ in range(3):
+        hydra_dir = current_folder / ".hydra"
+        if hydra_dir.exists() and hydra_dir.is_dir():
+            return str(hydra_dir)
+        current_folder = current_folder.parent
+    raise ValueError(
+        ".hydra folder not found (should be max 3 levels above checkpoint file"
+    )
+
+
+def reload_experiment_from_file(restore_file: str) -> Experiment:
+    """Reloads the experiment from a given restore file.
+
+    Requires a ``.hydra`` folder containing ``config.yaml``, ``hydra.yaml``, and ``overrides.yaml``
+    at max three directory levels higher than the checkpoint file. This should be automatically created by hydra.
+
+    Args:
+        restore_file (str): The checkpoint file of the experiment reload.
+
+    """
+    hydra_folder = _find_hydra_folder(restore_file)
+    with initialize(
+        version_base=None,
+        config_path="conf",
+    ):
+        cfg = compose(
+            config_name="config",
+            overrides=OmegaConf.load(Path(hydra_folder) / "overrides.yaml"),
+            return_hydra_config=True,
+        )
+        task_name = cfg.hydra.runtime.choices.task
+        algorithm_name = cfg.hydra.runtime.choices.algorithm
+    with initialize_config_dir(version_base=None, config_dir=hydra_folder):
+        cfg_loaded = dict(compose(config_name="config"))
+
+    for key in ("experiment", "algorithm", "task", "model", "critic_model"):
+        cfg[key].update(cfg_loaded[key])
+        cfg_loaded.pop(key)
+
+    cfg.update(cfg_loaded)
+    del cfg.hydra
+    cfg.experiment.restore_file = restore_file
+
+    print("\nReloaded experiment with:")
+    print(f"\nAlgorithm: {algorithm_name}, Task: {task_name}")
+    print("\nLoaded config:\n")
+    print(OmegaConf.to_yaml(cfg))
+
+    return load_experiment_from_hydra(cfg, task_name=task_name)
