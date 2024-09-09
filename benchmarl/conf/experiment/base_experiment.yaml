@@ -86,7 +86,7 @@ evaluation_episodes: 10
 evaluation_deterministic_actions: True
 
 # List of loggers to use, options are: wandb, csv, tensorboard, mflow
-loggers: []
+loggers: [csv]
 # Wandb project name
 project_name: "benchmarl"
 # Create a json folder as part of the output in the format of marl-eval
@@ -94,9 +94,14 @@ create_json: True
 
 # Absolute path to the folder where the experiment will log.
 # If null, this will default to the hydra output dir (if using hydra) or to the current folder when the script is run (if not).
+# If you are reloading an experiment with "restore_file", this will default to the reloaded experiment folder.
 save_folder: null
 # Absolute path to a checkpoint file where the experiment was saved. If null the experiment is started fresh.
 restore_file: null
+# Map location given to `torch.load()` when reloading.
+# If you are reloading in a cpu-only machine a gpu experiment, you can use `restore_map_location: {"cuda":"cpu"}`
+# to map gpu tensors to the cpu
+restore_map_location: null
 # Interval for experiment saving in terms of collected frames (this should be a multiple of on/off_policy_collected_frames_per_batch).
 # Set it to 0 to disable checkpointing
 checkpoint_interval: 0

@@ -38,17 +38,56 @@ Their checkpoints will be stored in a ``"checkpoints"`` folder within the experi
 
    python benchmarl/run.py task=vmas/balance algorithm=mappo experiment.max_n_iters=3 experiment.on_policy_collected_frames_per_batch=100 experiment.checkpoint_interval=100
 
+.. python_example_button::
+   https://github.com/facebookresearch/BenchMARL/blob/main/examples/checkpointing/reload_experiment.py
 
-To load from a checkpoint, pass the absolute checkpoint file name to ``experiment.restore_file``.
+Reloading
+---------
+
+To load from a checkpoint, you can do it in multiple ways:
+
+You can pass the absolute checkpoint file name to ``experiment.restore_file``.
 
 .. code-block:: console
 
-    python benchmarl/run.py task=vmas/balance algorithm=mappo experiment.max_n_iters=6 experiment.on_policy_collected_frames_per_batch=100 experiment.restore_file="/hydra/experiment/folder/checkpoint/checkpoint_300.pt"
-
-
+   python benchmarl/run.py task=vmas/balance algorithm=mappo experiment.max_n_iters=6 experiment.on_policy_collected_frames_per_batch=100 experiment.restore_file="/hydra/experiment/folder/checkpoint/checkpoint_300.pt"
 
 .. python_example_button::
    https://github.com/facebookresearch/BenchMARL/blob/main/examples/checkpointing/reload_experiment.py
+
+If you do not need to change the config, you can also just resume from the checkpoint file with:
+
+.. code-block:: console
+
+   python benchmarl/resume.py ../outputs/2024-09-09/20-39-31/mappo_balance_mlp__cd977b69_24_09_09-20_39_31/checkpoints/checkpoint_100.pt
+
+In Python, this is equivalent to:
+
+.. code-block:: python
+
+   from benchmarl.hydra_config import reload_experiment_from_file
+   experiment = reload_experiment_from_file(checkpoint_file)
+   experiment.run()
+
+
+Evaluating
+----------
+
+To evaluate an experiment, you can:
+
+.. code-block:: python
+
+   from benchmarl.hydra_config import reload_experiment_from_file
+   experiment = reload_experiment_from_file(checkpoint_file)
+   experiment.evaluate()
+
+This will run an iteration of evaluation, logging it to the experiment loggers (and to json if ``create_json==True``.
+
+There is a command line script which automates this:
+
+.. code-block:: console
+
+   python benchmarl/evaluate.py ../outputs/2024-09-09/20-39-31/mappo_balance_mlp__cd977b69_24_09_09-20_39_31/checkpoints/checkpoint_100.pt
 
 
 Callbacks

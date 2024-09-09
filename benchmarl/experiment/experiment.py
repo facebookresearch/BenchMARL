@@ -14,7 +14,7 @@ import time
 from collections import deque, OrderedDict
 from dataclasses import dataclass, MISSING
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import torch
 from tensordict import TensorDictBase
@@ -99,6 +99,7 @@ class ExperimentConfig:
 
     save_folder: Optional[str] = MISSING
     restore_file: Optional[str] = MISSING
+    restore_map_location: Optional[Any] = MISSING
     checkpoint_interval: int = MISSING
     checkpoint_at_end: bool = MISSING
     keep_checkpoints_num: Optional[int] = MISSING
@@ -506,33 +507,40 @@ class Experiment(CallbackNotifier):
         self.task_name = self.task.name.lower()
         self._checkpointed_files = deque([])
 
-        if self.config.restore_file is not None and self.config.save_folder is not None:
-            raise ValueError(
-                "Experiment restore file and save folder have both been specified."
-                "Do not set a save_folder when you are reloading an experiment as"
-                "it will by default reloaded into the old folder."
-            )
-        if self.config.restore_file is None:
-            if self.config.save_folder is not None:
-                folder_name = Path(self.config.save_folder)
+        if self.config.save_folder is not None:
+            # If the user specified a folder for the experiment we use that
+            save_folder = Path(self.config.save_folder)
+        else:
+            # Otherwise, if the user is restoring from a folder, we will save in the folder they are restoring from
+            if self.config.restore_file is not None:
+                save_folder = Path(
+                    self.config.restore_file
+                ).parent.parent.parent.resolve()
+            # Otherwise, the user is not restoring and did not specify a save_folder so we save in the hydra directory
+            # of the experiment or in the directory where the experiment was run (if hydra is not used)
             else:
                 if _has_hydra and HydraConfig.initialized():
-                    folder_name = Path(HydraConfig.get().runtime.output_dir)
+                    save_folder = Path(HydraConfig.get().runtime.output_dir)
                 else:
-                    folder_name = Path(os.getcwd())
+                    save_folder = Path(os.getcwd())
+
+        if self.config.restore_file is None:
             self.name = generate_exp_name(
                 f"{self.algorithm_name}_{self.task_name}_{self.model_name}", ""
             )
-            self.folder_name = folder_name / self.name
-            if (
-                len(self.config.loggers)
-                or self.config.checkpoint_interval > 0
-                or self.config.create_json
-            ):
-                self.folder_name.mkdir(parents=False, exist_ok=False)
+            self.folder_name = save_folder / self.name
+
         else:
-            self.folder_name = Path(self.config.restore_file).parent.parent.resolve()
-            self.name = self.folder_name.name
+            # If restoring, we use the name of the previous experiment
+            self.name = Path(self.config.restore_file).parent.parent.resolve().name
+            self.folder_name = save_folder / self.name
+
+        if (
+            len(self.config.loggers)
+            or self.config.checkpoint_interval > 0
+            or self.config.create_json
+        ):
+            self.folder_name.mkdir(parents=False, exist_ok=True)
 
     def _setup_logger(self):
         self.logger = Logger(
@@ -569,6 +577,15 @@ class Experiment(CallbackNotifier):
             print("\n\nExperiment failed and is closing gracefully\n\n")
             self.close()
             raise err
+
+    def evaluate(self):
+        """Run just the evaluation loop once."""
+        self._evaluation_loop()
+        self.logger.commit()
+        print(
+            f"Evaluation results logged to loggers={self.config.loggers}"
+            f"{' and to a json file in the experiment folder.' if self.config.create_json else ''}"
+        )
 
     def _collection_loop(self):
         pbar = tqdm(
@@ -883,6 +900,8 @@ class Experiment(CallbackNotifier):
 
     def _load_experiment(self) -> Experiment:
         """Load trainer from checkpoint"""
-        loaded_dict: OrderedDict = torch.load(self.config.restore_file)
+        loaded_dict: OrderedDict = torch.load(
+            self.config.restore_file, map_location=self.config.restore_map_location
+        )
         self.load_state_dict(loaded_dict)
         return self

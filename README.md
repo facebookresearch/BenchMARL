@@ -469,6 +469,15 @@ python benchmarl/run.py task=vmas/balance algorithm=mappo experiment.max_n_iters
 
 [![Example](https://img.shields.io/badge/Example-blue.svg)](examples/checkpointing/reload_experiment.py)
 
+
+There are also ways to **resume** and **evaluate** hydra experiments directly from the file
+```bash
+python benchmarl/evaluate.py ../outputs/2024-09-09/20-39-31/mappo_balance_mlp__cd977b69_24_09_09-20_39_31/checkpoints/checkpoint_100.pt
+```
+```bash
+python benchmarl/resume.py ../outputs/2024-09-09/20-39-31/mappo_balance_mlp__cd977b69_24_09_09-20_39_31/checkpoints/checkpoint_100.pt
+```
+
 ### Callbacks
 
 Experiments optionally take a list of [`Callback`](benchmarl/experiment/callback.py) which have several methods
