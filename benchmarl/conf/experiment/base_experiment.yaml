@@ -99,7 +99,7 @@ save_folder: null
 # Absolute path to a checkpoint file where the experiment was saved. If null the experiment is started fresh.
 restore_file: null
 # Map location given to `torch.load()` when reloading.
-# If you are reloading in a cpu-only machine a gpu experiment, you can use `restore_map_location: {"cuda":"cpu"}`
+# If you are reloading in a cpu-only machine a gpu experiment, you can use `restore_map_location: {"cuda:0":"cpu"}`
 # to map gpu tensors to the cpu
 restore_map_location: null
 # Interval for experiment saving in terms of collected frames (this should be a multiple of on/off_policy_collected_frames_per_batch).
