@@ -287,7 +287,6 @@ class Gnn(Model):
                         f"Position key in tensordict is {pos.shape[-1]}-dimensional, "
                         f"while model was configured with pos_features={self.pos_features-1}"
                     )
-                print(self._full_position_key)
             else:
                 pos = tensordict.get(self._full_position_key)
             if not self.exclude_pos_from_node_features:
