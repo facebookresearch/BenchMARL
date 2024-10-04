@@ -164,12 +164,8 @@ class Logger:
         max_length_rollout_0 = 0
         for i in range(len(rollouts)):
             r = rollouts[i]
-            next_done = self._get_global_done(r)
-            # Reduce it to batch size
-            next_done = next_done.sum(
-                tuple(range(r.batch_dims, next_done.ndim)),
-                dtype=torch.bool,
-            )
+            next_done = self._get_global_done(r).squeeze(-1)
+
             # First done index for this traj
             done_index = next_done.nonzero(as_tuple=True)[0]
             if done_index.numel() > 0:
