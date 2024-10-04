@@ -104,7 +104,12 @@ class Logger:
             )
         for group in self.group_map.keys():
             group_episode_rewards = self._log_individual_and_group_rewards(
-                group, batch, gobal_done, any_episode_ended, to_log
+                group,
+                batch,
+                gobal_done,
+                any_episode_ended,
+                to_log,
+                log_individual_agents=False,  # Turn on if you want single agent granularity
             )
             # group_episode_rewards has shape (n_episodes) as we took the mean over agents in the group
             groups_episode_rewards.append(group_episode_rewards)
