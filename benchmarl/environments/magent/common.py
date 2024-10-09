@@ -45,7 +45,8 @@ class MAgentTask(Task):
             env=self.__get_env(),
             return_state=True,
             seed=seed,
-            done_on_any=True,
+            done_on_any=False,
+            use_mask=True,
             device=device
         )
 
