@@ -108,7 +108,7 @@ class TestPettingzoo:
         experiment.run()
 
     @pytest.mark.parametrize(
-        "algo_config", [IddpgConfig, MaddpgConfig, IppoConfig, MappoConfig, QmixConfig]
+        "algo_config", [IddpgConfig, MappoConfig, QmixConfig, MasacConfig]
     )
     @pytest.mark.parametrize("task", [PettingZooTask.SIMPLE_TAG])
     @pytest.mark.skipif(
@@ -138,7 +138,7 @@ class TestPettingzoo:
         experiment.run()
 
     @pytest.mark.parametrize(
-        "algo_config", [IddpgConfig, MaddpgConfig, IppoConfig, MappoConfig, QmixConfig]
+        "algo_config", [MaddpgConfig, IppoConfig, QmixConfig, IsacConfig]
     )
     @pytest.mark.parametrize("task", [PettingZooTask.SIMPLE_TAG])
     @pytest.mark.skipif(

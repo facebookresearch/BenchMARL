@@ -116,7 +116,7 @@ class TestVmas:
         experiment.run()
 
     @pytest.mark.parametrize(
-        "algo_config", [IddpgConfig, MaddpgConfig, IppoConfig, MappoConfig, QmixConfig]
+        "algo_config", [MaddpgConfig, IppoConfig, QmixConfig, MasacConfig]
     )
     @pytest.mark.parametrize("task", [VmasTask.NAVIGATION])
     @pytest.mark.skipif(
@@ -147,7 +147,7 @@ class TestVmas:
         experiment.run()
 
     @pytest.mark.parametrize(
-        "algo_config", [IddpgConfig, MaddpgConfig, IppoConfig, MappoConfig, QmixConfig]
+        "algo_config", [IddpgConfig, MappoConfig, QmixConfig, IsacConfig]
     )
     @pytest.mark.parametrize("task", [VmasTask.NAVIGATION])
     @pytest.mark.skipif(
