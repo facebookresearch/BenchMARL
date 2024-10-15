@@ -1,0 +1,11 @@
+defaults:
+  - gather_config
+  - _self_
+
+minimap_mode: False
+step_reward: -0.01
+attack_penalty: -0.1
+dead_penalty: -1
+attack_food_reward: 0.5
+max_cycles: 500
+extra_features: False
