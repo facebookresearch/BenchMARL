@@ -9,7 +9,7 @@ from typing import Dict, Iterable, Tuple, Type
 
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModule, TensorDictSequential
-from torchrl.data import Composite, UnboundedContinuousTensorSpec
+from torchrl.data import Composite, Unbounded
 from torchrl.modules import (
     AdditiveGaussianWrapper,
     Delta,
@@ -100,7 +100,7 @@ class Maddpg(Algorithm):
             actor_output_spec = Composite(
                 {
                     group: Composite(
-                        {"param": UnboundedContinuousTensorSpec(shape=logits_shape)},
+                        {"param": Unbounded(shape=logits_shape)},
                         shape=(n_agents,),
                     )
                 }
@@ -192,17 +192,13 @@ class Maddpg(Algorithm):
 
         if self.share_param_critic:
             critic_output_spec = Composite(
-                {"state_action_value": UnboundedContinuousTensorSpec(shape=(1,))}
+                {"state_action_value": Unbounded(shape=(1,))}
             )
         else:
             critic_output_spec = Composite(
                 {
                     group: Composite(
-                        {
-                            "state_action_value": UnboundedContinuousTensorSpec(
-                                shape=(n_agents, 1)
-                            )
-                        },
+                        {"state_action_value": Unbounded(shape=(n_agents, 1))},
                         shape=(n_agents,),
                     )
                 }
@@ -219,7 +215,7 @@ class Maddpg(Algorithm):
 
             critic_input_spec = self.state_spec.clone().update(
                 {
-                    "global_action": UnboundedContinuousTensorSpec(
+                    "global_action": Unbounded(
                         shape=(self.action_spec[group, "action"].shape[-1] * n_agents,)
                     )
                 }

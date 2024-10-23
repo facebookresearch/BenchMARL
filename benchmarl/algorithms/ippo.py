@@ -12,7 +12,7 @@ from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModule, TensorDictSequential
 from tensordict.nn.distributions import NormalParamExtractor
 from torch.distributions import Categorical
-from torchrl.data import Composite, UnboundedContinuousTensorSpec
+from torchrl.data import Composite, Unbounded
 from torchrl.modules import IndependentNormal, ProbabilisticActor, TanhNormal
 from torchrl.modules.distributions import MaskedCategorical
 from torchrl.objectives import ClipPPOLoss, LossModule, ValueEstimators
@@ -125,7 +125,7 @@ class Ippo(Algorithm):
         actor_output_spec = Composite(
             {
                 group: Composite(
-                    {"logits": UnboundedContinuousTensorSpec(shape=logits_shape)},
+                    {"logits": Unbounded(shape=logits_shape)},
                     shape=(n_agents,),
                 )
             }
@@ -276,7 +276,7 @@ class Ippo(Algorithm):
         critic_output_spec = Composite(
             {
                 group: Composite(
-                    {"state_value": UnboundedContinuousTensorSpec(shape=(n_agents, 1))},
+                    {"state_value": Unbounded(shape=(n_agents, 1))},
                     shape=(n_agents,),
                 )
             }

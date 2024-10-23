@@ -13,7 +13,7 @@ from typing import Any, Dict, List, Optional, Sequence
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModuleBase, TensorDictSequential
 from tensordict.utils import NestedKey
-from torchrl.data import Composite, TensorSpec, UnboundedContinuousTensorSpec
+from torchrl.data import Composite, TensorSpec, Unbounded
 
 from benchmarl.utils import _class_from_name, _read_yaml_config, DEVICE_TYPING
 
@@ -449,7 +449,7 @@ class SequenceModelConfig(ModelConfig):
         intermediate_specs = [
             Composite(
                 {
-                    f"_{agent_group}{'_critic' if self.is_critic else ''}_intermediate_{i}": UnboundedContinuousTensorSpec(
+                    f"_{agent_group}{'_critic' if self.is_critic else ''}_intermediate_{i}": Unbounded(
                         shape=(n_agents, size) if out_has_agent_dim else (size,)
                     )
                 }

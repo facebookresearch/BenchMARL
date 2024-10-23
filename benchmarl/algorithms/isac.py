@@ -10,7 +10,7 @@ from typing import Dict, Iterable, Optional, Tuple, Type, Union
 from tensordict import TensorDictBase
 from tensordict.nn import NormalParamExtractor, TensorDictModule, TensorDictSequential
 from torch.distributions import Categorical
-from torchrl.data import Composite, UnboundedContinuousTensorSpec
+from torchrl.data import Composite, Unbounded
 from torchrl.modules import (
     IndependentNormal,
     MaskedCategorical,
@@ -171,7 +171,7 @@ class Isac(Algorithm):
         actor_output_spec = Composite(
             {
                 group: Composite(
-                    {"logits": UnboundedContinuousTensorSpec(shape=logits_shape)},
+                    {"logits": Unbounded(shape=logits_shape)},
                     shape=(n_agents,),
                 )
             }
@@ -290,11 +290,7 @@ class Isac(Algorithm):
         critic_output_spec = Composite(
             {
                 group: Composite(
-                    {
-                        "action_value": UnboundedContinuousTensorSpec(
-                            shape=(n_agents, n_actions)
-                        )
-                    },
+                    {"action_value": Unbounded(shape=(n_agents, n_actions))},
                     shape=(n_agents,),
                 )
             }
@@ -328,11 +324,7 @@ class Isac(Algorithm):
         critic_output_spec = Composite(
             {
                 group: Composite(
-                    {
-                        "state_action_value": UnboundedContinuousTensorSpec(
-                            shape=(n_agents, 1)
-                        )
-                    },
+                    {"state_action_value": Unbounded(shape=(n_agents, 1))},
                     shape=(n_agents,),
                 )
             }

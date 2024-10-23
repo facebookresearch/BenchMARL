@@ -9,7 +9,7 @@ from typing import Dict, Iterable, Tuple, Type
 
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModule, TensorDictSequential
-from torchrl.data import Composite, UnboundedContinuousTensorSpec
+from torchrl.data import Composite, Unbounded
 from torchrl.modules import (
     AdditiveGaussianWrapper,
     Delta,
@@ -100,7 +100,7 @@ class Iddpg(Algorithm):
             actor_output_spec = Composite(
                 {
                     group: Composite(
-                        {"param": UnboundedContinuousTensorSpec(shape=logits_shape)},
+                        {"param": Unbounded(shape=logits_shape)},
                         shape=(n_agents,),
                     )
                 }
@@ -200,11 +200,7 @@ class Iddpg(Algorithm):
         critic_output_spec = Composite(
             {
                 group: Composite(
-                    {
-                        "state_action_value": UnboundedContinuousTensorSpec(
-                            shape=(n_agents, 1)
-                        )
-                    },
+                    {"state_action_value": Unbounded(shape=(n_agents, 1))},
                     shape=(n_agents,),
                 )
             }

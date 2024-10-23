@@ -9,7 +9,7 @@ from typing import Dict, Iterable, Tuple, Type
 
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModule, TensorDictSequential
-from torchrl.data import Composite, UnboundedContinuousTensorSpec
+from torchrl.data import Composite, Unbounded
 from torchrl.modules import EGreedyModule, QMixer, QValueModule
 from torchrl.objectives import LossModule, QMixerLoss, ValueEstimators
 
@@ -90,7 +90,7 @@ class Qmix(Algorithm):
         actor_output_spec = Composite(
             {
                 group: Composite(
-                    {"action_value": UnboundedContinuousTensorSpec(shape=logits_shape)},
+                    {"action_value": Unbounded(shape=logits_shape)},
                     shape=(n_agents,),
                 )
             }

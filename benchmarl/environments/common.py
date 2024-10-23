@@ -182,7 +182,7 @@ class Task(Enum):
                             device=cpu,
                             dtype=torch.uint8,
                             domain=discrete),
-                        array: UnboundedContinuousTensorSpec(
+                        array: Unbounded(
                             shape=torch.Size([8, 3]),
                             space=None,
                             device=cpu,
