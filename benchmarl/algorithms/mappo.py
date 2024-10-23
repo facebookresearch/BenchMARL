@@ -12,7 +12,7 @@ from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModule, TensorDictSequential
 from tensordict.nn.distributions import NormalParamExtractor
 from torch.distributions import Categorical
-from torchrl.data import CompositeSpec, UnboundedContinuousTensorSpec
+from torchrl.data import Composite, UnboundedContinuousTensorSpec
 from torchrl.modules import (
     IndependentNormal,
     MaskedCategorical,
@@ -122,13 +122,13 @@ class Mappo(Algorithm):
                 self.action_spec[group, "action"].space.n,
             ]
 
-        actor_input_spec = CompositeSpec(
+        actor_input_spec = Composite(
             {group: self.observation_spec[group].clone().to(self.device)}
         )
 
-        actor_output_spec = CompositeSpec(
+        actor_output_spec = Composite(
             {
-                group: CompositeSpec(
+                group: Composite(
                     {"logits": UnboundedContinuousTensorSpec(shape=logits_shape)},
                     shape=(n_agents,),
                 )
@@ -274,13 +274,13 @@ class Mappo(Algorithm):
     def get_critic(self, group: str) -> TensorDictModule:
         n_agents = len(self.group_map[group])
         if self.share_param_critic:
-            critic_output_spec = CompositeSpec(
+            critic_output_spec = Composite(
                 {"state_value": UnboundedContinuousTensorSpec(shape=(1,))}
             )
         else:
-            critic_output_spec = CompositeSpec(
+            critic_output_spec = Composite(
                 {
-                    group: CompositeSpec(
+                    group: Composite(
                         {
                             "state_value": UnboundedContinuousTensorSpec(
                                 shape=(n_agents, 1)
@@ -305,7 +305,7 @@ class Mappo(Algorithm):
             )
 
         else:
-            critic_input_spec = CompositeSpec(
+            critic_input_spec = Composite(
                 {group: self.observation_spec[group].clone().to(self.device)}
             )
             value_module = self.critic_model_config.get_model(

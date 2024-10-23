@@ -12,7 +12,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModule, TensorDictSequential
 from torchrl.data import (
-    CompositeSpec,
+    Composite,
     DiscreteTensorSpec,
     LazyTensorStorage,
     OneHotDiscreteTensorSpec,
@@ -263,9 +263,9 @@ class Algorithm(ABC):
                 env = env_fun()
 
                 spec_actor = self.model_config.get_model_state_spec()
-                spec_actor = CompositeSpec(
+                spec_actor = Composite(
                     {
-                        group: CompositeSpec(
+                        group: Composite(
                             spec_actor.expand(len(agents), *spec_actor.shape),
                             shape=(len(agents),),
                         )

@@ -10,7 +10,7 @@ from typing import Dict, Iterable, Optional, Tuple, Type, Union
 from tensordict import TensorDictBase
 from tensordict.nn import NormalParamExtractor, TensorDictModule, TensorDictSequential
 from torch.distributions import Categorical
-from torchrl.data import CompositeSpec, UnboundedContinuousTensorSpec
+from torchrl.data import Composite, UnboundedContinuousTensorSpec
 from torchrl.modules import (
     IndependentNormal,
     MaskedCategorical,
@@ -164,13 +164,13 @@ class Isac(Algorithm):
                 self.action_spec[group, "action"].space.n,
             ]
 
-        actor_input_spec = CompositeSpec(
+        actor_input_spec = Composite(
             {group: self.observation_spec[group].clone().to(self.device)}
         )
 
-        actor_output_spec = CompositeSpec(
+        actor_output_spec = Composite(
             {
-                group: CompositeSpec(
+                group: Composite(
                     {"logits": UnboundedContinuousTensorSpec(shape=logits_shape)},
                     shape=(n_agents,),
                 )
@@ -283,13 +283,13 @@ class Isac(Algorithm):
         n_agents = len(self.group_map[group])
         n_actions = self.action_spec[group, "action"].space.n
 
-        critic_input_spec = CompositeSpec(
+        critic_input_spec = Composite(
             {group: self.observation_spec[group].clone().to(self.device)}
         )
 
-        critic_output_spec = CompositeSpec(
+        critic_output_spec = Composite(
             {
-                group: CompositeSpec(
+                group: Composite(
                     {
                         "action_value": UnboundedContinuousTensorSpec(
                             shape=(n_agents, n_actions)
@@ -317,7 +317,7 @@ class Isac(Algorithm):
         n_agents = len(self.group_map[group])
         modules = []
 
-        critic_input_spec = CompositeSpec(
+        critic_input_spec = Composite(
             {
                 group: self.observation_spec[group]
                 .clone()
@@ -325,9 +325,9 @@ class Isac(Algorithm):
             }
         )
 
-        critic_output_spec = CompositeSpec(
+        critic_output_spec = Composite(
             {
-                group: CompositeSpec(
+                group: Composite(
                     {
                         "state_action_value": UnboundedContinuousTensorSpec(
                             shape=(n_agents, 1)

@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
 from tensordict import TensorDictBase
-from torchrl.data import CompositeSpec
+from torchrl.data import Composite
 from torchrl.envs import EnvBase, RewardSum, Transform
 
 from benchmarl.utils import _read_yaml_config, DEVICE_TYPING
@@ -161,19 +161,19 @@ class Task(Enum):
         """
         raise NotImplementedError
 
-    def observation_spec(self, env: EnvBase) -> CompositeSpec:
+    def observation_spec(self, env: EnvBase) -> Composite:
         """
         A spec for the observation.
-        Must be a CompositeSpec with as many entries as needed nested under the ``group_name`` key.
+        Must be a Composite with as many entries as needed nested under the ``group_name`` key.
 
         Args:
             env (EnvBase): An environment created via self.get_env_fun
 
         Examples:
             >>> print(task.observation_spec(env))
-            CompositeSpec(
-                agents: CompositeSpec(
-                    observation: CompositeSpec(
+            Composite(
+                agents: Composite(
+                    observation: Composite(
                         image: UnboundedDiscreteTensorSpec(
                             shape=torch.Size([8, 88, 88, 3]),
                             space=ContinuousBox(
@@ -193,10 +193,10 @@ class Task(Enum):
         """
         raise NotImplementedError
 
-    def info_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
+    def info_spec(self, env: EnvBase) -> Optional[Composite]:
         """
         A spec for the info.
-        If provided, must be a CompositeSpec with one (group_name, "info") entry per group (this entry can be composite).
+        If provided, must be a Composite with one (group_name, "info") entry per group (this entry can be composite).
 
 
         Args:
@@ -205,10 +205,10 @@ class Task(Enum):
         """
         raise NotImplementedError
 
-    def state_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
+    def state_spec(self, env: EnvBase) -> Optional[Composite]:
         """
         A spec for the state.
-        If provided, must be a CompositeSpec with one entry.
+        If provided, must be a Composite with one entry.
 
         Args:
             env (EnvBase): An environment created via self.get_env_fun
@@ -216,10 +216,10 @@ class Task(Enum):
         """
         raise NotImplementedError
 
-    def action_spec(self, env: EnvBase) -> CompositeSpec:
+    def action_spec(self, env: EnvBase) -> Composite:
         """
         A spec for the action.
-        If provided, must be a CompositeSpec with one (group_name, "action") entry per group.
+        If provided, must be a Composite with one (group_name, "action") entry per group.
 
         Args:
             env (EnvBase): An environment created via self.get_env_fun
@@ -227,10 +227,10 @@ class Task(Enum):
         """
         raise NotImplementedError
 
-    def action_mask_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
+    def action_mask_spec(self, env: EnvBase) -> Optional[Composite]:
         """
         A spec for the action mask.
-        If provided, must be a CompositeSpec with one (group_name, "action_mask") entry per group.
+        If provided, must be a Composite with one (group_name, "action_mask") entry per group.
 
         Args:
             env (EnvBase): An environment created via self.get_env_fun

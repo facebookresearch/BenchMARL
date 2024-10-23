@@ -14,7 +14,7 @@ import torch.nn.functional as F
 from tensordict import TensorDict, TensorDictBase
 from tensordict.utils import expand_as_right, unravel_key_list
 from torch import nn
-from torchrl.data.tensor_specs import CompositeSpec, UnboundedContinuousTensorSpec
+from torchrl.data.tensor_specs import Composite, UnboundedContinuousTensorSpec
 
 from torchrl.modules import GRUCell, MLP, MultiAgentMLP
 
@@ -509,8 +509,8 @@ class GruConfig(ModelConfig):
     def is_rnn(self) -> bool:
         return True
 
-    def get_model_state_spec(self, model_index: int = 0) -> CompositeSpec:
-        spec = CompositeSpec(
+    def get_model_state_spec(self, model_index: int = 0) -> Composite:
+        spec = Composite(
             {
                 f"_hidden_gru_{model_index}": UnboundedContinuousTensorSpec(
                     shape=(self.n_layers, self.hidden_size)

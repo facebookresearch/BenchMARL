@@ -12,7 +12,7 @@ from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModule, TensorDictSequential
 from tensordict.nn.distributions import NormalParamExtractor
 from torch.distributions import Categorical
-from torchrl.data import CompositeSpec, UnboundedContinuousTensorSpec
+from torchrl.data import Composite, UnboundedContinuousTensorSpec
 from torchrl.modules import IndependentNormal, ProbabilisticActor, TanhNormal
 from torchrl.modules.distributions import MaskedCategorical
 from torchrl.objectives import ClipPPOLoss, LossModule, ValueEstimators
@@ -118,13 +118,13 @@ class Ippo(Algorithm):
                 self.action_spec[group, "action"].space.n,
             ]
 
-        actor_input_spec = CompositeSpec(
+        actor_input_spec = Composite(
             {group: self.observation_spec[group].clone().to(self.device)}
         )
 
-        actor_output_spec = CompositeSpec(
+        actor_output_spec = Composite(
             {
-                group: CompositeSpec(
+                group: Composite(
                     {"logits": UnboundedContinuousTensorSpec(shape=logits_shape)},
                     shape=(n_agents,),
                 )
@@ -270,12 +270,12 @@ class Ippo(Algorithm):
     def get_critic(self, group: str) -> TensorDictModule:
         n_agents = len(self.group_map[group])
 
-        critic_input_spec = CompositeSpec(
+        critic_input_spec = Composite(
             {group: self.observation_spec[group].clone().to(self.device)}
         )
-        critic_output_spec = CompositeSpec(
+        critic_output_spec = Composite(
             {
-                group: CompositeSpec(
+                group: Composite(
                     {"state_value": UnboundedContinuousTensorSpec(shape=(n_agents, 1))},
                     shape=(n_agents,),
                 )
