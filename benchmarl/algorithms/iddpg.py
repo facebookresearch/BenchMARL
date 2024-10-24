@@ -9,7 +9,7 @@ from typing import Dict, Iterable, Tuple, Type
 
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModule, TensorDictSequential
-from torchrl.data import CompositeSpec, UnboundedContinuousTensorSpec
+from torchrl.data import Composite, Unbounded
 from torchrl.modules import (
     AdditiveGaussianWrapper,
     Delta,
@@ -94,13 +94,13 @@ class Iddpg(Algorithm):
         if continuous:
             n_agents = len(self.group_map[group])
             logits_shape = list(self.action_spec[group, "action"].shape)
-            actor_input_spec = CompositeSpec(
+            actor_input_spec = Composite(
                 {group: self.observation_spec[group].clone().to(self.device)}
             )
-            actor_output_spec = CompositeSpec(
+            actor_output_spec = Composite(
                 {
-                    group: CompositeSpec(
-                        {"param": UnboundedContinuousTensorSpec(shape=logits_shape)},
+                    group: Composite(
+                        {"param": Unbounded(shape=logits_shape)},
                         shape=(n_agents,),
                     )
                 }
@@ -190,21 +190,17 @@ class Iddpg(Algorithm):
         n_agents = len(self.group_map[group])
         modules = []
 
-        critic_input_spec = CompositeSpec(
+        critic_input_spec = Composite(
             {
                 group: self.observation_spec[group]
                 .clone()
                 .update(self.action_spec[group])
             }
         )
-        critic_output_spec = CompositeSpec(
+        critic_output_spec = Composite(
             {
-                group: CompositeSpec(
-                    {
-                        "state_action_value": UnboundedContinuousTensorSpec(
-                            shape=(n_agents, 1)
-                        )
-                    },
+                group: Composite(
+                    {"state_action_value": Unbounded(shape=(n_agents, 1))},
                     shape=(n_agents,),
                 )
             }

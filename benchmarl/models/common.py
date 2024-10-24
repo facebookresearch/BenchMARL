@@ -13,7 +13,7 @@ from typing import Any, Dict, List, Optional, Sequence
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModuleBase, TensorDictSequential
 from tensordict.utils import NestedKey
-from torchrl.data import CompositeSpec, TensorSpec, UnboundedContinuousTensorSpec
+from torchrl.data import Composite, TensorSpec, Unbounded
 
 from benchmarl.utils import _class_from_name, _read_yaml_config, DEVICE_TYPING
 
@@ -56,8 +56,8 @@ class Model(TensorDictModuleBase, ABC):
     They are associated with input and output specs that define their domains.
 
     Args:
-        input_spec (CompositeSpec): the input spec of the model
-        output_spec (CompositeSpec): the output spec of the model
+        input_spec (Composite): the input spec of the model
+        output_spec (Composite): the output spec of the model
         agent_group (str): the name of the agent group the model is for
         n_agents (int): the number of agents this module is for
         device (str): the model's device
@@ -73,22 +73,22 @@ class Model(TensorDictModuleBase, ABC):
             or a different set of parameters for each agent.
             This is independent of the other options as it is possible to have different parameters
             for centralized critics with global input.
-        action_spec (CompositeSpec): The action spec of the environment
+        action_spec (Composite): The action spec of the environment
         model_index (int): the index of the model in a sequence
         is_critic (bool): Whether the model is a critic
     """
 
     def __init__(
         self,
-        input_spec: CompositeSpec,
-        output_spec: CompositeSpec,
+        input_spec: Composite,
+        output_spec: Composite,
         agent_group: str,
         input_has_agent_dim: bool,
         n_agents: int,
         centralised: bool,
         share_params: bool,
         device: DEVICE_TYPING,
-        action_spec: CompositeSpec,
+        action_spec: Composite,
         model_index: int,
         is_critic: bool,
     ):
@@ -250,23 +250,23 @@ class ModelConfig(ABC):
 
     def get_model(
         self,
-        input_spec: CompositeSpec,
-        output_spec: CompositeSpec,
+        input_spec: Composite,
+        output_spec: Composite,
         agent_group: str,
         input_has_agent_dim: bool,
         n_agents: int,
         centralised: bool,
         share_params: bool,
         device: DEVICE_TYPING,
-        action_spec: CompositeSpec,
+        action_spec: Composite,
         model_index: int = 0,
     ) -> Model:
         """
         Creates the model from the config.
 
         Args:
-            input_spec (CompositeSpec): the input spec of the model
-            output_spec (CompositeSpec): the output spec of the model
+            input_spec (Composite): the input spec of the model
+            output_spec (Composite): the output spec of the model
             agent_group (str): the name of the agent group the model is for
             n_agents (int): the number of agents this module is for
             device (str): the mdoel's device
@@ -282,7 +282,7 @@ class ModelConfig(ABC):
                 or a different set of parameters for each agent.
                 This is independent of the other options as it is possible to have different parameters
                 for centralized critics with global input.
-            action_spec (CompositeSpec): The action spec of the environment
+            action_spec (Composite): The action spec of the environment
             model_index (int): the index of the model in a sequence. Defaults to 0.
 
         Returns: the Model
@@ -334,7 +334,7 @@ class ModelConfig(ABC):
         """
         self._is_critic = value
 
-    def get_model_state_spec(self, model_index: int = 0) -> CompositeSpec:
+    def get_model_state_spec(self, model_index: int = 0) -> Composite:
         """Get additional specs needed by the model as input.
 
         This method is useful for adding recurrent states.
@@ -347,7 +347,7 @@ class ModelConfig(ABC):
             model_index (int, optional): the index of the model. Defaults to 0.
 
         """
-        return CompositeSpec()
+        return Composite()
 
     @staticmethod
     def _load_from_yaml(name: str) -> Dict[str, Any]:
@@ -423,15 +423,15 @@ class SequenceModelConfig(ModelConfig):
 
     def get_model(
         self,
-        input_spec: CompositeSpec,
-        output_spec: CompositeSpec,
+        input_spec: Composite,
+        output_spec: Composite,
         agent_group: str,
         input_has_agent_dim: bool,
         n_agents: int,
         centralised: bool,
         share_params: bool,
         device: DEVICE_TYPING,
-        action_spec: CompositeSpec,
+        action_spec: Composite,
         model_index: int = 0,
     ) -> Model:
         n_models = len(self.model_configs)
@@ -447,9 +447,9 @@ class SequenceModelConfig(ModelConfig):
         out_has_agent_dim = output_has_agent_dim(share_params, centralised)
         next_centralised = not out_has_agent_dim
         intermediate_specs = [
-            CompositeSpec(
+            Composite(
                 {
-                    f"_{agent_group}{'_critic' if self.is_critic else ''}_intermediate_{i}": UnboundedContinuousTensorSpec(
+                    f"_{agent_group}{'_critic' if self.is_critic else ''}_intermediate_{i}": Unbounded(
                         shape=(n_agents, size) if out_has_agent_dim else (size,)
                     )
                 }
@@ -506,8 +506,8 @@ class SequenceModelConfig(ModelConfig):
         for model_config in self.model_configs:
             model_config.is_critic = value
 
-    def get_model_state_spec(self, model_index: int = 0) -> CompositeSpec:
-        spec = CompositeSpec()
+    def get_model_state_spec(self, model_index: int = 0) -> Composite:
+        spec = Composite()
         for i, model_config in enumerate(self.model_configs):
             spec.update(model_config.get_model_state_spec(model_index=i))
         return spec
