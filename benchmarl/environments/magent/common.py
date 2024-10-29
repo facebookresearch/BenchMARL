@@ -18,11 +18,11 @@ class MAgentTask(Task):
     """Enum for MAgent2 tasks."""
 
     ADVERSARIAL_PURSUIT = None
-    BATTLE = None
-    BATTLEFIELD = None
-    COMBINED_ARMS = None
-    GATHER = None
-    TIGER_DEER = None
+    # BATTLE = None
+    # BATTLEFIELD = None
+    # COMBINED_ARMS = None
+    # GATHER = None
+    # TIGER_DEER = None
 
     def get_env_fun(
             self,
@@ -37,7 +37,7 @@ class MAgentTask(Task):
             return_state=True,
             seed=seed,
             done_on_any=False,
-            use_mask=True,
+            use_mask=False,
             device=device
         )
 
