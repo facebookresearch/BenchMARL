@@ -45,11 +45,11 @@ class MAgentTask(Task):
         try:
             from magent2.environments import (
                 adversarial_pursuit_v4,
-                battle_v4,
-                battlefield_v5,
-                combined_arms_v6,
-                gather_v5,
-                tiger_deer_v4
+                # battle_v4,
+                # battlefield_v5,
+                # combined_arms_v6,
+                # gather_v5,
+                # tiger_deer_v4
             )
         except ImportError as e:
             print("Module 'magent2' not found, install it using `pip install magent2`")
@@ -57,11 +57,11 @@ class MAgentTask(Task):
 
         envs = {
             "ADVERSARIAL_PURSUIT": adversarial_pursuit_v4,
-            "BATTLE": battle_v4,
-            "BATTLEFIELD": battlefield_v5,
-            "COMBINED_ARMS": combined_arms_v6,
-            "GATHER": gather_v5,
-            "TIGER_DEER": tiger_deer_v4
+            # "BATTLE": battle_v4,
+            # "BATTLEFIELD": battlefield_v5,
+            # "COMBINED_ARMS": combined_arms_v6,
+            # "GATHER": gather_v5,
+            # "TIGER_DEER": tiger_deer_v4
         }
         if self.name not in envs:
             raise Exception(f"{self.name} is not an environment of MAgent2")
