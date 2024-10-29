@@ -9,15 +9,6 @@ from typing import Callable, Dict, List, Optional
 from torchrl.data import CompositeSpec
 from torchrl.envs import EnvBase, PettingZooWrapper
 
-from magent2.environments import (
-    adversarial_pursuit_v4,
-    battle_v4,
-    battlefield_v5,
-    combined_arms_v6,
-    gather_v5,
-    tiger_deer_v4
-)
-
 from benchmarl.environments.common import Task
 
 from benchmarl.utils import DEVICE_TYPING
@@ -51,6 +42,19 @@ class MAgentTask(Task):
         )
 
     def __get_env(self) -> EnvBase:
+        try:
+            from magent2.environments import (
+                adversarial_pursuit_v4,
+                battle_v4,
+                battlefield_v5,
+                combined_arms_v6,
+                gather_v5,
+                tiger_deer_v4
+            )
+        except ImportError as e:
+            print("Module 'magent2' not found, install it using `pip install magent2`")
+            raise e
+
         envs = {
             "ADVERSARIAL_PURSUIT": adversarial_pursuit_v4,
             "BATTLE": battle_v4,
