@@ -362,10 +362,9 @@ class Experiment(CallbackNotifier):
         self._on_setup()
 
     def _perfrom_checks(self):
-        model_configs = [self.model_config, self.critic_model_config]
-        for config in model_configs:
+        for config in (self.model_config, self.critic_model_config):
             if isinstance(config, SequenceModelConfig):
-                for layer_config in config[1:]:
+                for layer_config in config.model_configs[1:]:
                     if isinstance(layer_config, GnnConfig) and (
                         layer_config.position_key is not None
                         or layer_config.velocity_key is not None
@@ -377,7 +376,7 @@ class Experiment(CallbackNotifier):
 
         if self.algorithm_name in ("mappo", "ippo"):
             critic_model_config = self.critic_model_config
-            if isinstance(self.critic_model_config, SequenceModelConfig):
+            if isinstance(critic_model_config, SequenceModelConfig):
                 critic_model_config = self.critic_model_config.model_configs[0]
             if (
                 isinstance(critic_model_config, GnnConfig)
