@@ -366,9 +366,9 @@ class Experiment(CallbackNotifier):
         for config in model_configs:
             if isinstance(config, SequenceModelConfig):
                 for layer_config in self.critic_model_config.model_configs[1:]:
-                    if (
-                        isinstance(layer_config, GnnConfig)
-                        and layer_config.topology == "from_pos"
+                    if isinstance(layer_config, GnnConfig) and (
+                        layer_config.position_key is not None
+                        or layer_config.velocity_key is not None
                     ):
                         raise ValueError(
                             "GNNs with topology 'from_pos' are currently only usable in first"
