@@ -365,7 +365,7 @@ class Experiment(CallbackNotifier):
         model_configs = [self.model_config, self.critic_model_config]
         for config in model_configs:
             if isinstance(config, SequenceModelConfig):
-                for layer_config in self.critic_model_config.model_configs[1:]:
+                for layer_config in config[1:]:
                     if isinstance(layer_config, GnnConfig) and (
                         layer_config.position_key is not None
                         or layer_config.velocity_key is not None
