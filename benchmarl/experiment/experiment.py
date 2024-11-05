@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import torch
+from models import GnnConfig, SequenceModelConfig
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictSequential
 from torchrl.collectors import SyncDataCollector
@@ -361,7 +362,31 @@ class Experiment(CallbackNotifier):
         self._on_setup()
 
     def _perfrom_checks(self):
-        pass
+        model_configs = [self.model_config, self.critic_model_config]
+        for config in model_configs:
+            if isinstance(config, SequenceModelConfig):
+                for layer_config in self.critic_model_config.model_configs[1:]:
+                    if (
+                        isinstance(layer_config, GnnConfig)
+                        and layer_config.topology == "from_pos"
+                    ):
+                        raise ValueError(
+                            "GNNs with topology 'from_pos' are currently only usable in first"
+                            " layer of sequence models"
+                        )
+
+        if self.algorithm_name in ("mappo", "ippo"):
+            critic_model_config = self.critic_model_config
+            if isinstance(self.critic_model_config, SequenceModelConfig):
+                critic_model_config = self.critic_model_config.model_configs[0]
+            if (
+                isinstance(critic_model_config, GnnConfig)
+                and critic_model_config.topology == "from_pos"
+            ):
+                raise ValueError(
+                    "GNNs in PPO critics with topology 'from_pos' are currently not available, "
+                    "see https://github.com/pytorch/rl/issues/2537"
+                )
 
     def _set_action_type(self):
         if (
