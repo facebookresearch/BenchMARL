@@ -371,7 +371,7 @@ class Experiment(CallbackNotifier):
                         or layer_config.velocity_key is not None
                     ):
                         raise ValueError(
-                            "GNNs with topology 'from_pos' are currently only usable in first"
+                            "GNNs reading position or velocity keys are currently only usable in first"
                             " layer of sequence models"
                         )
 
