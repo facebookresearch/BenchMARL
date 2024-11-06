@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import torch
+from algorithms import IppoConfig, MappoConfig
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictSequential
 from torchrl.collectors import SyncDataCollector
@@ -374,7 +375,7 @@ class Experiment(CallbackNotifier):
                             " layer of sequence models"
                         )
 
-        if self.algorithm_name in ("mappo", "ippo"):
+        if self.algorithm_config in (MappoConfig, IppoConfig):
             critic_model_config = self.critic_model_config
             if isinstance(critic_model_config, SequenceModelConfig):
                 critic_model_config = self.critic_model_config.model_configs[0]
