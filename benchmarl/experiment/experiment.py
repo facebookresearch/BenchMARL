@@ -17,7 +17,6 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import torch
-from algorithms import IppoConfig, MappoConfig
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictSequential
 from torchrl.collectors import SyncDataCollector
@@ -26,6 +25,8 @@ from torchrl.envs.transforms import Compose
 from torchrl.envs.utils import ExplorationType, set_exploration_type, step_mdp
 from torchrl.record.loggers import generate_exp_name
 from tqdm import tqdm
+
+from benchmarl.algorithms import IppoConfig, MappoConfig
 
 from benchmarl.algorithms.common import AlgorithmConfig
 from benchmarl.environments import Task
