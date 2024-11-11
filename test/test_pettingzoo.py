@@ -5,9 +5,7 @@
 #
 
 
-import packaging
 import pytest
-import torchrl
 from benchmarl.algorithms import (
     algorithm_config_registry,
     IddpgConfig,
@@ -108,13 +106,9 @@ class TestPettingzoo:
         experiment.run()
 
     @pytest.mark.parametrize(
-        "algo_config", [IddpgConfig, MaddpgConfig, IppoConfig, MappoConfig, QmixConfig]
+        "algo_config", [IddpgConfig, MappoConfig, QmixConfig, MasacConfig]
     )
     @pytest.mark.parametrize("task", [PettingZooTask.SIMPLE_TAG])
-    @pytest.mark.skipif(
-        packaging.version.parse(torchrl.__version__).local is None,
-        reason="gru model needs torchrl from github",
-    )
     def test_gru(
         self,
         algo_config: AlgorithmConfig,
@@ -138,13 +132,9 @@ class TestPettingzoo:
         experiment.run()
 
     @pytest.mark.parametrize(
-        "algo_config", [IddpgConfig, MaddpgConfig, IppoConfig, MappoConfig, QmixConfig]
+        "algo_config", [MaddpgConfig, IppoConfig, QmixConfig, IsacConfig]
     )
     @pytest.mark.parametrize("task", [PettingZooTask.SIMPLE_TAG])
-    @pytest.mark.skipif(
-        packaging.version.parse(torchrl.__version__).local is None,
-        reason="lstm model needs torchrl from github",
-    )
     def test_lstm(
         self,
         algo_config: AlgorithmConfig,

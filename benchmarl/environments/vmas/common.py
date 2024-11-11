@@ -6,7 +6,7 @@
 
 from typing import Callable, Dict, List, Optional
 
-from torchrl.data import CompositeSpec
+from torchrl.data import Composite
 from torchrl.envs import EnvBase
 from torchrl.envs.libs.vmas import VmasEnv
 
@@ -80,20 +80,20 @@ class VmasTask(Task):
             return env.group_map
         return {"agents": [agent.name for agent in env.agents]}
 
-    def state_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
+    def state_spec(self, env: EnvBase) -> Optional[Composite]:
         return None
 
-    def action_mask_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
+    def action_mask_spec(self, env: EnvBase) -> Optional[Composite]:
         return None
 
-    def observation_spec(self, env: EnvBase) -> CompositeSpec:
+    def observation_spec(self, env: EnvBase) -> Composite:
         observation_spec = env.unbatched_observation_spec.clone()
         for group in self.group_map(env):
             if "info" in observation_spec[group]:
                 del observation_spec[(group, "info")]
         return observation_spec
 
-    def info_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
+    def info_spec(self, env: EnvBase) -> Optional[Composite]:
         info_spec = env.unbatched_observation_spec.clone()
         for group in self.group_map(env):
             del info_spec[(group, "observation")]
@@ -103,7 +103,7 @@ class VmasTask(Task):
         else:
             return None
 
-    def action_spec(self, env: EnvBase) -> CompositeSpec:
+    def action_spec(self, env: EnvBase) -> Composite:
         return env.unbatched_action_spec
 
     @staticmethod

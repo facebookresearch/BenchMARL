@@ -9,7 +9,7 @@ from typing import Callable, Dict, List, Optional
 import torch
 from tensordict import TensorDictBase
 
-from torchrl.data import CompositeSpec
+from torchrl.data import Composite
 from torchrl.envs import (
     DoubleToFloat,
     DTypeCastTransform,
@@ -146,7 +146,7 @@ class MeltingPotTask(Task):
             )
         ]
 
-    def state_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
+    def state_spec(self, env: EnvBase) -> Optional[Composite]:
         observation_spec = env.observation_spec.clone()
         for group in self.group_map(env):
             del observation_spec[group]
@@ -156,17 +156,17 @@ class MeltingPotTask(Task):
             )
         return observation_spec
 
-    def action_mask_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
+    def action_mask_spec(self, env: EnvBase) -> Optional[Composite]:
         return None
 
-    def observation_spec(self, env: EnvBase) -> CompositeSpec:
+    def observation_spec(self, env: EnvBase) -> Composite:
         observation_spec = env.observation_spec.clone()
         for group_key in list(observation_spec.keys()):
             if group_key not in self.group_map(env).keys():
                 del observation_spec[group_key]
         return observation_spec
 
-    def info_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
+    def info_spec(self, env: EnvBase) -> Optional[Composite]:
         observation_spec = env.observation_spec.clone()
         for group_key in list(observation_spec.keys()):
             if group_key not in self.group_map(env).keys():
@@ -176,7 +176,7 @@ class MeltingPotTask(Task):
                 del group_obs_spec["RGB"]
         return observation_spec
 
-    def action_spec(self, env: EnvBase) -> CompositeSpec:
+    def action_spec(self, env: EnvBase) -> Composite:
         return env.full_action_spec
 
     @staticmethod

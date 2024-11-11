@@ -4,9 +4,7 @@
 #  LICENSE file in the root directory of this source tree.
 #
 
-import packaging
 import pytest
-import torchrl
 
 from benchmarl.algorithms import algorithm_config_registry, MappoConfig, QmixConfig
 from benchmarl.algorithms.common import AlgorithmConfig
@@ -81,10 +79,6 @@ class TestSmacv2:
 
     @pytest.mark.parametrize("algo_config", [QmixConfig])
     @pytest.mark.parametrize("task", [Smacv2Task.PROTOSS_5_VS_5])
-    @pytest.mark.skipif(
-        packaging.version.parse(torchrl.__version__).local is None,
-        reason="gru model needs torchrl from github",
-    )
     def test_gru(
         self,
         algo_config,

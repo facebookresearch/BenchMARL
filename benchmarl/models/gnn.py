@@ -73,7 +73,7 @@ class Gnn(Model):
         velocity_key (str, optional): if provided, it will need to match a leaf key in the tensordict coming from the env
             (in the `observation_spec`) representing the agent position.
             To do this, your environment needs to have dictionary observations and one of the keys needs to be `velocity_key`.
-             This key will be processed as a node feature, and
+            This key will be processed as a node feature, and
             it will be used to construct edge features. In particular, it will be used to compute relative velocities
             (``vel_node_1 - vel_node_2``) for all neighbours in the graph.
             If you want to use this feature in a :class:`~benchmarl.models.SequenceModel`, the GNN needs to be first in sequence.

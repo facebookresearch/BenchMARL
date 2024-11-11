@@ -26,8 +26,6 @@ from torchrl.envs.utils import ExplorationType, set_exploration_type, step_mdp
 from torchrl.record.loggers import generate_exp_name
 from tqdm import tqdm
 
-from benchmarl.algorithms import IsacConfig, MasacConfig
-
 from benchmarl.algorithms.common import AlgorithmConfig
 from benchmarl.environments import Task
 from benchmarl.experiment.callback import Callback, CallbackNotifier
@@ -363,13 +361,7 @@ class Experiment(CallbackNotifier):
         self._on_setup()
 
     def _perfrom_checks(self):
-        if isinstance(self.algorithm_config, (MasacConfig, IsacConfig)) and (
-            self.model_config.is_rnn or self.critic_model_config.is_rnn
-        ):
-            raise ValueError(
-                "SAC based losses not compatible with RNNs due to https://github.com/pytorch/rl/issues/2338."
-                " Please leave a comment on the issue if you would like this feature."
-            )
+        pass
 
     def _set_action_type(self):
         if (
