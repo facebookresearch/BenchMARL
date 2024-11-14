@@ -52,8 +52,7 @@ class MAgentTask(Task):
                 # tiger_deer_v4
             )
         except ImportError as e:
-            print("Module 'magent2' not found, install it using `pip install magent2`")
-            raise e
+            raise ImportError("Module `magent2` not found, install it using `pip install magent2`")
 
         envs = {
             "ADVERSARIAL_PURSUIT": adversarial_pursuit_v4,
