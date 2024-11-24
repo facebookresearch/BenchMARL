@@ -6,10 +6,12 @@
 
 
 import pytest
+
 from benchmarl.algorithms import (
     algorithm_config_registry,
     IppoConfig,
     IsacConfig,
+    MappoConfig,
     MasacConfig,
     QmixConfig,
 )
@@ -47,7 +49,7 @@ class TestMagent:
         )
         experiment.run()
 
-    @pytest.mark.parametrize("algo_config", [IppoConfig, QmixConfig, IsacConfig])
+    @pytest.mark.parametrize("algo_config", [MappoConfig, QmixConfig, IsacConfig])
     @pytest.mark.parametrize("task", [MAgentTask.ADVERSARIAL_PURSUIT])
     def test_gnn(
         self,
