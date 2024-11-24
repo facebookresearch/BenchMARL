@@ -1,5 +1,5 @@
 defaults:
-  - adversarial_pursuit_config
+  - magent_adversarial_pursuit_config
   - _self_
 
 map_size: 45
