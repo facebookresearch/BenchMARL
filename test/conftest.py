@@ -91,6 +91,31 @@ def mlp_gnn_sequence_config() -> ModelConfig:
 
 
 @pytest.fixture
+def cnn_gnn_sequence_config() -> ModelConfig:
+    return SequenceModelConfig(
+        model_configs=[
+            CnnConfig(
+                cnn_num_cells=[4, 3],
+                cnn_kernel_sizes=[3, 2],
+                cnn_strides=1,
+                cnn_paddings=0,
+                cnn_activation_class=nn.Tanh,
+                mlp_num_cells=[4],
+                mlp_activation_class=nn.Tanh,
+                mlp_layer_class=nn.Linear,
+            ),
+            GnnConfig(
+                topology="full",
+                self_loops=False,
+                gnn_class=torch_geometric.nn.conv.GATv2Conv,
+            ),
+            MlpConfig(num_cells=[4], activation_class=nn.Tanh, layer_class=nn.Linear),
+        ],
+        intermediate_sizes=[5, 3],
+    )
+
+
+@pytest.fixture
 def gru_mlp_sequence_config() -> ModelConfig:
     return SequenceModelConfig(
         model_configs=[
@@ -125,6 +150,35 @@ def lstm_mlp_sequence_config() -> ModelConfig:
                 compile=False,
             ),
             MlpConfig(num_cells=[4], activation_class=nn.Tanh, layer_class=nn.Linear),
+        ],
+        intermediate_sizes=[5],
+    )
+
+
+@pytest.fixture
+def cnn_lstm_sequence_config() -> ModelConfig:
+    return SequenceModelConfig(
+        model_configs=[
+            CnnConfig(
+                cnn_num_cells=[4, 3],
+                cnn_kernel_sizes=[3, 2],
+                cnn_strides=1,
+                cnn_paddings=0,
+                cnn_activation_class=nn.Tanh,
+                mlp_num_cells=[4],
+                mlp_activation_class=nn.Tanh,
+                mlp_layer_class=nn.Linear,
+            ),
+            LstmConfig(
+                hidden_size=13,
+                mlp_num_cells=[],
+                mlp_activation_class=nn.Tanh,
+                mlp_layer_class=nn.Linear,
+                n_layers=1,
+                bias=True,
+                dropout=0,
+                compile=False,
+            ),
         ],
         intermediate_sizes=[5],
     )
