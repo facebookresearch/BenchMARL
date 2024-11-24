@@ -25,11 +25,11 @@ class MAgentTask(Task):
     # TIGER_DEER = None
 
     def get_env_fun(
-            self,
-            num_envs: int,
-            continuous_actions: bool,
-            seed: Optional[int],
-            device: DEVICE_TYPING,
+        self,
+        num_envs: int,
+        continuous_actions: bool,
+        seed: Optional[int],
+        device: DEVICE_TYPING,
     ) -> Callable[[], EnvBase]:
 
         return lambda: PettingZooWrapper(
@@ -38,7 +38,7 @@ class MAgentTask(Task):
             seed=seed,
             done_on_any=False,
             use_mask=False,
-            device=device
+            device=device,
         )
 
     def __get_env(self) -> EnvBase:
@@ -51,8 +51,10 @@ class MAgentTask(Task):
                 # gather_v5,
                 # tiger_deer_v4
             )
-        except ImportError as e:
-            raise ImportError("Module `magent2` not found, install it using `pip install magent2`")
+        except ImportError:
+            raise ImportError(
+                "Module `magent2` not found, install it using `pip install magent2`"
+            )
 
         envs = {
             "ADVERSARIAL_PURSUIT": adversarial_pursuit_v4,
