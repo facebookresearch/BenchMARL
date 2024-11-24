@@ -450,6 +450,7 @@ def _batch_from_dense_to_ptg(
         graphs.edge_index = torch_geometric.nn.pool.radius_graph(
             graphs.pos, batch=graphs.batch, r=edge_radius, loop=self_loops
         )
+        print("")
 
     graphs = graphs.to(x.device)
     if pos is not None:
