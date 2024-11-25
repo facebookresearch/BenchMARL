@@ -31,7 +31,7 @@ jobs:
     - name: Install dependencies
       run: |
        bash .github/unittest/install_dependencies_nightly.sh
-    - name: Install pettingzoo
+    - name: Install magent2
       run: |
        bash .github/unittest/install_magent2.sh
     - name: Test with pytest
