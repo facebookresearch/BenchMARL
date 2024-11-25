@@ -125,22 +125,16 @@ class MeltingPotTask(Task):
             else []
         )
 
-    def get_replay_buffer_transforms(self, env: EnvBase) -> List[Transform]:
+    def get_replay_buffer_transforms(self, env: EnvBase, group: str) -> List[Transform]:
         return [
             DTypeCastTransform(
                 dtype_in=torch.uint8,
                 dtype_out=torch.float,
                 in_keys=[
                     "RGB",
-                    *[
-                        (group, "observation", "RGB")
-                        for group in self.group_map(env).keys()
-                    ],
+                    (group, "observation", "RGB"),
                     ("next", "RGB"),
-                    *[
-                        ("next", group, "observation", "RGB")
-                        for group in self.group_map(env).keys()
-                    ],
+                    ("next", group, "observation", "RGB"),
                 ],
                 in_keys_inv=[],
             )
