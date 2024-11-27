@@ -92,7 +92,7 @@ class TestMagent:
         )
         experiment.run()
 
-    @pytest.mark.parametrize("algo_config", IppoConfig)
+    @pytest.mark.parametrize("algo_config", [IppoConfig])
     @pytest.mark.parametrize("task", [MAgentTask.ADVERSARIAL_PURSUIT])
     def test_reloading_trainer(
         self,
