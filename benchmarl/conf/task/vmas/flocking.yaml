@@ -5,5 +5,5 @@ defaults:
 
 max_steps: 100
 n_agents: 4
-n_targets: 5
+n_obstacles: 5
 collision_reward: -0.1
