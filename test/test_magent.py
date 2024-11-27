@@ -7,8 +7,13 @@
 
 import pytest
 
-from algorithms import IppoConfig, IsacConfig, MasacConfig, QmixConfig
-from benchmarl.algorithms import algorithm_config_registry
+from benchmarl.algorithms import (
+    algorithm_config_registry,
+    IppoConfig,
+    IsacConfig,
+    MasacConfig,
+    QmixConfig,
+)
 from benchmarl.algorithms.common import AlgorithmConfig
 from benchmarl.environments import MAgentTask, Task
 from benchmarl.experiment import Experiment
