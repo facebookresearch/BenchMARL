@@ -116,6 +116,13 @@ pip install "pettingzoo[all]"
 ```bash
 pip install dm-meltingpot
 ```
+
+##### MAgent2
+
+```bash
+pip install git+https://github.com/Farama-Foundation/MAgent
+```
+
 ##### SMACv2
 
 Follow the instructions on the environment [repository](https://github.com/oxwhirl/smacv2).

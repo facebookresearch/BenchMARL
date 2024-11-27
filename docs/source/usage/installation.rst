@@ -87,6 +87,16 @@ Follow the instructions on the environment `repository <https://github.com/oxwhi
 `Here <https://github.com/facebookresearch/BenchMARL/blob/main/.github/unittest/install_smacv2.sh>`_
 is how we install it on linux.
 
+MAgent2
+^^^^^^^
+:github:`null` `GitHub <https://github.com/Farama-Foundation/MAgent>`__
+
+
+.. code-block:: console
+
+   pip install git+https://github.com/Farama-Foundation/MAgent
+
+
 Install models
 --------------
 
