@@ -6,7 +6,7 @@
 
 from typing import Callable, Dict, List, Optional
 
-from torchrl.data import CompositeSpec
+from torchrl.data import Composite
 from torchrl.envs import EnvBase, PettingZooWrapper
 
 from benchmarl.environments.common import Task
@@ -86,10 +86,10 @@ class MAgentTask(Task):
     def group_map(self, env: EnvBase) -> Dict[str, List[str]]:
         return env.group_map
 
-    def state_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
-        return CompositeSpec({"state": env.observation_spec["state"].clone()})
+    def state_spec(self, env: EnvBase) -> Optional[Composite]:
+        return Composite({"state": env.observation_spec["state"].clone()})
 
-    def action_mask_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
+    def action_mask_spec(self, env: EnvBase) -> Optional[Composite]:
         observation_spec = env.observation_spec.clone()
         for group in self.group_map(env):
             group_obs_spec = observation_spec[group]
@@ -103,7 +103,7 @@ class MAgentTask(Task):
             return None
         return observation_spec
 
-    def observation_spec(self, env: EnvBase) -> CompositeSpec:
+    def observation_spec(self, env: EnvBase) -> Composite:
         observation_spec = env.observation_spec.clone()
         for group in self.group_map(env):
             group_obs_spec = observation_spec[group]
@@ -113,7 +113,7 @@ class MAgentTask(Task):
         del observation_spec["state"]
         return observation_spec
 
-    def info_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
+    def info_spec(self, env: EnvBase) -> Optional[Composite]:
         observation_spec = env.observation_spec.clone()
         for group in self.group_map(env):
             group_obs_spec = observation_spec[group]
@@ -123,7 +123,7 @@ class MAgentTask(Task):
         del observation_spec["state"]
         return observation_spec
 
-    def action_spec(self, env: EnvBase) -> CompositeSpec:
+    def action_spec(self, env: EnvBase) -> Composite:
         return env.full_action_spec
 
     @staticmethod
