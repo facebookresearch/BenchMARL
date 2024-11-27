@@ -282,13 +282,14 @@ class Task(Enum):
         """
         return []
 
-    def get_replay_buffer_transforms(self, env: EnvBase) -> List[Transform]:
+    def get_replay_buffer_transforms(self, env: EnvBase, group: str) -> List[Transform]:
         """
-        Returns a list of :class:`torchrl.envs.Transform` to be applied to the :class:`torchrl.data.ReplayBuffer`.
+        Returns a list of :class:`torchrl.envs.Transform` to be applied to the :class:`torchrl.data.ReplayBuffer`
+        of the specified group.
 
         Args:
             env (EnvBase): An environment created via self.get_env_fun
-
+            group (str): The agent group using the replay buffer
 
         """
         return []

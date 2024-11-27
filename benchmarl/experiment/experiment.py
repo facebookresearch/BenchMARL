@@ -466,7 +466,7 @@ class Experiment(CallbackNotifier):
         self.replay_buffers = {
             group: self.algorithm.get_replay_buffer(
                 group=group,
-                transforms=self.task.get_replay_buffer_transforms(self.test_env),
+                transforms=self.task.get_replay_buffer_transforms(self.test_env, group),
             )
             for group in self.group_map.keys()
         }
