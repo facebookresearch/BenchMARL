@@ -62,3 +62,13 @@ MeltingPot
    :template: autosummary/class.rst
 
    MeltingPotTask
+
+MAgent2
+-------
+
+.. autosummary::
+   :nosignatures:
+   :toctree: ../generated
+   :template: autosummary/class.rst
+
+   MAgentTask
