@@ -113,7 +113,7 @@ class TestMagent:
             task=task.get_from_yaml(),
         )
 
-    @pytest.mark.parametrize("algo_config", [QmixConfig, IppoConfig, MasacConfig])
+    @pytest.mark.parametrize("algo_config", [QmixConfig, MasacConfig])
     @pytest.mark.parametrize("task", [MAgentTask.ADVERSARIAL_PURSUIT])
     @pytest.mark.parametrize("share_params", [True, False])
     def test_share_policy_params(

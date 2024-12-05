@@ -38,7 +38,6 @@ Why would I BenchMARL 🤔?
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Why would you BenchMARL, I see you ask.
-
 Well, you can BenchMARL to compare different algorithms, environments, models,
 to check how your new research compares to existing ones, or if you just want to approach
 the domain and want to easily take a picture of the landscape.
