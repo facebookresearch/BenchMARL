@@ -3,7 +3,7 @@
 #  This source code is licensed under the license found in the
 #  LICENSE file in the root directory of this source tree.
 #
-
+import copy
 from typing import Callable, Dict, List, Optional
 
 from torchrl.data import Composite
@@ -52,6 +52,7 @@ class VmasTask(Task):
         seed: Optional[int],
         device: DEVICE_TYPING,
     ) -> Callable[[], EnvBase]:
+        config = copy.deepcopy(self.config)
         return lambda: VmasEnv(
             scenario=self.name.lower(),
             num_envs=num_envs,
@@ -60,7 +61,7 @@ class VmasTask(Task):
             device=device,
             categorical_actions=True,
             clamp_actions=True,
-            **self.config,
+            **config,
         )
 
     def supports_continuous_actions(self) -> bool:

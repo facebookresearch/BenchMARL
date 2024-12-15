@@ -4,6 +4,7 @@
 #  LICENSE file in the root directory of this source tree.
 #
 
+import copy
 from typing import Callable, Dict, List, Optional
 
 from torchrl.data import Composite
@@ -35,9 +36,9 @@ class PettingZooTask(Task):
         seed: Optional[int],
         device: DEVICE_TYPING,
     ) -> Callable[[], EnvBase]:
+        config = copy.deepcopy(self.config)
         if self.supports_continuous_actions() and self.supports_discrete_actions():
-            self.config.update({"continuous_actions": continuous_actions})
-
+            config.update({"continuous_actions": continuous_actions})
         return lambda: PettingZooEnv(
             categorical_actions=True,
             device=device,
@@ -45,7 +46,7 @@ class PettingZooTask(Task):
             parallel=True,
             return_state=self.has_state(),
             render_mode="rgb_array",
-            **self.config
+            **config
         )
 
     def supports_continuous_actions(self) -> bool:

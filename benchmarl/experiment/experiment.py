@@ -19,8 +19,9 @@ from typing import Any, Dict, List, Optional
 import torch
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictSequential
+
 from torchrl.collectors import SyncDataCollector
-from torchrl.envs import SerialEnv, TransformedEnv
+from torchrl.envs import ParallelEnv, SerialEnv, TransformedEnv
 from torchrl.envs.transforms import Compose
 from torchrl.envs.utils import ExplorationType, set_exploration_type, step_mdp
 from torchrl.record.loggers import generate_exp_name
@@ -58,6 +59,7 @@ class ExperimentConfig:
     share_policy_params: bool = MISSING
     prefer_continuous_actions: bool = MISSING
     collect_with_grad: bool = MISSING
+    parallel_collection: bool = MISSING
 
     gamma: float = MISSING
     lr: float = MISSING
@@ -435,8 +437,11 @@ class Experiment(CallbackNotifier):
         transforms_training = Compose(*transforms_training)
 
         if test_env.batch_size == ():
+            env_class = (
+                SerialEnv if not self.config.parallel_collection else ParallelEnv
+            )
             self.env_func = lambda: TransformedEnv(
-                SerialEnv(self.config.n_envs_per_worker(self.on_policy), env_func),
+                env_class(self.config.n_envs_per_worker(self.on_policy), env_func),
                 transforms_training.clone(),
             )
         else:

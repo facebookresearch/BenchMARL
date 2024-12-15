@@ -34,7 +34,7 @@ def _type_check_task_config(
     else:
         if warn_on_missing_dataclass:
             warnings.warn(
-                "TaskConfig python dataclass not foud, task is being loaded without type checks"
+                "TaskConfig python dataclass not found, task is being loaded without type checks"
             )
         return config
 

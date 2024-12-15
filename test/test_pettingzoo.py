@@ -68,13 +68,16 @@ class TestPettingzoo:
 
     @pytest.mark.parametrize("algo_config", [IppoConfig, MasacConfig])
     @pytest.mark.parametrize("task", list(PettingZooTask))
+    @pytest.mark.parametrize("parallel_collection", [True, False])
     def test_all_tasks(
         self,
         algo_config: AlgorithmConfig,
         task: Task,
+        parallel_collection,
         experiment_config,
         mlp_sequence_config,
     ):
+        experiment_config.parallel_collection = parallel_collection
         task = task.get_from_yaml()
         experiment = Experiment(
             algorithm_config=algo_config.get_from_yaml(),
