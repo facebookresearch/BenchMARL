@@ -16,7 +16,7 @@ prefer_continuous_actions: True
 # If False collection is done using a collector (under no grad). If True, collection is done with gradients.
 collect_with_grad: False
 # In case of non-vectorized environments, weather to run collection of multiple processes
-# If this is used, there will be n_envs_per_worker processes, collecting frames_per_batch/n_envs_per_worker each
+# If this is used, there will be n_envs_per_worker processes, collecting frames_per_batch/n_envs_per_worker frames each
 parallel_collection: False
 
 # Discount factor
