@@ -10,6 +10,7 @@ import pytest
 from benchmarl.algorithms import (
     algorithm_config_registry,
     IppoConfig,
+    MappoConfig,
     MasacConfig,
     QmixConfig,
 )
@@ -72,6 +73,33 @@ class TestMeltingPot:
         experiment = Experiment(
             algorithm_config=algo_config.get_from_yaml(),
             model_config=cnn_sequence_config,
+            seed=0,
+            config=experiment_config,
+            task=task,
+        )
+        experiment.run()
+
+    @pytest.mark.parametrize("algo_config", [MappoConfig])
+    @pytest.mark.parametrize("task", [MeltingPotTask.COINS])
+    @pytest.mark.parametrize("parallel_collection", [True, False])
+    def test_lstm(
+        self,
+        algo_config: AlgorithmConfig,
+        task: Task,
+        parallel_collection: bool,
+        experiment_config,
+        cnn_lstm_sequence_config,
+    ):
+        algo_config = algo_config.get_from_yaml()
+        if algo_config.has_critic():
+            algo_config.share_param_critic = False
+        experiment_config.parallel_collection = parallel_collection
+        experiment_config.share_policy_params = False
+        task = task.get_from_yaml()
+        experiment = Experiment(
+            algorithm_config=algo_config,
+            model_config=cnn_lstm_sequence_config,
+            critic_model_config=cnn_lstm_sequence_config,
             seed=0,
             config=experiment_config,
             task=task,

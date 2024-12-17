@@ -15,22 +15,14 @@ from collections import deque, OrderedDict
 from dataclasses import dataclass, MISSING
 from pathlib import Path
 
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import torch
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictSequential
 from torchrl.collectors import SyncDataCollector
 
-from torchrl.data import Composite
-from torchrl.envs import (
-    EnvBase,
-    InitTracker,
-    ParallelEnv,
-    SerialEnv,
-    TensorDictPrimer,
-    TransformedEnv,
-)
+from torchrl.envs import ParallelEnv, SerialEnv, TransformedEnv
 from torchrl.envs.transforms import Compose
 from torchrl.envs.utils import ExplorationType, set_exploration_type, step_mdp
 from torchrl.record.loggers import generate_exp_name
@@ -44,7 +36,7 @@ from benchmarl.experiment.callback import Callback, CallbackNotifier
 from benchmarl.experiment.logger import Logger
 from benchmarl.models import GnnConfig, SequenceModelConfig
 from benchmarl.models.common import ModelConfig
-from benchmarl.utils import _read_yaml_config, seed_everything
+from benchmarl.utils import _add_rnn_transforms, _read_yaml_config, seed_everything
 
 _has_hydra = importlib.util.find_spec("hydra") is not None
 if _has_hydra:
@@ -461,8 +453,10 @@ class Experiment(CallbackNotifier):
 
         # Add rnn transforms here so they do not show in the benchmarl specs
         if self.model_config.is_rnn:
-            self.test_env = self._add_rnn_transforms(lambda: self.test_env)()
-            env_func = self._add_rnn_transforms(env_func)
+            self.test_env = _add_rnn_transforms(
+                lambda: self.test_env, self.group_map, self.model_config
+            )()
+            env_func = _add_rnn_transforms(env_func, self.group_map, self.model_config)
 
         # Initialize train env
         if self.test_env.batch_size == ():
@@ -949,48 +943,3 @@ class Experiment(CallbackNotifier):
         )
         self.load_state_dict(loaded_dict)
         return self
-
-    def _add_rnn_transforms(
-        self,
-        env_fun: Callable[[], EnvBase],
-    ) -> Callable[[], EnvBase]:
-        """
-        This function adds RNN specific transforms to the environment
-
-        Args:
-            env_fun (callable): a function that takes no args and creates an environment
-
-        Returns: a function that takes no args and creates an environment
-
-        """
-
-        def model_fun():
-            env = env_fun()
-            group_map = self.task.group_map(env)
-            spec_actor = self.model_config.get_model_state_spec()
-            spec_actor = Composite(
-                {
-                    group: Composite(
-                        spec_actor.expand(len(agents), *spec_actor.shape),
-                        shape=(len(agents),),
-                    )
-                    for group, agents in group_map.items()
-                }
-            )
-
-            out_env = TransformedEnv(
-                env,
-                Compose(
-                    *(
-                        [InitTracker(init_key="is_init")]
-                        + (
-                            [TensorDictPrimer(spec_actor, reset_key="_reset")]
-                            if len(spec_actor.keys(True, True)) > 0
-                            else []
-                        )
-                    )
-                ),
-            )
-            return out_env
-
-        return model_fun
