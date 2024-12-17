@@ -14,14 +14,23 @@ import time
 from collections import deque, OrderedDict
 from dataclasses import dataclass, MISSING
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+
+from typing import Any, Callable, Dict, List, Optional
 
 import torch
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictSequential
-
 from torchrl.collectors import SyncDataCollector
-from torchrl.envs import ParallelEnv, SerialEnv, TransformedEnv
+
+from torchrl.data import Composite
+from torchrl.envs import (
+    EnvBase,
+    InitTracker,
+    ParallelEnv,
+    SerialEnv,
+    TensorDictPrimer,
+    TransformedEnv,
+)
 from torchrl.envs.transforms import Compose
 from torchrl.envs.utils import ExplorationType, set_exploration_type, step_mdp
 from torchrl.record.loggers import generate_exp_name
@@ -361,6 +370,7 @@ class Experiment(CallbackNotifier):
         self._setup_task()
         self._setup_algorithm()
         self._setup_collector()
+        self._setup_buffers()
         self._setup_name()
         self._setup_logger()
         self._on_setup()
@@ -436,7 +446,21 @@ class Experiment(CallbackNotifier):
         transforms_env = Compose(*transforms_env)
         transforms_training = Compose(*transforms_training)
 
+        self.observation_spec = self.task.observation_spec(test_env)
+        self.info_spec = self.task.info_spec(test_env)
+        self.state_spec = self.task.state_spec(test_env)
+        self.action_mask_spec = self.task.action_mask_spec(test_env)
+        self.action_spec = self.task.action_spec(test_env)
+        self.group_map = self.task.group_map(test_env)
+        self.train_group_map = copy.deepcopy(self.group_map)
+        self.max_steps = self.task.max_steps(test_env)
+
+        if self.model_config.is_rnn:
+            test_env = self._add_rnn_transforms(lambda: test_env)()
+            env_func = self._add_rnn_transforms(env_func)
+
         if test_env.batch_size == ():
+            # If the environment is not vectorized, we simulate vectorization using parallel or serial environments
             env_class = (
                 SerialEnv if not self.config.parallel_collection else ParallelEnv
             )
@@ -453,28 +477,12 @@ class Experiment(CallbackNotifier):
             self.config.sampling_device
         )
 
-        self.observation_spec = self.task.observation_spec(self.test_env)
-        self.info_spec = self.task.info_spec(self.test_env)
-        self.state_spec = self.task.state_spec(self.test_env)
-        self.action_mask_spec = self.task.action_mask_spec(self.test_env)
-        self.action_spec = self.task.action_spec(self.test_env)
-        self.group_map = self.task.group_map(self.test_env)
-        self.train_group_map = copy.deepcopy(self.group_map)
-        self.max_steps = self.task.max_steps(self.test_env)
-
     def _setup_algorithm(self):
         self.algorithm = self.algorithm_config.get_algorithm(experiment=self)
 
         self.test_env = self.algorithm.process_env_fun(lambda: self.test_env)()
         self.env_func = self.algorithm.process_env_fun(self.env_func)
 
-        self.replay_buffers = {
-            group: self.algorithm.get_replay_buffer(
-                group=group,
-                transforms=self.task.get_replay_buffer_transforms(self.test_env, group),
-            )
-            for group in self.group_map.keys()
-        }
         self.losses = {
             group: self.algorithm.get_loss_and_updater(group)[0]
             for group in self.group_map.keys()
@@ -522,6 +530,15 @@ class Experiment(CallbackNotifier):
                     "Collection via rollouts does not support initial random frames as of now."
                 )
             self.rollout_env = self.env_func().to(self.config.sampling_device)
+
+    def _setup_buffers(self):
+        self.replay_buffers = {
+            group: self.algorithm.get_replay_buffer(
+                group=group,
+                transforms=self.task.get_replay_buffer_transforms(self.test_env, group),
+            )
+            for group in self.group_map.keys()
+        }
 
     def _setup_name(self):
         self.algorithm_name = self.algorithm_config.associated_class().__name__.lower()
@@ -929,3 +946,48 @@ class Experiment(CallbackNotifier):
         )
         self.load_state_dict(loaded_dict)
         return self
+
+    def _add_rnn_transforms(
+        self,
+        env_fun: Callable[[], EnvBase],
+    ) -> Callable[[], EnvBase]:
+        """
+        This function adds RNN specific transforms to the environment
+
+        Args:
+            env_fun (callable): a function that takes no args and creates an environment
+
+        Returns: a function that takes no args and creates an environment
+
+        """
+
+        def model_fun():
+            env = env_fun()
+            group_map = self.task.group_map(env)
+            spec_actor = self.model_config.get_model_state_spec()
+            spec_actor = Composite(
+                {
+                    group: Composite(
+                        spec_actor.expand(len(agents), *spec_actor.shape),
+                        shape=(len(agents),),
+                    )
+                    for group, agents in group_map.items()
+                }
+            )
+
+            out_env = TransformedEnv(
+                env,
+                Compose(
+                    *(
+                        [InitTracker(init_key="is_init")]
+                        + (
+                            [TensorDictPrimer(spec_actor, reset_key="_reset")]
+                            if len(spec_actor.keys(True, True)) > 0
+                            else []
+                        )
+                    )
+                ),
+            )
+            return out_env
+
+        return model_fun
