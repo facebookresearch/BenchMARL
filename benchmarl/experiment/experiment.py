@@ -362,7 +362,6 @@ class Experiment(CallbackNotifier):
         self._setup_task()
         self._setup_algorithm()
         self._setup_collector()
-        self._setup_buffers()
         self._setup_name()
         self._setup_logger()
         self._on_setup()
@@ -480,6 +479,13 @@ class Experiment(CallbackNotifier):
         self.test_env = self.algorithm.process_env_fun(lambda: self.test_env)()
         self.env_func = self.algorithm.process_env_fun(self.env_func)
 
+        self.replay_buffers = {
+            group: self.algorithm.get_replay_buffer(
+                group=group,
+                transforms=self.task.get_replay_buffer_transforms(self.test_env, group),
+            )
+            for group in self.group_map.keys()
+        }
         self.losses = {
             group: self.algorithm.get_loss_and_updater(group)[0]
             for group in self.group_map.keys()
@@ -527,15 +533,6 @@ class Experiment(CallbackNotifier):
                     "Collection via rollouts does not support initial random frames as of now."
                 )
             self.rollout_env = self.env_func().to(self.config.sampling_device)
-
-    def _setup_buffers(self):
-        self.replay_buffers = {
-            group: self.algorithm.get_replay_buffer(
-                group=group,
-                transforms=self.task.get_replay_buffer_transforms(self.test_env, group),
-            )
-            for group in self.group_map.keys()
-        }
 
     def _setup_name(self):
         self.algorithm_name = self.algorithm_config.associated_class().__name__.lower()
