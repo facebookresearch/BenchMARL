@@ -3,7 +3,7 @@
 #  This source code is licensed under the license found in the
 #  LICENSE file in the root directory of this source tree.
 #
-
+import copy
 from typing import Callable, Dict, List, Optional
 
 import torch
@@ -84,11 +84,13 @@ class MeltingPotTask(Task):
     ) -> Callable[[], EnvBase]:
         from torchrl.envs.libs.meltingpot import MeltingpotEnv
 
+        config = copy.deepcopy(self.config)
+
         return lambda: MeltingpotEnv(
             substrate=self.name.lower(),
             categorical_actions=True,
             device=device,
-            **self.config,
+            **config,
         )
 
     def supports_continuous_actions(self) -> bool:

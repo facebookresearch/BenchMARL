@@ -34,7 +34,7 @@ def test_loading_tasks(task_name):
         task_name_hydra = cfg.hydra.runtime.choices.task
         assert task_name_hydra == task_name
 
-        warn_message = "TaskConfig python dataclass not foud, task is being loaded without type checks"
+        warn_message = "TaskConfig python dataclass not found, task is being loaded without type checks"
 
         with (
             pytest.warns(match=warn_message)

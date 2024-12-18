@@ -13,21 +13,13 @@ from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModule, TensorDictSequential
 from torchrl.data import (
     Categorical,
-    Composite,
     LazyTensorStorage,
     OneHot,
     ReplayBuffer,
     TensorDictReplayBuffer,
 )
 from torchrl.data.replay_buffers import RandomSampler, SamplerWithoutReplacement
-from torchrl.envs import (
-    Compose,
-    EnvBase,
-    InitTracker,
-    TensorDictPrimer,
-    Transform,
-    TransformedEnv,
-)
+from torchrl.envs import Compose, EnvBase, Transform
 from torchrl.objectives import LossModule
 from torchrl.objectives.utils import HardUpdate, SoftUpdate, TargetNetUpdater
 
@@ -251,38 +243,6 @@ class Algorithm(ABC):
         Returns: a function that takes no args and creates an enviornment
 
         """
-        if self.has_rnn:
-
-            def model_fun():
-                env = env_fun()
-
-                spec_actor = self.model_config.get_model_state_spec()
-                spec_actor = Composite(
-                    {
-                        group: Composite(
-                            spec_actor.expand(len(agents), *spec_actor.shape),
-                            shape=(len(agents),),
-                        )
-                        for group, agents in self.group_map.items()
-                    }
-                )
-
-                env = TransformedEnv(
-                    env,
-                    Compose(
-                        *(
-                            [InitTracker(init_key="is_init")]
-                            + (
-                                [TensorDictPrimer(spec_actor, reset_key="_reset")]
-                                if len(spec_actor.keys(True, True)) > 0
-                                else []
-                            )
-                        )
-                    ),
-                )
-                return env
-
-            return model_fun
 
         return env_fun
 

@@ -29,6 +29,7 @@ def experiment_config(tmp_path) -> ExperimentConfig:
     experiment_config.on_policy_n_envs_per_worker = (
         experiment_config.off_policy_n_envs_per_worker
     ) = 2
+    experiment_config.parallel_collection = False
     experiment_config.off_policy_n_optimizer_steps = 2
     experiment_config.off_policy_train_batch_size = 3
     experiment_config.off_policy_memory_size = 200

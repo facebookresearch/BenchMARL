@@ -3,7 +3,7 @@
 #  This source code is licensed under the license found in the
 #  LICENSE file in the root directory of this source tree.
 #
-
+import copy
 from typing import Callable, Dict, List, Optional
 
 import torch
@@ -42,8 +42,9 @@ class Smacv2Task(Task):
         seed: Optional[int],
         device: DEVICE_TYPING,
     ) -> Callable[[], EnvBase]:
+        config = copy.deepcopy(self.config)
         return lambda: SMACv2Env(
-            categorical_actions=True, seed=seed, device=device, **self.config
+            categorical_actions=True, seed=seed, device=device, **config
         )
 
     def supports_continuous_actions(self) -> bool:

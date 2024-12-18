@@ -3,7 +3,7 @@
 #  This source code is licensed under the license found in the
 #  LICENSE file in the root directory of this source tree.
 #
-
+import copy
 from typing import Callable, Dict, List, Optional
 
 from torchrl.data import Composite
@@ -31,9 +31,10 @@ class MAgentTask(Task):
         seed: Optional[int],
         device: DEVICE_TYPING,
     ) -> Callable[[], EnvBase]:
+        config = copy.deepcopy(self.config)
 
         return lambda: PettingZooWrapper(
-            env=self.__get_env(),
+            env=self.__get_env(config),
             return_state=True,
             seed=seed,
             done_on_any=False,
@@ -41,7 +42,7 @@ class MAgentTask(Task):
             device=device,
         )
 
-    def __get_env(self) -> EnvBase:
+    def __get_env(self, config) -> EnvBase:
         try:
             from magent2.environments import (
                 adversarial_pursuit_v4,
@@ -66,7 +67,7 @@ class MAgentTask(Task):
         }
         if self.name not in envs:
             raise Exception(f"{self.name} is not an environment of MAgent2")
-        return envs[self.name].parallel_env(**self.config, render_mode="rgb_array")
+        return envs[self.name].parallel_env(**config, render_mode="rgb_array")
 
     def supports_continuous_actions(self) -> bool:
         return False

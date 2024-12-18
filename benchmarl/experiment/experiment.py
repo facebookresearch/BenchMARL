@@ -14,13 +14,15 @@ import time
 from collections import deque, OrderedDict
 from dataclasses import dataclass, MISSING
 from pathlib import Path
+
 from typing import Any, Dict, List, Optional
 
 import torch
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictSequential
 from torchrl.collectors import SyncDataCollector
-from torchrl.envs import SerialEnv, TransformedEnv
+
+from torchrl.envs import ParallelEnv, SerialEnv, TransformedEnv
 from torchrl.envs.transforms import Compose
 from torchrl.envs.utils import ExplorationType, set_exploration_type, step_mdp
 from torchrl.record.loggers import generate_exp_name
@@ -34,7 +36,7 @@ from benchmarl.experiment.callback import Callback, CallbackNotifier
 from benchmarl.experiment.logger import Logger
 from benchmarl.models import GnnConfig, SequenceModelConfig
 from benchmarl.models.common import ModelConfig
-from benchmarl.utils import _read_yaml_config, seed_everything
+from benchmarl.utils import _add_rnn_transforms, _read_yaml_config, seed_everything
 
 _has_hydra = importlib.util.find_spec("hydra") is not None
 if _has_hydra:
@@ -58,6 +60,7 @@ class ExperimentConfig:
     share_policy_params: bool = MISSING
     prefer_continuous_actions: bool = MISSING
     collect_with_grad: bool = MISSING
+    parallel_collection: bool = MISSING
 
     gamma: float = MISSING
     lr: float = MISSING
@@ -430,20 +433,10 @@ class Experiment(CallbackNotifier):
         transforms_training = transforms_env + [
             self.task.get_reward_sum_transform(test_env)
         ]
-
         transforms_env = Compose(*transforms_env)
         transforms_training = Compose(*transforms_training)
 
-        if test_env.batch_size == ():
-            self.env_func = lambda: TransformedEnv(
-                SerialEnv(self.config.n_envs_per_worker(self.on_policy), env_func),
-                transforms_training.clone(),
-            )
-        else:
-            self.env_func = lambda: TransformedEnv(
-                env_func(), transforms_training.clone()
-            )
-
+        # Initialize test env
         self.test_env = TransformedEnv(test_env, transforms_env.clone()).to(
             self.config.sampling_device
         )
@@ -456,6 +449,29 @@ class Experiment(CallbackNotifier):
         self.group_map = self.task.group_map(self.test_env)
         self.train_group_map = copy.deepcopy(self.group_map)
         self.max_steps = self.task.max_steps(self.test_env)
+
+        # Add rnn transforms here so they do not show in the benchmarl specs
+        if self.model_config.is_rnn:
+            self.test_env = _add_rnn_transforms(
+                lambda: self.test_env, self.group_map, self.model_config
+            )()
+            env_func = _add_rnn_transforms(env_func, self.group_map, self.model_config)
+
+        # Initialize train env
+        if self.test_env.batch_size == ():
+            # If the environment is not vectorized, we simulate vectorization using parallel or serial environments
+            env_class = (
+                SerialEnv if not self.config.parallel_collection else ParallelEnv
+            )
+            self.env_func = lambda: TransformedEnv(
+                env_class(self.config.n_envs_per_worker(self.on_policy), env_func),
+                transforms_training.clone(),
+            )
+        else:
+            # Otherwise it is already vectorized
+            self.env_func = lambda: TransformedEnv(
+                env_func(), transforms_training.clone()
+            )
 
     def _setup_algorithm(self):
         self.algorithm = self.algorithm_config.get_algorithm(experiment=self)
