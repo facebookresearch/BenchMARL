@@ -30,7 +30,7 @@ from tqdm import tqdm
 
 from benchmarl.algorithms import IppoConfig, MappoConfig
 
-from benchmarl.algorithms.common import AlgorithmConfig
+from benchmarl.algorithms.common import AlgorithmConfig, PhysicalStorage
 from benchmarl.environments import Task
 from benchmarl.experiment.callback import Callback, CallbackNotifier
 from benchmarl.experiment.logger import Logger
@@ -320,6 +320,7 @@ class Experiment(CallbackNotifier):
         config: ExperimentConfig,
         critic_model_config: Optional[ModelConfig] = None,
         callbacks: Optional[List[Callback]] = None,
+        replay_buffer_storage: Optional[PhysicalStorage] = None,
     ):
         super().__init__(
             experiment=self, callbacks=callbacks if callbacks is not None else []
@@ -333,6 +334,11 @@ class Experiment(CallbackNotifier):
             critic_model_config
             if critic_model_config is not None
             else copy.deepcopy(model_config)
+        )
+        self.replay_buffer_storage = (
+            replay_buffer_storage
+            if replay_buffer_storage is not None
+            else PhysicalStorage.MEMORY
         )
         self.critic_model_config.is_critic = True
 
@@ -357,7 +363,7 @@ class Experiment(CallbackNotifier):
     def _setup(self):
         self.config.validate(self.on_policy)
         seed_everything(self.seed)
-        self._perfrom_checks()
+        self._perform_checks()
         self._set_action_type()
         self._setup_task()
         self._setup_algorithm()
@@ -366,7 +372,7 @@ class Experiment(CallbackNotifier):
         self._setup_logger()
         self._on_setup()
 
-    def _perfrom_checks(self):
+    def _perform_checks(self):
         for config in (self.model_config, self.critic_model_config):
             if isinstance(config, SequenceModelConfig):
                 for layer_config in config.model_configs[1:]:
@@ -482,6 +488,7 @@ class Experiment(CallbackNotifier):
         self.replay_buffers = {
             group: self.algorithm.get_replay_buffer(
                 group=group,
+                physical_storage=self.replay_buffer_storage,
                 transforms=self.task.get_replay_buffer_transforms(self.test_env, group),
             )
             for group in self.group_map.keys()

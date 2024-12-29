@@ -7,6 +7,8 @@
 import pathlib
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from enum import Enum
+import tempfile
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
 
 from tensordict import TensorDictBase
@@ -14,6 +16,7 @@ from tensordict.nn import TensorDictModule, TensorDictSequential
 from torchrl.data import (
     Categorical,
     LazyTensorStorage,
+    LazyMemmapStorage,
     OneHot,
     ReplayBuffer,
     TensorDictReplayBuffer,
@@ -25,6 +28,11 @@ from torchrl.objectives.utils import HardUpdate, SoftUpdate, TargetNetUpdater
 
 from benchmarl.models.common import ModelConfig
 from benchmarl.utils import _read_yaml_config, DEVICE_TYPING
+
+
+class PhysicalStorage(Enum):
+    MEMORY = 1
+    DISK = 2
 
 
 class Algorithm(ABC):
@@ -66,6 +74,7 @@ class Algorithm(ABC):
         self._losses_and_updaters = {}
         self._policies_for_loss = {}
         self._policies_for_collection = {}
+        self._memmap_dir = None
 
         self._check_specs()
 
@@ -135,8 +144,24 @@ class Algorithm(ABC):
             self._losses_and_updaters.update({group: (loss, target_net_updater)})
         return self._losses_and_updaters[group]
 
+    def get_storage(self, memory_size: int, physical_storage: PhysicalStorage) -> LazyTensorStorage:
+        if physical_storage == PhysicalStorage.MEMORY:
+            storage = LazyTensorStorage(
+                memory_size,
+                device=self.device if self.on_policy else self.buffer_device,
+            )
+        else:
+            self._memmap_dir = tempfile.TemporaryDirectory()
+            storage = LazyMemmapStorage(
+                memory_size,
+                device=self.device if self.on_policy else self.buffer_device,
+                scratch_dir=self._memmap_dir.name
+            )
+
+        return storage
+
     def get_replay_buffer(
-        self, group: str, transforms: List[Transform] = None
+        self, group: str, physical_storage: PhysicalStorage, transforms: List[Transform] = None
     ) -> ReplayBuffer:
         """
         Get the ReplayBuffer for a specific group.
@@ -144,6 +169,7 @@ class Algorithm(ABC):
 
         Args:
             group (str): agent group of the loss and updater
+            physical_storage (PhysicalStorage): Storage device used for saving trajectories from the replay buffer
             transforms (optional, list of Transform): Transforms to apply to the replay buffer ``.sample()`` call
 
         Returns: ReplayBuffer the group
@@ -160,10 +186,7 @@ class Algorithm(ABC):
 
         sampler = SamplerWithoutReplacement() if self.on_policy else RandomSampler()
         return TensorDictReplayBuffer(
-            storage=LazyTensorStorage(
-                memory_size,
-                device=self.device if self.on_policy else self.buffer_device,
-            ),
+            storage=self.get_storage(memory_size, physical_storage),
             sampler=sampler,
             batch_size=sampling_size,
             priority_key=(group, "td_error"),
@@ -335,6 +358,10 @@ class Algorithm(ABC):
         Returns: the processed loss_vals
         """
         return loss_vals
+
+    def __del__(self) -> None:
+        if self._memmap_dir is not None:
+            self._memmap_dir.cleanup()
 
 
 @dataclass
