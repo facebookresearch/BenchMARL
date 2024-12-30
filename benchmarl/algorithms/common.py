@@ -3,12 +3,12 @@
 #  This source code is licensed under the license found in the
 #  LICENSE file in the root directory of this source tree.
 #
-
+import os
+import uuid
 import pathlib
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
-import tempfile
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
 
 from tensordict import TensorDictBase
@@ -74,7 +74,6 @@ class Algorithm(ABC):
         self._losses_and_updaters = {}
         self._policies_for_loss = {}
         self._policies_for_collection = {}
-        self._memmap_dir = None
 
         self._check_specs()
 
@@ -151,11 +150,10 @@ class Algorithm(ABC):
                 device=self.device if self.on_policy else self.buffer_device,
             )
         else:
-            self._memmap_dir = tempfile.TemporaryDirectory()
             storage = LazyMemmapStorage(
                 memory_size,
                 device=self.device if self.on_policy else self.buffer_device,
-                scratch_dir=self._memmap_dir.name
+                scratch_dir=f".memmap-{uuid.uuid4().hex}",
             )
 
         return storage
@@ -358,10 +356,6 @@ class Algorithm(ABC):
         Returns: the processed loss_vals
         """
         return loss_vals
-
-    def __del__(self) -> None:
-        if self._memmap_dir is not None:
-            self._memmap_dir.cleanup()
 
 
 @dataclass

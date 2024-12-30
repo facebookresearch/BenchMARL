@@ -8,8 +8,9 @@ from __future__ import annotations
 
 import copy
 import importlib
-
 import os
+import shutil
+
 import time
 from collections import deque, OrderedDict
 from dataclasses import dataclass, MISSING
@@ -21,6 +22,7 @@ import torch
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictSequential
 from torchrl.collectors import SyncDataCollector
+from torchrl.data import LazyMemmapStorage
 
 from torchrl.envs import ParallelEnv, SerialEnv, TransformedEnv
 from torchrl.envs.transforms import Compose
@@ -769,6 +771,10 @@ class Experiment(CallbackNotifier):
             self.rollout_env.close()
         self.test_env.close()
         self.logger.finish()
+
+        for group in self.replay_buffers:
+            if isinstance(self.replay_buffers[group].storage, LazyMemmapStorage):
+                shutil.rmtree(self.replay_buffers[group].storage.scratch_dir, ignore_errors=True)
 
     def _get_excluded_keys(self, group: str):
         excluded_keys = []
