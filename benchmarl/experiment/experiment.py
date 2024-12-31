@@ -312,7 +312,6 @@ class Experiment(CallbackNotifier):
             If None, it defaults to model_config
         callbacks (list of Callback, optional): callbacks for this experiment
     """
-
     def __init__(
         self,
         task: Task,
