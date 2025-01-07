@@ -349,6 +349,11 @@ class ModelConfig(ABC):
         """
         return Composite()
 
+    def _get_model_state_spec_inner(
+        self, model_index: int = 0, group: str = None
+    ) -> Composite:
+        return self.get_model_state_spec(model_index)
+
     @staticmethod
     def _load_from_yaml(name: str) -> Dict[str, Any]:
         yaml_path = (
@@ -516,6 +521,54 @@ class SequenceModelConfig(ModelConfig):
     def is_rnn(self) -> bool:
         is_rnn = False
         for model_config in self.model_configs:
+            is_rnn += model_config.is_rnn
+        return is_rnn
+
+    @classmethod
+    def get_from_yaml(cls, path: Optional[str] = None):
+        raise NotImplementedError
+
+
+@dataclass
+class EnsembleModelConfig(ModelConfig):
+
+    model_configs_map: Dict[str, ModelConfig]
+
+    def get_model(self, agent_group: str, **kwargs) -> Model:
+        return self.model_configs_map[agent_group].get_model(
+            **kwargs, agent_group=agent_group
+        )
+
+    @staticmethod
+    def associated_class():
+        class EnsembleModel(Model):
+            pass
+
+        return EnsembleModel
+
+    @property
+    def is_critic(self):
+        if not hasattr(self, "_is_critic"):
+            self._is_critic = False
+        return self._is_critic
+
+    @is_critic.setter
+    def is_critic(self, value):
+        self._is_critic = value
+        for model_config in self.model_configs_map.values():
+            model_config.is_critic = value
+
+    def _get_model_state_spec_inner(
+        self, model_index: int = 0, group: str = None
+    ) -> Composite:
+        return self.model_configs_map[group].get_model_state_spec(
+            model_index=model_index
+        )
+
+    @property
+    def is_rnn(self) -> bool:
+        is_rnn = False
+        for model_config in self.model_configs_map.values():
             is_rnn += model_config.is_rnn
         return is_rnn
 
