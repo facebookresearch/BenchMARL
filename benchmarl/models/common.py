@@ -426,6 +426,13 @@ class SequenceModelConfig(ModelConfig):
     model_configs: Sequence[ModelConfig]
     intermediate_sizes: Sequence[int]
 
+    def __post_init__(self):
+        for model_config in self.model_configs:
+            if isinstance(model_config, EnsembleModelConfig):
+                raise TypeError(
+                    "SequenceModelConfig cannot contain EnsembleModelConfig layers, but the opposite can be done."
+                )
+
     def get_model(
         self,
         input_spec: Composite,
