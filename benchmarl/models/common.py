@@ -542,6 +542,10 @@ class EnsembleModelConfig(ModelConfig):
     model_configs_map: Dict[str, ModelConfig]
 
     def get_model(self, agent_group: str, **kwargs) -> Model:
+        if agent_group not in self.model_configs_map.keys():
+            raise ValueError(
+                f"Environment contains agent group '{agent_group}' not present in the EnsembleModelConfig configuration."
+            )
         return self.model_configs_map[agent_group].get_model(
             **kwargs, agent_group=agent_group
         )
