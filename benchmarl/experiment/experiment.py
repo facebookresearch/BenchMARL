@@ -90,6 +90,9 @@ class ExperimentConfig:
     off_policy_train_batch_size: int = MISSING
     off_policy_memory_size: int = MISSING
     off_policy_init_random_frames: int = MISSING
+    off_policy_use_prioritized_replay_buffer: bool = MISSING
+    off_policy_prb_alpha: float = MISSING
+    off_policy_prb_beta: float = MISSING
 
     evaluation: bool = MISSING
     render: bool = MISSING
