@@ -12,6 +12,7 @@ from torchrl.envs.libs.vmas import VmasEnv
 
 from benchmarl.environments.common import Task
 from benchmarl.utils import DEVICE_TYPING
+from .navigation_pos import Scenario as navigation_pos_scenario
 
 
 class VmasTask(Task):
@@ -44,6 +45,7 @@ class VmasTask(Task):
     SIMPLE_SPREAD = None
     SIMPLE_TAG = None
     SIMPLE_WORLD_COMM = None
+    NAVIGATION_POS = None
 
     def get_env_fun(
         self,
@@ -53,8 +55,12 @@ class VmasTask(Task):
         device: DEVICE_TYPING,
     ) -> Callable[[], EnvBase]:
         config = copy.deepcopy(self.config)
+        if self is VmasTask.NAVIGATION_POS:
+            scenario = navigation_pos_scenario()
+        else:
+            scenario = self.name.lower()
         return lambda: VmasEnv(
-            scenario=self.name.lower(),
+            scenario=scenario,
             num_envs=num_envs,
             continuous_actions=continuous_actions,
             seed=seed,
