@@ -12,7 +12,7 @@ from torchrl.envs.libs.vmas import VmasEnv
 
 from benchmarl.environments.common import Task
 from benchmarl.utils import DEVICE_TYPING
-from .navigation_pos import Scenario as navigation_pos_scenario
+from .navigation_pos import NavigationScenario as navigation_pos_scenario
 
 
 class VmasTask(Task):
