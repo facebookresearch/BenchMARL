@@ -466,6 +466,7 @@ class GnnConfig(ModelConfig):
     """Dataclass config for a :class:`~benchmarl.models.Gnn`."""
 
     topology: str = MISSING
+
     self_loops: bool = MISSING
 
     gnn_class: Type[torch_geometric.nn.MessagePassing] = MISSING
