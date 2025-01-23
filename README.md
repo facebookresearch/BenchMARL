@@ -120,7 +120,7 @@ pip install dm-meltingpot
 ##### MAgent2
 
 ```bash
-pip install git+https://github.com/Farama-Foundation/MAgent
+pip install git+https://github.com/Farama-Foundation/MAgent2
 ```
 
 ##### SMACv2
