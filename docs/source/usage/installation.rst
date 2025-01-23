@@ -94,7 +94,7 @@ MAgent2
 
 .. code-block:: console
 
-   pip install git+https://github.com/Farama-Foundation/MAgent
+   pip install git+https://github.com/Farama-Foundation/MAgent2
 
 
 Install models
