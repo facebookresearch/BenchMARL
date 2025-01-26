@@ -80,11 +80,13 @@ def _add_rnn_transforms(
 
     def model_fun():
         env = env_fun()
-        spec_actor = model_config.get_model_state_spec()
         spec_actor = Composite(
             {
                 group: Composite(
-                    spec_actor.expand(len(agents), *spec_actor.shape),
+                    model_config._get_model_state_spec_inner(group=group).expand(
+                        len(agents),
+                        *model_config._get_model_state_spec_inner(group=group).shape
+                    ),
                     shape=(len(agents),),
                 )
                 for group, agents in group_map.items()

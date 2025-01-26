@@ -442,12 +442,13 @@ a script [![Example](https://img.shields.io/badge/Example-blue.svg)](examples/co
 BenchMARL has several features:
 - A test CI with integration and training test routines that are run for all simulators and algorithms
 - Integration in the official TorchRL ecosystem for dedicated support
+- Possibility of using different algorithms and models for different agent groups (see [`examples/ensemble`](examples/ensemble))
 
 
 ### Logging
 
 BenchMARL is compatible with the [TorchRL loggers](https://github.com/pytorch/rl/tree/main/torchrl/record/loggers).
-A list of logger names can be provided in the [experiment config](benchmarl/conf/experiment/base_experiment.yaml).
+A list of logger names can be provided in the [experiment config])(benchmarl/conf/experiment/base_experiment.yaml.
 Example of available options are: `wandb`, `csv`, `mflow`, `tensorboard` or any other option available in TorchRL. You can specify the loggers
 in the yaml config files or in the script arguments like so:
 ```bash

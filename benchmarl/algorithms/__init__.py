@@ -5,6 +5,7 @@
 #
 
 from .common import Algorithm, AlgorithmConfig
+from .ensemble import EnsembleAlgorithm, EnsembleAlgorithmConfig
 from .iddpg import Iddpg, IddpgConfig
 from .ippo import Ippo, IppoConfig
 from .iql import Iql, IqlConfig

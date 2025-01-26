@@ -5,7 +5,13 @@
 #
 
 from .cnn import Cnn, CnnConfig
-from .common import Model, ModelConfig, SequenceModel, SequenceModelConfig
+from .common import (
+    EnsembleModelConfig,
+    Model,
+    ModelConfig,
+    SequenceModel,
+    SequenceModelConfig,
+)
 from .deepsets import Deepsets, DeepsetsConfig
 from .gnn import Gnn, GnnConfig
 from .gru import Gru, GruConfig

@@ -106,3 +106,49 @@ as:
 
 .. python_example_button::
    https://github.com/facebookresearch/BenchMARL/blob/main/examples/callback/custom_callback.py
+
+Ensemble models and algorithms
+------------------------------
+
+It is possible to use different algorithms and models for different agent groups.
+
+Ensemble algorithm
+^^^^^^^^^^^^^^^^^^
+
+Ensemble algorithms take as input a dictionary mapping group names to algorithm configs:
+
+.. code-block:: python
+
+   from benchmarl.algorithms import EnsembleAlgorithmConfig, IsacConfig, MaddpgConfig
+
+   algorithm_config = EnsembleAlgorithmConfig(
+       {"agent": MaddpgConfig.get_from_yaml(), "adversary": IsacConfig.get_from_yaml()}
+   )
+
+.. note::
+   All algorithms need to be on-policy or off-policy, it is not possible to mix the two paradigms.
+
+
+.. python_example_button::
+   https://github.com/facebookresearch/BenchMARL/blob/main/examples/ensemble/ensemble_algorithm.py
+
+
+Ensemble model
+^^^^^^^^^^^^^^
+
+Ensemble models take as input a dictionary mapping group names to model configs:
+
+.. code-block:: python
+
+   from benchmarl.models import EnsembleModelConfig, GnnConfig, MlpConfig
+
+   model_config = EnsembleModelConfig(
+           {"agent": MlpConfig.get_from_yaml(), "adversary": GnnConfig.get_from_yaml()}
+   )
+
+
+.. note::
+   If you use ensemble models with sequence models, make sure the ensemble is the outer layer (you cannot make a sequence of ensembles, but an ensemble of sequences yes).
+
+.. python_example_button::
+   https://github.com/facebookresearch/BenchMARL/blob/main/examples/ensemble/ensemble_algorithm.py
