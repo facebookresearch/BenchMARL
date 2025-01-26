@@ -21,7 +21,11 @@ from torchrl.data import (
     ReplayBuffer,
     TensorDictReplayBuffer,
 )
-from torchrl.data.replay_buffers import RandomSampler, SamplerWithoutReplacement
+from torchrl.data.replay_buffers import (
+    PrioritizedSampler,
+    RandomSampler,
+    SamplerWithoutReplacement,
+)
 from torchrl.envs import Compose, EnvBase, Transform
 from torchrl.objectives import LossModule
 from torchrl.objectives.utils import HardUpdate, SoftUpdate, TargetNetUpdater
@@ -182,7 +186,17 @@ class Algorithm(ABC):
             memory_size = -(-memory_size // sequence_length)
             sampling_size = -(-sampling_size // sequence_length)
 
-        sampler = SamplerWithoutReplacement() if self.on_policy else RandomSampler()
+        if self.on_policy:
+            sampler = SamplerWithoutReplacement()
+        elif self.experiment_config.off_policy_use_prioritized_replay_buffer:
+            sampler = PrioritizedSampler(
+                memory_size,
+                self.experiment_config.off_policy_prb_alpha,
+                self.experiment_config.off_policy_prb_beta,
+            )
+        else:
+            sampler = RandomSampler()
+
         return TensorDictReplayBuffer(
             storage=self.get_storage(memory_size, physical_storage),
             sampler=sampler,
