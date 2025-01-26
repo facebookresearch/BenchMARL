@@ -151,4 +151,4 @@ Ensemble models take as input a dictionary mapping group names to model configs:
    If you use ensemble models with sequence models, make sure the ensemble is the outer layer (you cannot make a sequence of ensembles, but an ensemble of sequences yes).
 
 .. python_example_button::
-   https://github.com/facebookresearch/BenchMARL/blob/main/examples/ensemble/ensemble_algorithm.py
+   https://github.com/facebookresearch/BenchMARL/blob/main/examples/ensemble/ensemble_model.py
