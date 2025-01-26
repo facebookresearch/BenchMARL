@@ -150,7 +150,6 @@ class Algorithm(ABC):
 
         Args:
             group (str): agent group of the loss and updater
-            physical_storage (PhysicalStorage): Storage device used for saving trajectories from the replay buffer
             transforms (optional, list of Transform): Transforms to apply to the replay buffer ``.sample()`` call
 
         Returns: ReplayBuffer the group
