@@ -8,9 +8,9 @@ from __future__ import annotations
 
 import copy
 import importlib
+
 import os
 import shutil
-
 import time
 from collections import deque, OrderedDict
 from dataclasses import dataclass, MISSING
@@ -22,7 +22,6 @@ import torch
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictSequential
 from torchrl.collectors import SyncDataCollector
-from torchrl.data import LazyMemmapStorage
 
 from torchrl.envs import ParallelEnv, SerialEnv, TransformedEnv
 from torchrl.envs.transforms import Compose
@@ -32,7 +31,7 @@ from tqdm import tqdm
 
 from benchmarl.algorithms import IppoConfig, MappoConfig
 
-from benchmarl.algorithms.common import AlgorithmConfig, PhysicalStorage
+from benchmarl.algorithms.common import AlgorithmConfig
 from benchmarl.environments import Task
 from benchmarl.experiment.callback import Callback, CallbackNotifier
 from benchmarl.experiment.logger import Logger
@@ -315,6 +314,7 @@ class Experiment(CallbackNotifier):
             If None, it defaults to model_config
         callbacks (list of Callback, optional): callbacks for this experiment
     """
+
     def __init__(
         self,
         task: Task,
@@ -324,7 +324,6 @@ class Experiment(CallbackNotifier):
         config: ExperimentConfig,
         critic_model_config: Optional[ModelConfig] = None,
         callbacks: Optional[List[Callback]] = None,
-        replay_buffer_storage: Optional[PhysicalStorage] = None,
     ):
         super().__init__(
             experiment=self, callbacks=callbacks if callbacks is not None else []
@@ -338,11 +337,6 @@ class Experiment(CallbackNotifier):
             critic_model_config
             if critic_model_config is not None
             else copy.deepcopy(model_config)
-        )
-        self.replay_buffer_storage = (
-            replay_buffer_storage
-            if replay_buffer_storage is not None
-            else PhysicalStorage.MEMORY
         )
         self.critic_model_config.is_critic = True
 
@@ -369,10 +363,10 @@ class Experiment(CallbackNotifier):
         seed_everything(self.seed)
         self._perform_checks()
         self._set_action_type()
+        self._setup_name()
         self._setup_task()
         self._setup_algorithm()
         self._setup_collector()
-        self._setup_name()
         self._setup_logger()
         self._on_setup()
 
@@ -492,7 +486,6 @@ class Experiment(CallbackNotifier):
         self.replay_buffers = {
             group: self.algorithm.get_replay_buffer(
                 group=group,
-                physical_storage=self.replay_buffer_storage,
                 transforms=self.task.get_replay_buffer_transforms(self.test_env, group),
             )
             for group in self.group_map.keys()
@@ -774,9 +767,9 @@ class Experiment(CallbackNotifier):
         self.test_env.close()
         self.logger.finish()
 
-        for group in self.replay_buffers:
-            if isinstance(self.replay_buffers[group].storage, LazyMemmapStorage):
-                shutil.rmtree(self.replay_buffers[group].storage.scratch_dir, ignore_errors=True)
+        for buffer in self.replay_buffers.values():
+            if hasattr(buffer.storage, "scratch_dir"):
+                shutil.rmtree(buffer.storage.scratch_dir, ignore_errors=False)
 
     def _get_excluded_keys(self, group: str):
         excluded_keys = []

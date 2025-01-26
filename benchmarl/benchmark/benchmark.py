@@ -10,7 +10,6 @@ from benchmarl.algorithms.common import AlgorithmConfig
 from benchmarl.environments import Task
 from benchmarl.experiment import Experiment, ExperimentConfig
 from benchmarl.models.common import ModelConfig
-from benchmarl.algorithms.common import PhysicalStorage
 
 
 class Benchmark:
@@ -36,7 +35,6 @@ class Benchmark:
         seeds: Set[int],
         experiment_config: ExperimentConfig,
         critic_model_config: Optional[ModelConfig] = None,
-        replay_buffer_storage: Optional[PhysicalStorage] = None,
     ):
         self.algorithm_configs = algorithm_configs
         self.tasks = tasks
@@ -47,11 +45,6 @@ class Benchmark:
             critic_model_config if critic_model_config is not None else model_config
         )
         self.experiment_config = experiment_config
-        self.replay_buffer_storage = (
-            replay_buffer_storage
-            if replay_buffer_storage is not None
-            else PhysicalStorage.MEMORY
-        )
 
         print(f"Created benchmark with {self.n_experiments} experiments.")
 
@@ -72,7 +65,6 @@ class Benchmark:
                         model_config=self.model_config,
                         critic_model_config=self.critic_model_config,
                         config=self.experiment_config,
-                        replay_buffer_storage=self.replay_buffer_storage,
                     )
 
     def run_sequential(self):

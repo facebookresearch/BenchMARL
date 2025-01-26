@@ -4,19 +4,18 @@
 #  LICENSE file in the root directory of this source tree.
 #
 
-import uuid
 import pathlib
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from enum import Enum
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
 
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModule, TensorDictSequential
 from torchrl.data import (
     Categorical,
-    LazyTensorStorage,
     LazyMemmapStorage,
+    LazyTensorStorage,
     OneHot,
     ReplayBuffer,
     TensorDictReplayBuffer,
@@ -32,11 +31,6 @@ from torchrl.objectives.utils import HardUpdate, SoftUpdate, TargetNetUpdater
 
 from benchmarl.models.common import ModelConfig
 from benchmarl.utils import _read_yaml_config, DEVICE_TYPING
-
-
-class PhysicalStorage(Enum):
-    MEMORY = 1
-    DISK = 2
 
 
 class Algorithm(ABC):
@@ -147,23 +141,8 @@ class Algorithm(ABC):
             self._losses_and_updaters.update({group: (loss, target_net_updater)})
         return self._losses_and_updaters[group]
 
-    def get_storage(self, memory_size: int, physical_storage: PhysicalStorage) -> LazyTensorStorage:
-        if physical_storage == PhysicalStorage.MEMORY:
-            storage = LazyTensorStorage(
-                memory_size,
-                device=self.device if self.on_policy else self.buffer_device,
-            )
-        else:
-            storage = LazyMemmapStorage(
-                memory_size,
-                device=self.device if self.on_policy else self.buffer_device,
-                scratch_dir=f".memmap-{uuid.uuid4().hex}",
-            )
-
-        return storage
-
     def get_replay_buffer(
-        self, group: str, physical_storage: PhysicalStorage, transforms: List[Transform] = None
+        self, group: str, transforms: List[Transform] = None
     ) -> ReplayBuffer:
         """
         Get the ReplayBuffer for a specific group.
@@ -186,6 +165,7 @@ class Algorithm(ABC):
             memory_size = -(-memory_size // sequence_length)
             sampling_size = -(-sampling_size // sequence_length)
 
+        # Sampler
         if self.on_policy:
             sampler = SamplerWithoutReplacement()
         elif self.experiment_config.off_policy_use_prioritized_replay_buffer:
@@ -197,8 +177,21 @@ class Algorithm(ABC):
         else:
             sampler = RandomSampler()
 
+        # Storage
+        if self.buffer_device == "disk" and not self.on_policy:
+            storage = LazyMemmapStorage(
+                memory_size,
+                device=self.device,
+                scratch_dir=self.experiment.folder_name / f"buffer_{group}",
+            )
+        else:
+            storage = LazyTensorStorage(
+                memory_size,
+                device=self.device if self.on_policy else self.buffer_device,
+            )
+
         return TensorDictReplayBuffer(
-            storage=self.get_storage(memory_size, physical_storage),
+            storage=storage,
             sampler=sampler,
             batch_size=sampling_size,
             priority_key=(group, "td_error"),
