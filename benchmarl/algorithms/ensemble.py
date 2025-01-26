@@ -79,6 +79,11 @@ class EnsembleAlgorithmConfig(AlgorithmConfig):
             )
 
     def get_algorithm(self, experiment) -> Algorithm:
+        if set(self.algorithm_configs_map.keys()) != set(experiment.group_map.keys()):
+            raise ValueError(
+                f"EnsembleAlgorithm group names {self.algorithm_configs_map.keys()} do not match "
+                f"environment group names {experiment.group_map.keys()}"
+            )
         return self.associated_class()(
             algorithms_map={
                 group: algorithm_config.get_algorithm(experiment)
