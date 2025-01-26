@@ -5,6 +5,7 @@
 #
 
 import pathlib
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
@@ -13,6 +14,7 @@ from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModule, TensorDictSequential
 from torchrl.data import (
     Categorical,
+    LazyMemmapStorage,
     LazyTensorStorage,
     OneHot,
     ReplayBuffer,
@@ -162,6 +164,7 @@ class Algorithm(ABC):
             memory_size = -(-memory_size // sequence_length)
             sampling_size = -(-sampling_size // sequence_length)
 
+        # Sampler
         if self.on_policy:
             sampler = SamplerWithoutReplacement()
         elif self.experiment_config.off_policy_use_prioritized_replay_buffer:
@@ -173,11 +176,21 @@ class Algorithm(ABC):
         else:
             sampler = RandomSampler()
 
-        return TensorDictReplayBuffer(
-            storage=LazyTensorStorage(
+        # Storage
+        if self.buffer_device == "disk" and not self.on_policy:
+            storage = LazyMemmapStorage(
+                memory_size,
+                device=self.device,
+                scratch_dir=self.experiment.folder_name / f"buffer_{group}",
+            )
+        else:
+            storage = LazyTensorStorage(
                 memory_size,
                 device=self.device if self.on_policy else self.buffer_device,
-            ),
+            )
+
+        return TensorDictReplayBuffer(
+            storage=storage,
             sampler=sampler,
             batch_size=sampling_size,
             priority_key=(group, "td_error"),

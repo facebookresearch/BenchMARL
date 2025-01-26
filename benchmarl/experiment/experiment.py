@@ -10,6 +10,7 @@ import copy
 import importlib
 
 import os
+import shutil
 import time
 from collections import deque, OrderedDict
 from dataclasses import dataclass, MISSING
@@ -360,16 +361,16 @@ class Experiment(CallbackNotifier):
     def _setup(self):
         self.config.validate(self.on_policy)
         seed_everything(self.seed)
-        self._perfrom_checks()
+        self._perform_checks()
         self._set_action_type()
+        self._setup_name()
         self._setup_task()
         self._setup_algorithm()
         self._setup_collector()
-        self._setup_name()
         self._setup_logger()
         self._on_setup()
 
-    def _perfrom_checks(self):
+    def _perform_checks(self):
         for config in (self.model_config, self.critic_model_config):
             if isinstance(config, SequenceModelConfig):
                 for layer_config in config.model_configs[1:]:
@@ -765,6 +766,10 @@ class Experiment(CallbackNotifier):
             self.rollout_env.close()
         self.test_env.close()
         self.logger.finish()
+
+        for buffer in self.replay_buffers.values():
+            if hasattr(buffer.storage, "scratch_dir"):
+                shutil.rmtree(buffer.storage.scratch_dir, ignore_errors=False)
 
     def _get_excluded_keys(self, group: str):
         excluded_keys = []
