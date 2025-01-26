@@ -49,7 +49,7 @@ exploration_anneal_frames: null
 # The maximum number of experiment iterations before the experiment terminates, exclusive with max_n_frames
 max_n_iters: null
 # Number of collected frames before ending, exclusive with max_n_iters
-max_n_frames: 18_000
+max_n_frames: 3_000_000
 
 # Number of frames collected and each experiment iteration
 on_policy_collected_frames_per_batch: 6000
@@ -115,9 +115,9 @@ restore_file: null
 restore_map_location: null
 # Interval for experiment saving in terms of collected frames (this should be a multiple of on/off_policy_collected_frames_per_batch).
 # Set it to 0 to disable checkpointing
-checkpoint_interval: 6000
+checkpoint_interval: 0
 # Whether to checkpoint when the experiment is done
-checkpoint_at_end: True
+checkpoint_at_end: False
 # How many checkpoints to keep. As new checkpoints are taken, temporally older checkpoints are deleted to keep this number of
 # checkpoints. The checkpoint at the end is included in this number. Set to `null` to keep all checkpoints.
 keep_checkpoints_num: 3
