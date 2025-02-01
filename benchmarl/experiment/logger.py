@@ -7,6 +7,7 @@
 import json
 import os
 import warnings
+from collections.abc import MutableMapping, Sequence
 from pathlib import Path
 
 from typing import Dict, List, Optional
@@ -17,6 +18,8 @@ import torchrl
 
 from tensordict import TensorDictBase
 from torch import Tensor
+
+from torchrl.record import TensorboardLogger
 from torchrl.record.loggers import get_logger
 from torchrl.record.loggers.wandb import WandbLogger
 
@@ -73,17 +76,41 @@ class Logger:
             )
 
     def log_hparams(self, **kwargs):
+        kwargs.update(
+            {
+                "algorithm_name": self.algorithm_name,
+                "model_name": self.model_name,
+                "task_name": self.task_name,
+                "environment_name": self.environment_name,
+                "seed": self.seed,
+            }
+        )
         for logger in self.loggers:
-            kwargs.update(
-                {
-                    "algorithm_name": self.algorithm_name,
-                    "model_name": self.model_name,
-                    "task_name": self.task_name,
-                    "environment_name": self.environment_name,
-                    "seed": self.seed,
-                }
-            )
-            logger.log_hparams(kwargs)
+            if isinstance(logger, TensorboardLogger):
+                # Tensorboard does not like nested dictionaries -> flatten them
+                def flatten(dictionary, parent_key="", separator="_"):
+                    items = []
+                    for key, value in dictionary.items():
+                        new_key = parent_key + separator + key if parent_key else key
+                        if isinstance(value, MutableMapping):
+                            items.extend(
+                                flatten(value, new_key, separator=separator).items()
+                            )
+                        elif isinstance(value, Sequence):
+                            for i, v in enumerate(value):
+                                items.append((new_key + separator + str(i), v))
+                        else:
+                            items.append((new_key, value))
+                    return dict(items)
+
+                # Convert any non-supported values
+                for key, value in kwargs.items():
+                    if not isinstance(value, (int, float, str, Tensor)):
+                        kwargs[key] = str(value)
+
+                logger.log_hparams(flatten(kwargs))
+            else:
+                logger.log_hparams(kwargs)
 
     def log_collection(
         self,
