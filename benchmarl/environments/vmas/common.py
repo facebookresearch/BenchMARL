@@ -36,6 +36,7 @@ class VmasTask(Task):
     BUZZ_WIRE = None
     FLOCKING = None
     DISCOVERY = None
+    FOOTBALL = None
     SIMPLE_ADVERSARY = None
     SIMPLE_CRYPTO = None
     SIMPLE_PUSH = None
