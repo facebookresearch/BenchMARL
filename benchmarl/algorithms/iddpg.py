@@ -146,7 +146,7 @@ class Iddpg(Algorithm):
             action_key=(group, "action"),
             sigma_init=self.experiment_config.exploration_eps_init,
             sigma_end=self.experiment_config.exploration_eps_end,
-            device=policy_for_loss.device,
+            # device=policy_for_loss.device, TODO add device
         )
         return TensorDictSequential(*policy_for_loss, noise_module)
 
