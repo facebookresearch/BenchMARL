@@ -25,7 +25,7 @@ formation_noise: 0.2  # Noise on formation positions
 
 # Ai config
 n_traj_points: 0  # Number of spline trajectory points to plot for heuristic (ai) agents
-ai_speed_strength: 1.0  # The speed of the ai 0<=x<=1
+ai_strength: 1.0  # The speed of the ai 0<=x<=1
 ai_decision_strength: 1.0  # The decision strength of the ai 0<=x<=1
 ai_precision_strength: 1.0  # The precision strength of the ai 0<=x<=1
 
