@@ -10,12 +10,7 @@ from typing import Dict, Iterable, Tuple, Type
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModule, TensorDictSequential
 from torchrl.data import Composite, Unbounded
-from torchrl.modules import (
-    AdditiveGaussianWrapper,
-    Delta,
-    ProbabilisticActor,
-    TanhDelta,
-)
+from torchrl.modules import AdditiveGaussianModule, Delta, ProbabilisticActor, TanhDelta
 from torchrl.objectives import DDPGLoss, LossModule, ValueEstimators
 
 from benchmarl.algorithms.common import Algorithm, AlgorithmConfig
@@ -143,15 +138,17 @@ class Maddpg(Algorithm):
     def _get_policy_for_collection(
         self, policy_for_loss: TensorDictModule, group: str, continuous: bool
     ) -> TensorDictModule:
-        return AdditiveGaussianWrapper(
-            policy_for_loss,
+        noise_module = AdditiveGaussianModule(
+            spec=self.action_spec,
             annealing_num_steps=self.experiment_config.get_exploration_anneal_frames(
                 self.on_policy
             ),
             action_key=(group, "action"),
             sigma_init=self.experiment_config.exploration_eps_init,
             sigma_end=self.experiment_config.exploration_eps_end,
+            # device=policy_for_loss.device, TODO add device
         )
+        return TensorDictSequential(*policy_for_loss, noise_module)
 
     def process_batch(self, group: str, batch: TensorDictBase) -> TensorDictBase:
         keys = list(batch.keys(True, True))
