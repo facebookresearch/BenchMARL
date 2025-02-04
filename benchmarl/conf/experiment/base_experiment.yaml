@@ -21,7 +21,7 @@ collect_with_grad: False
 parallel_collection: False
 
 # Discount factor
-gamma: 0.9
+gamma: 0.99
 # Learning rate
 lr: 0.00005
 # The epsilon parameter of the adam optimizer
