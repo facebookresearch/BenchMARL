@@ -89,14 +89,14 @@ class VmasTask(Task):
         return None
 
     def observation_spec(self, env: EnvBase) -> Composite:
-        observation_spec = env.full_observation_spec_unbatched.clone()
+        observation_spec = env.unbatched_observation_spec.clone()
         for group in self.group_map(env):
             if "info" in observation_spec[group]:
                 del observation_spec[(group, "info")]
         return observation_spec
 
     def info_spec(self, env: EnvBase) -> Optional[Composite]:
-        info_spec = env.full_observation_spec_unbatched.clone()
+        info_spec = env.unbatched_observation_spec.clone()
         for group in self.group_map(env):
             del info_spec[(group, "observation")]
         for group in self.group_map(env):
@@ -106,7 +106,7 @@ class VmasTask(Task):
             return None
 
     def action_spec(self, env: EnvBase) -> Composite:
-        return env.full_action_spec_unbatched
+        return env.unbatched_action_spec
 
     @staticmethod
     def env_name() -> str:
