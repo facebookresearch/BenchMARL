@@ -74,6 +74,8 @@ the domain and want to easily take a picture of the landscape.
 
 ### Notebooks
 - [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/facebookresearch/BenchMARL/blob/main/notebooks/run.ipynb) &ensp; **Running BenchMARL experiments**.
+- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/proroklab/VectorizedMultiAgentSimulator/blob/main/notebooks/Simulation_and_training_in_VMAS_and_BenchMARL.ipynb) &ensp;  **Creating a VMAS scenario and training it in BenchMARL**.  We will create a scenario where multiple robots with different embodiments need to navigate to their goals while avoiding each other (as well as obstacles) and train it using MAPPO and MLP/GNN policies.
+
 
 ### Install
 
