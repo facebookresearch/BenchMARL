@@ -345,7 +345,7 @@ class Task(Enum):
         yaml_path = Path(__file__).parent.parent / "conf" / "task" / f"{name}.yaml"
         return _read_yaml_config(str(yaml_path.resolve()))
 
-    def get_from_yaml(self, path: Optional[str] = None) -> Task:
+    def get_from_yaml(self, path: Optional[str] = None) -> TaskClass:
         """
         Load the task configuration from yaml
 
@@ -363,4 +363,4 @@ class Task(Enum):
         else:
             config = _read_yaml_config(path)
         config = _type_check_task_config(environment_name, task_name, config)
-        return self.update_config(config)
+        return self.update_config(config).get_task()

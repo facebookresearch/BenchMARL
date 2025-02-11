@@ -12,6 +12,7 @@ import importlib
 import os
 import shutil
 import time
+import warnings
 from collections import deque, OrderedDict
 from dataclasses import dataclass, MISSING
 from pathlib import Path
@@ -332,6 +333,10 @@ class Experiment(CallbackNotifier):
         self.config = config
 
         if isinstance(task, Task):
+            warnings.warn(
+                "Call `.get_task()` on your task Enum before passing it to the experiment. "
+                "This makes it so that if you later edit the Enum config, it won't affect this task."
+            )
             task = task.get_task()
         self.task = task
         self.model_config = model_config
