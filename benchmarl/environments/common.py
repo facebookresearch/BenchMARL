@@ -219,6 +219,14 @@ class TaskClass(abc.ABC):
         raise NotImplementedError
 
     @staticmethod
+    @abstractmethod
+    def env_name() -> str:
+        """
+        The name of the environment in the benchmarl/conf/task folder
+        """
+        raise NotImplementedError
+
+    @staticmethod
     def log_info(batch: TensorDictBase) -> Dict[str, float]:
         """
         Return a str->float dict with extra items to log.
@@ -265,10 +273,6 @@ class TaskClass(abc.ABC):
 
         """
         return []
-
-    @staticmethod
-    def env_name() -> str:
-        raise NotImplementedError
 
     @staticmethod
     def render_callback(experiment, env: EnvBase, data: TensorDictBase):
