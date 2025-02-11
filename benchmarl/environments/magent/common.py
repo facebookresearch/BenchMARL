@@ -9,21 +9,12 @@ from typing import Callable, Dict, List, Optional
 from torchrl.data import Composite
 from torchrl.envs import EnvBase, PettingZooWrapper
 
-from benchmarl.environments.common import Task
+from benchmarl.environments.common import Task, TaskClass
 
 from benchmarl.utils import DEVICE_TYPING
 
 
-class MAgentTask(Task):
-    """Enum for MAgent2 tasks."""
-
-    ADVERSARIAL_PURSUIT = None
-    # BATTLE = None
-    # BATTLEFIELD = None
-    # COMBINED_ARMS = None
-    # GATHER = None
-    # TIGER_DEER = None
-
+class MAgentTaskClass(TaskClass):
     def get_env_fun(
         self,
         num_envs: int,
@@ -130,3 +121,18 @@ class MAgentTask(Task):
     @staticmethod
     def env_name() -> str:
         return "magent"
+
+
+class MAgentTask(Task):
+    """Enum for MAgent2 tasks."""
+
+    ADVERSARIAL_PURSUIT = None
+    # BATTLE = None
+    # BATTLEFIELD = None
+    # COMBINED_ARMS = None
+    # GATHER = None
+    # TIGER_DEER = None
+
+    @staticmethod
+    def associated_class():
+        return MAgentTaskClass

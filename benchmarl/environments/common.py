@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 import abc
-import copy
+
 import importlib
 
 import warnings
@@ -55,6 +55,8 @@ def _get_task_config_class(environemnt_name: str, task_name: str):
 class TaskClass(abc.ABC):
     def __init__(self, name: str, config: Dict[str, Any]):
         self.name = name
+        if config is None:
+            config = {}
         self.config = config
 
     @abstractmethod
@@ -275,13 +277,23 @@ class TaskClass(abc.ABC):
         except TypeError:
             return env.render()
 
+    def __repr__(self):
+        cls_name = self.__class__.__name__
+        return f"{cls_name}.{self.name}: (config={self.config})"
+
+    def __str__(self):
+        return self.__repr__()
+
+    def __eq__(self, other):
+        return self.name == other.name and self.config == other.config
+
 
 class Task(Enum):
     """Task.
 
     Tasks are enums, one enum for each environment.
-    Each enum member has a config attribute that is a dictionary which can be loaded from .yaml
-    files. You can also access and modify this attribute directly.
+    Each enum member can be converted to a TaskClass by calling ``get_task()`` which by default behaves like
+    ``get_from_yaml()`` or by calling ``get_task(config={...})``, providing your own config.
 
     Each new environment should inherit from Task and instantiate its members as
 
@@ -303,10 +315,10 @@ class Task(Enum):
     def env_name(cls) -> str:
         return cls.associated_class().env_name()
 
-    def get_task(self) -> TaskClass:
-        return self.associated_class()(
-            name=self.name, config=copy.deepcopy(self.config)
-        )
+    def get_task(self, config: Optional[Dict[str, Any]] = None) -> TaskClass:
+        if config is None:
+            return self.get_from_yaml()
+        return self.associated_class()(name=self.name, config=config)
 
     def __new__(cls, *args, **kwargs):
         value = len(cls.__members__) + 1
@@ -314,31 +326,16 @@ class Task(Enum):
         obj._value_ = value
         return obj
 
-    def __init__(self, config: Dict[str, Any]):
-        self.config = config
+    @property
+    def config(self):
+        raise ValueError(
+            "Task.config is deprecated, use Task.get_task().config instead"
+        )
 
     def update_config(self, config: Dict[str, Any]) -> Task:
-        """
-        Updates the task config
-
-        Args:
-            config (dictionary): The config to update in the task
-
-        Returns: The updated task
-
-        """
-        if self.config is None:
-            self.config = config
-        else:
-            self.config.update(config)
-        return self
-
-    def __repr__(self):
-        cls_name = self.__class__.__name__
-        return f"{cls_name}.{self.name}: (config={self.config})"
-
-    def __str__(self):
-        return self.__repr__()
+        raise ValueError(
+            "Task.update_config is deprecated please use Task.get_task().config.update instead"
+        )
 
     @staticmethod
     def _load_from_yaml(name: str) -> Dict[str, Any]:
@@ -363,4 +360,10 @@ class Task(Enum):
         else:
             config = _read_yaml_config(path)
         config = _type_check_task_config(environment_name, task_name, config)
-        return self.update_config(config).get_task()
+        return self.get_task(config=config)
+
+    def supports_continuous_actions(self) -> bool:
+        return self.get_task().supports_continuous_actions()
+
+    def supports_discrete_actions(self) -> bool:
+        return self.get_task().supports_discrete_actions()

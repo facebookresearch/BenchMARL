@@ -12,29 +12,11 @@ from torchrl.data import Composite
 from torchrl.envs import EnvBase
 from torchrl.envs.libs.smacv2 import SMACv2Env
 
-from benchmarl.environments.common import Task
+from benchmarl.environments.common import Task, TaskClass
 from benchmarl.utils import DEVICE_TYPING
 
 
-class Smacv2Task(Task):
-    """Enum for SMACv2 tasks."""
-
-    PROTOSS_5_VS_5 = None
-    PROTOSS_10_VS_10 = None
-    PROTOSS_10_VS_11 = None
-    PROTOSS_20_VS_20 = None
-    PROTOSS_20_VS_23 = None
-    TERRAN_5_VS_5 = None
-    TERRAN_10_VS_10 = None
-    TERRAN_10_VS_11 = None
-    TERRAN_20_VS_20 = None
-    TERRAN_20_VS_23 = None
-    ZERG_5_VS_5 = None
-    ZERG_10_VS_10 = None
-    ZERG_10_VS_11 = None
-    ZERG_20_VS_20 = None
-    ZERG_20_VS_23 = None
-
+class Smacv2TaskClass(TaskClass):
     def get_env_fun(
         self,
         num_envs: int,
@@ -110,3 +92,27 @@ class Smacv2Task(Task):
     @staticmethod
     def env_name() -> str:
         return "smacv2"
+
+
+class Smacv2Task(Task):
+    """Enum for SMACv2 tasks."""
+
+    PROTOSS_5_VS_5 = None
+    PROTOSS_10_VS_10 = None
+    PROTOSS_10_VS_11 = None
+    PROTOSS_20_VS_20 = None
+    PROTOSS_20_VS_23 = None
+    TERRAN_5_VS_5 = None
+    TERRAN_10_VS_10 = None
+    TERRAN_10_VS_11 = None
+    TERRAN_20_VS_20 = None
+    TERRAN_20_VS_23 = None
+    ZERG_5_VS_5 = None
+    ZERG_10_VS_10 = None
+    ZERG_10_VS_11 = None
+    ZERG_20_VS_20 = None
+    ZERG_20_VS_23 = None
+
+    @staticmethod
+    def associated_class():
+        return Smacv2TaskClass
