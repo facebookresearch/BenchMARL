@@ -6,12 +6,15 @@
 
 from __future__ import annotations
 
+import abc
+import copy
 import importlib
 
 import warnings
+from abc import abstractmethod
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Type
 
 from tensordict import TensorDictBase
 from torchrl.data import Composite
@@ -49,47 +52,12 @@ def _get_task_config_class(environemnt_name: str, task_name: str):
         return None
 
 
-class Task(Enum):
-    """Task.
-
-    Tasks are enums, one enum for each environment.
-    Each enum member has a config attribute that is a dictionary which can be loaded from .yaml
-    files. You can also access and modify this attribute directly.
-
-    Each new environment should inherit from Task and instantiate its members as
-
-    TASK_1 = None
-    TASK_2 = None
-    ...
-
-    Tasks configs are loaded from benchmarl/conf/environments
-    """
-
-    def __new__(cls, *args, **kwargs):
-        value = len(cls.__members__) + 1
-        obj = object.__new__(cls)
-        obj._value_ = value
-        return obj
-
-    def __init__(self, config: Dict[str, Any]):
+class TaskClass(abc.ABC):
+    def __init__(self, name: str, config: Dict[str, Any]):
+        self.name = name
         self.config = config
 
-    def update_config(self, config: Dict[str, Any]) -> Task:
-        """
-        Updates the task config
-
-        Args:
-            config (dictionary): The config to update in the task
-
-        Returns: The updated task
-
-        """
-        if self.config is None:
-            self.config = config
-        else:
-            self.config.update(config)
-        return self
-
+    @abstractmethod
     def get_env_fun(
         self,
         num_envs: int,
@@ -115,6 +83,7 @@ class Task(Enum):
         """
         raise NotImplementedError
 
+    @abstractmethod
     def supports_continuous_actions(self) -> bool:
         """
         Return true if your task supports continuous actions.
@@ -122,6 +91,7 @@ class Task(Enum):
         """
         raise NotImplementedError
 
+    @abstractmethod
     def supports_discrete_actions(self) -> bool:
         """
         Return true if your task supports discrete actions.
@@ -129,6 +99,7 @@ class Task(Enum):
         """
         raise NotImplementedError
 
+    @abstractmethod
     def max_steps(self, env: EnvBase) -> int:
         """
         The maximum number of steps allowed in an evaluation rollout.
@@ -139,6 +110,7 @@ class Task(Enum):
         """
         raise NotImplementedError
 
+    @abstractmethod
     def has_render(self, env: EnvBase) -> bool:
         """
         If env.render() should be called on the environment
@@ -149,6 +121,7 @@ class Task(Enum):
         """
         raise NotImplementedError
 
+    @abstractmethod
     def group_map(self, env: EnvBase) -> Dict[str, List[str]]:
         """
         The group_map mapping agents groups to agent names.
@@ -161,6 +134,7 @@ class Task(Enum):
         """
         raise NotImplementedError
 
+    @abstractmethod
     def observation_spec(self, env: EnvBase) -> Composite:
         """
         A spec for the observation.
@@ -193,6 +167,7 @@ class Task(Enum):
         """
         raise NotImplementedError
 
+    @abstractmethod
     def info_spec(self, env: EnvBase) -> Optional[Composite]:
         """
         A spec for the info.
@@ -205,6 +180,7 @@ class Task(Enum):
         """
         raise NotImplementedError
 
+    @abstractmethod
     def state_spec(self, env: EnvBase) -> Optional[Composite]:
         """
         A spec for the state.
@@ -216,6 +192,7 @@ class Task(Enum):
         """
         raise NotImplementedError
 
+    @abstractmethod
     def action_spec(self, env: EnvBase) -> Composite:
         """
         A spec for the action.
@@ -227,6 +204,7 @@ class Task(Enum):
         """
         raise NotImplementedError
 
+    @abstractmethod
     def action_mask_spec(self, env: EnvBase) -> Optional[Composite]:
         """
         A spec for the action mask.
@@ -234,14 +212,6 @@ class Task(Enum):
 
         Args:
             env (EnvBase): An environment created via self.get_env_fun
-
-        """
-        raise NotImplementedError
-
-    @staticmethod
-    def env_name() -> str:
-        """
-        The name of the environment in the benchmarl/conf/task folder
 
         """
         raise NotImplementedError
@@ -295,11 +265,73 @@ class Task(Enum):
         return []
 
     @staticmethod
+    def env_name() -> str:
+        raise NotImplementedError
+
+    @staticmethod
     def render_callback(experiment, env: EnvBase, data: TensorDictBase):
         try:
             return env.render(mode="rgb_array")
         except TypeError:
             return env.render()
+
+
+class Task(Enum):
+    """Task.
+
+    Tasks are enums, one enum for each environment.
+    Each enum member has a config attribute that is a dictionary which can be loaded from .yaml
+    files. You can also access and modify this attribute directly.
+
+    Each new environment should inherit from Task and instantiate its members as
+
+    TASK_1 = None
+    TASK_2 = None
+    ...
+
+    Tasks configs are loaded from benchmarl/conf/environments
+    """
+
+    @staticmethod
+    def associated_class() -> Type[TaskClass]:
+        """
+        The associated task class
+        """
+        raise NotImplementedError
+
+    @classmethod
+    def env_name(cls) -> str:
+        return cls.associated_class().env_name()
+
+    def get_task(self) -> TaskClass:
+        return self.associated_class()(
+            name=self.name, config=copy.deepcopy(self.config)
+        )
+
+    def __new__(cls, *args, **kwargs):
+        value = len(cls.__members__) + 1
+        obj = object.__new__(cls)
+        obj._value_ = value
+        return obj
+
+    def __init__(self, config: Dict[str, Any]):
+        self.config = config
+
+    def update_config(self, config: Dict[str, Any]) -> Task:
+        """
+        Updates the task config
+
+        Args:
+            config (dictionary): The config to update in the task
+
+        Returns: The updated task
+
+        """
+        if self.config is None:
+            self.config = config
+        else:
+            self.config.update(config)
+        return self
 
     def __repr__(self):
         cls_name = self.__class__.__name__

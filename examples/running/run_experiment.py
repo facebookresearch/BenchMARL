@@ -13,19 +13,26 @@ if __name__ == "__main__":
 
     # Loads from "benchmarl/conf/experiment/base_experiment.yaml"
     experiment_config = ExperimentConfig.get_from_yaml()
-
-    # Loads from "benchmarl/conf/task/vmas/balance.yaml"
-    task = VmasTask.BALANCE.get_from_yaml()
-
     # Loads from "benchmarl/conf/algorithm/mappo.yaml"
     algorithm_config = MappoConfig.get_from_yaml()
-
     # Loads from "benchmarl/conf/model/layers/mlp.yaml"
     model_config = MlpConfig.get_from_yaml()
     critic_model_config = MlpConfig.get_from_yaml()
 
+    task1 = VmasTask.BALANCE.get_from_yaml()
+    task1.update_config({"a": 1})
+    task1_immutable = task1.get_task()
+    assert task1.config["a"] == 1
+    assert task1_immutable.config["a"] == 1
+
+    task1.update_config({"a": 3})
+    assert task1.config["a"] == 3
+    assert task1_immutable.config["a"] == 1
+
+    # You can pass either task1 or task1_immutable to the experiment
+
     experiment = Experiment(
-        task=task,
+        task=task1_immutable,
         algorithm_config=algorithm_config,
         model_config=model_config,
         critic_model_config=critic_model_config,
