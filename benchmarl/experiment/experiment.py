@@ -311,9 +311,9 @@ class Experiment(CallbackNotifier):
         algorithm_config (AlgorithmConfig): the algorithm configuration
         model_config (ModelConfig): the policy model configuration
         seed (int): the seed for the experiment
-        config (ExperimentConfig): The experiment config. Note that some of the parameters 
-            of this config may go un-consumed based on the provided algorithm or model config. 
-            For example, all parameters off-policy algorithm would not be used when running 
+        config (ExperimentConfig): The experiment config. Note that some of the parameters
+            of this config may go un-consumed based on the provided algorithm or model config.
+            For example, all parameters off-policy algorithm would not be used when running
             an experiment with an on-policy algorithm.
         critic_model_config (ModelConfig, optional): the policy model configuration.
             If None, it defaults to model_config
