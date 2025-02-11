@@ -20,6 +20,7 @@ def experiment_config(tmp_path) -> ExperimentConfig:
     experiment_config: ExperimentConfig = ExperimentConfig.get_from_yaml()
     experiment_config.save_folder = str(save_dir)
     experiment_config.max_n_iters = 3
+    experiment_config.max_n_frames = None
 
     experiment_config.on_policy_n_minibatch_iters = 1
     experiment_config.on_policy_minibatch_size = 2
