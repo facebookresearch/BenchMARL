@@ -320,6 +320,17 @@ class Task(Enum):
         return cls.associated_class().env_name()
 
     def get_task(self, config: Optional[Dict[str, Any]] = None) -> TaskClass:
+        """
+        Get the ``TaskClass`` object associated with this enum element.
+
+        Args:
+            config (dict): Optional configuration of the task.
+            If not provided, the default configuration will be loaded from yaml.
+
+        Returns:
+            The TaskClass object for the task.
+
+        """
         if config is None:
             return self.get_from_yaml()
         return self.associated_class()(name=self.name, config=config)
