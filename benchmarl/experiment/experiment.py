@@ -297,7 +297,9 @@ class ExperimentConfig:
         if self.keep_checkpoints_num is not None and self.keep_checkpoints_num <= 0:
             raise ValueError("keep_checkpoints_num must be greater than zero or null")
         if self.max_n_frames is None and self.max_n_iters is None:
-            raise ValueError("n_iters and total_frames are both not set")
+            raise ValueError("max_n_frames and max_n_iters are both not set")
+        if self.max_n_frames is not None and self.max_n_iters is not None:
+            raise ValueError("max_n_frames and max_n_iters cannot both be set")
 
 
 class Experiment(CallbackNotifier):
@@ -309,7 +311,10 @@ class Experiment(CallbackNotifier):
         algorithm_config (AlgorithmConfig): the algorithm configuration
         model_config (ModelConfig): the policy model configuration
         seed (int): the seed for the experiment
-        config (ExperimentConfig): the experiment config
+        config (ExperimentConfig): The experiment config. Note that some of the parameters
+            of this config may go un-consumed based on the provided algorithm or model config.
+            For example, all parameters off-policy algorithm would not be used when running
+            an experiment with an on-policy algorithm.
         critic_model_config (ModelConfig, optional): the policy model configuration.
             If None, it defaults to model_config
         callbacks (list of Callback, optional): callbacks for this experiment
