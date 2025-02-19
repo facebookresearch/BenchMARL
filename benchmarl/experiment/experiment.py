@@ -12,6 +12,7 @@ import importlib
 import os
 import shutil
 import time
+import warnings
 from collections import deque, OrderedDict
 from dataclasses import dataclass, MISSING
 from pathlib import Path
@@ -299,7 +300,10 @@ class ExperimentConfig:
         if self.max_n_frames is None and self.max_n_iters is None:
             raise ValueError("max_n_frames and max_n_iters are both not set")
         if self.max_n_frames is not None and self.max_n_iters is not None:
-            raise ValueError("max_n_frames and max_n_iters cannot both be set")
+            warnings.warn(
+                f"max_n_frames and max_n_iters have both been set. The experiment will terminate after "
+                f"{self.get_max_n_iters(on_policy)} iterations ({self.get_max_n_frames(on_policy)} frames)."
+            )
 
 
 class Experiment(CallbackNotifier):
