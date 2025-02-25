@@ -8,7 +8,7 @@ from dataclasses import is_dataclass
 from pathlib import Path
 
 from benchmarl.algorithms.common import AlgorithmConfig
-from benchmarl.environments import Task, task_config_registry
+from benchmarl.environments import task_config_registry, TaskClass
 from benchmarl.environments.common import _type_check_task_config
 from benchmarl.experiment import Experiment, ExperimentConfig
 from benchmarl.models import model_config_registry
@@ -51,7 +51,7 @@ def load_experiment_from_hydra(
     )
 
 
-def load_task_config_from_hydra(cfg: DictConfig, task_name: str) -> Task:
+def load_task_config_from_hydra(cfg: DictConfig, task_name: str) -> TaskClass:
     """Returns a :class:`~benchmarl.environments.Task` from hydra config.
 
     Args:
@@ -69,7 +69,7 @@ def load_task_config_from_hydra(cfg: DictConfig, task_name: str) -> Task:
     cfg_dict_checked = _type_check_task_config(
         environment_name, inner_task_name, cfg_dict_checked
     )  # Only needed for the warning
-    return task_config_registry[task_name].update_config(cfg_dict_checked)
+    return task_config_registry[task_name].get_task(cfg_dict_checked)
 
 
 def load_experiment_config_from_hydra(cfg: DictConfig) -> ExperimentConfig:
