@@ -476,9 +476,10 @@ To load from a checkpoint, pass the absolute checkpoint file name to `experiment
 ```bash
 python benchmarl/run.py task=vmas/balance algorithm=mappo experiment.max_n_iters=6 experiment.on_policy_collected_frames_per_batch=100 experiment.restore_file="/hydra/experiment/folder/checkpoint/checkpoint_300.pt"
 ```
-
+Here is a python example when modifying the config
 [![Example](https://img.shields.io/badge/Example-blue.svg)](examples/checkpointing/reload_experiment.py)
-
+and one keeping the same config 
+[![Example](https://img.shields.io/badge/Example-blue.svg)](examples/checkpointing/resume_experiment.py).
 
 There are also ways to **resume** and **evaluate** hydra experiments directly from the file
 ```bash

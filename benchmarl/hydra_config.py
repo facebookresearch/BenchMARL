@@ -148,7 +148,11 @@ def reload_experiment_from_file(restore_file: str) -> Experiment:
         restore_file (str): The checkpoint file of the experiment reload.
 
     """
-    hydra_folder = _find_hydra_folder(restore_file)
+    try:
+        hydra_folder = _find_hydra_folder(restore_file)
+    except ValueError:
+        # Hydra was not used
+        return Experiment.reload_from_file(restore_file)
     with initialize(
         version_base=None,
         config_path="conf",

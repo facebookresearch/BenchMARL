@@ -47,7 +47,7 @@ if __name__ == "__main__":
         )
     )  # Restore from first checkpoint
 
-    # We keep te same configuration
+    # We keep tHe same configuration
     restored_experiment.run()
 
     # We can also evaluate
