@@ -531,7 +531,7 @@ class Experiment(CallbackNotifier):
                 self.env_func,
                 self.policy,
                 device=self.config.sampling_device,
-                storing_device=self.config.buffer_device,
+                storing_device=self.config.sampling_device,
                 frames_per_batch=self.config.collected_frames_per_batch(self.on_policy),
                 total_frames=self.config.get_max_n_frames(self.on_policy),
                 init_random_frames=(
@@ -694,7 +694,9 @@ class Experiment(CallbackNotifier):
                 group_batch = self.algorithm.process_batch(group, group_batch)
                 if not self.algorithm.has_rnn:
                     group_batch = group_batch.reshape(-1)
-                self.replay_buffers[group].extend(group_batch)
+
+                group_buffer = self.replay_buffers[group]
+                group_buffer.extend(group_batch.to(group_buffer.storage.device))
 
                 training_tds = []
                 for _ in range(self.config.n_optimizer_steps(self.on_policy)):
