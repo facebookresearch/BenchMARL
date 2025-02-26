@@ -531,7 +531,7 @@ class Experiment(CallbackNotifier):
                 self.env_func,
                 self.policy,
                 device=self.config.sampling_device,
-                storing_device=self.config.train_device,
+                storing_device=self.config.buffer_device,
                 frames_per_batch=self.config.collected_frames_per_batch(self.on_policy),
                 total_frames=self.config.get_max_n_frames(self.on_policy),
                 init_random_frames=(
