@@ -17,5 +17,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     checkpoint_file = str(Path(args.checkpoint_file).resolve())
+
     experiment = reload_experiment_from_file(checkpoint_file)
+
     experiment.evaluate()

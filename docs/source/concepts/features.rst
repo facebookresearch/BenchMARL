@@ -47,6 +47,7 @@ Reloading
 To load from a checkpoint, you can do it in multiple ways:
 
 You can pass the absolute checkpoint file name to ``experiment.restore_file``.
+This allows you to change some parts of the config (e.g., task parameters to evaluate in a new setting).
 
 .. code-block:: console
 

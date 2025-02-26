@@ -10,6 +10,7 @@ import copy
 import importlib
 
 import os
+import pickle
 import shutil
 import time
 import warnings
@@ -582,12 +583,16 @@ class Experiment(CallbackNotifier):
             self.name = Path(self.config.restore_file).parent.parent.resolve().name
             self.folder_name = save_folder / self.name
 
-        if (
-            len(self.config.loggers)
-            or self.config.checkpoint_interval > 0
-            or self.config.create_json
-        ):
-            self.folder_name.mkdir(parents=False, exist_ok=True)
+        self.folder_name.mkdir(parents=False, exist_ok=True)
+        with open(self.folder_name / "config.pkl", "wb") as f:
+            pickle.dump(self.task, f)
+            pickle.dump(self.task.config if self.task.config is not None else {}, f)
+            pickle.dump(self.algorithm_config, f)
+            pickle.dump(self.model_config, f)
+            pickle.dump(self.seed, f)
+            pickle.dump(self.config, f)
+            pickle.dump(self.critic_model_config, f)
+            pickle.dump(self.callbacks, f)
 
     def _setup_logger(self):
         self.logger = Logger(
@@ -959,3 +964,46 @@ class Experiment(CallbackNotifier):
         )
         self.load_state_dict(loaded_dict)
         return self
+
+    @staticmethod
+    def reload_from_file(restore_file: str) -> Experiment:
+        """
+        Restores the experiment from the checkpoint file.
+
+        This method expects the same folder structure created when an experiment is run.
+        The checkpoint file (``restore_file``) is in the checkpoints directory and a config.pkl file is
+        present a level above at restore_file/../../config.pkl
+
+        Args:
+            restore_file (str): The checkpoint file (.pt) of the experiment reload.
+
+        Returns:
+            The reloaded experiment.
+
+        """
+        experiment_folder = Path(restore_file).parent.parent.resolve()
+        config_file = experiment_folder / "config.pkl"
+        if not os.path.exists(config_file):
+            raise ValueError("config.pkl file not found in experiment folder.")
+        with open(config_file, "rb") as f:
+            task = pickle.load(f)
+            task_config = pickle.load(f)
+            algorithm_config = pickle.load(f)
+            model_config = pickle.load(f)
+            seed = pickle.load(f)
+            experiment_config = pickle.load(f)
+            critic_model_config = pickle.load(f)
+            callbacks = pickle.load(f)
+        task.config = task_config
+        experiment_config.restore_file = restore_file
+        experiment = Experiment(
+            task=task,
+            algorithm_config=algorithm_config,
+            model_config=model_config,
+            seed=seed,
+            config=experiment_config,
+            callbacks=callbacks,
+            critic_model_config=critic_model_config,
+        )
+        print(f"\nReloaded experiment {experiment.name} from {restore_file}.")
+        return experiment
