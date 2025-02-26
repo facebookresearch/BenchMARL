@@ -21,6 +21,15 @@ if _has_hydra:
     from omegaconf import DictConfig, OmegaConf
 
 
+class _HydraMissingMetadataError(FileNotFoundError):
+    def __init__(
+        self,
+        message=".hydra folder not found (should be max 3 levels above checkpoint file",
+    ):
+        self.message = message
+        super().__init__(self.message)
+
+
 def load_experiment_from_hydra(
     cfg: DictConfig, task_name: str, callbacks=()
 ) -> Experiment:
@@ -133,9 +142,7 @@ def _find_hydra_folder(restore_file: str) -> str:
         if hydra_dir.exists() and hydra_dir.is_dir():
             return str(hydra_dir)
         current_folder = current_folder.parent
-    raise ValueError(
-        ".hydra folder not found (should be max 3 levels above checkpoint file"
-    )
+    raise _HydraMissingMetadataError()
 
 
 def reload_experiment_from_file(restore_file: str) -> Experiment:
@@ -150,15 +157,10 @@ def reload_experiment_from_file(restore_file: str) -> Experiment:
     """
     try:
         hydra_folder = _find_hydra_folder(restore_file)
-    except ValueError as e:
-        if (
-            str(e)
-            == ".hydra folder not found (should be max 3 levels above checkpoint file"
-        ):
-            # Hydra was not used
-            return Experiment.reload_from_file(restore_file)
-        else:
-            raise e
+    except _HydraMissingMetadataError:
+        # Hydra was not used
+        return Experiment.reload_from_file(restore_file)
+
     with initialize(
         version_base=None,
         config_path="conf",

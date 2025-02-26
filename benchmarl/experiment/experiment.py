@@ -968,7 +968,7 @@ class Experiment(CallbackNotifier):
         """
         Restores the experiment from the checkpoint file.
 
-        If expects the same folder structure created when an experiment is run.
+        This method expects the same folder structure created when an experiment is run.
         The checkpoint file (``restore_file``) is in the checkpoints directory and a config.pkl file is
         present a level above at restore_file/../../config.pkl
 
