@@ -49,7 +49,7 @@ if __name__ == "__main__":
     # Let's do 3 more iters
     experiment_config.max_n_iters += 3
 
-    # We can also chenge part of the configuration (algorithm, task). For example to evaluate in a new task.
+    # We can also change part of the configuration (algorithm, task). For example to evaluate in a new task.
     experiment = Experiment(
         algorithm_config=algorithm_config,
         model_config=model_config,
