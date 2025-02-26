@@ -6,7 +6,7 @@
 
 from pathlib import Path
 
-from benchmarl.experiment import Experiment
+from benchmarl.hydra_config import reload_experiment_from_file
 
 if __name__ == "__main__":
 
@@ -22,5 +22,5 @@ if __name__ == "__main__":
         / "outputs/2024-09-09/20-39-31/mappo_balance_mlp__cd977b69_24_09_09-20_39_31/checkpoints/checkpoint_100.pt"
     )
 
-    experiment = Experiment.reload_from_file(str(restore_file))
+    experiment = reload_experiment_from_file(str(restore_file))
     experiment.evaluate()
