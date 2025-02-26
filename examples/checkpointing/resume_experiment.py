@@ -10,6 +10,7 @@ from pathlib import Path
 from benchmarl.algorithms import MappoConfig
 from benchmarl.environments import VmasTask
 from benchmarl.experiment import Experiment, ExperimentConfig
+from benchmarl.hydra_config import reload_experiment_from_file
 from benchmarl.models.mlp import MlpConfig
 
 if __name__ == "__main__":
@@ -39,7 +40,7 @@ if __name__ == "__main__":
     experiment.run()
 
     # Now we tell it where to resume from
-    restored_experiment = Experiment.reload_from_file(
+    restored_experiment = reload_experiment_from_file(
         (
             experiment.folder_name
             / "checkpoints"
