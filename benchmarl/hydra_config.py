@@ -150,9 +150,15 @@ def reload_experiment_from_file(restore_file: str) -> Experiment:
     """
     try:
         hydra_folder = _find_hydra_folder(restore_file)
-    except ValueError:
-        # Hydra was not used
-        return Experiment.reload_from_file(restore_file)
+    except ValueError as e:
+        if (
+            str(e)
+            == ".hydra folder not found (should be max 3 levels above checkpoint file"
+        ):
+            # Hydra was not used
+            return Experiment.reload_from_file(restore_file)
+        else:
+            raise e
     with initialize(
         version_base=None,
         config_path="conf",
