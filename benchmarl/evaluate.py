@@ -6,7 +6,7 @@
 import argparse
 from pathlib import Path
 
-from experiment import Experiment
+from benchmarl.experiment import Experiment
 
 
 if __name__ == "__main__":
