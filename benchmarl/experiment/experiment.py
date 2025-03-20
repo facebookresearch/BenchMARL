@@ -551,6 +551,9 @@ class Experiment(CallbackNotifier):
     def _setup_name(self):
         self.algorithm_name = self.algorithm_config.associated_class().__name__.lower()
         self.model_name = self.model_config.associated_class().__name__.lower()
+        self.critic_model_name = (
+            self.critic_model_config.associated_class().__name__.lower()
+        )
         self.environment_name = self.task.env_name().lower()
         self.task_name = self.task.name.lower()
         self._checkpointed_files = deque([])
@@ -608,6 +611,7 @@ class Experiment(CallbackNotifier):
             seed=self.seed,
         )
         self.logger.log_hparams(
+            critic_model_name=self.critic_model_name,
             experiment_config=self.config.__dict__,
             algorithm_config=self.algorithm_config.__dict__,
             model_config=self.model_config.__dict__,
