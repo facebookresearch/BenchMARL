@@ -15,7 +15,11 @@ pip uninstall --yes torchrl
 pip uninstall --yes tensordict
 
 cd ..
-python -m pip install git+https://github.com/pytorch-labs/tensordict.git
+#python -m pip install git+https://github.com/pytorch-labs/tensordict.git
+git clone https://github.com/pytorch-labs/tensordict.git
+cd tensordict
+python setup.py develop
+cd ..
 git clone https://github.com/pytorch/rl.git
 cd rl
 python setup.py develop
