@@ -41,4 +41,4 @@ jobs:
         bash .github/unittest/install_meltingpot.sh
     - name: Tests
       run: |
-        xvfb-run -s "-screen 0 1024x768x24" pytest test/test_pettingzoo.py test/test_vmas.py  --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml --cov-report=html
+        xvfb-run -s "-screen 0 1024x768x24" pytest test/test_algorithm.py test/test_models.py test/test_task.py test/test_pettingzoo.py test/test_vmas.py  --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml --cov-report=html
