@@ -551,6 +551,9 @@ class Experiment(CallbackNotifier):
     def _setup_name(self):
         self.algorithm_name = self.algorithm_config.associated_class().__name__.lower()
         self.model_name = self.model_config.associated_class().__name__.lower()
+        self.critic_model_name = (
+            self.critic_model_config.associated_class().__name__.lower()
+        )
         self.environment_name = self.task.env_name().lower()
         self.task_name = self.task.name.lower()
         self._checkpointed_files = deque([])
@@ -608,9 +611,11 @@ class Experiment(CallbackNotifier):
             seed=self.seed,
         )
         self.logger.log_hparams(
+            critic_model_name=self.critic_model_name,
             experiment_config=self.config.__dict__,
             algorithm_config=self.algorithm_config.__dict__,
             model_config=self.model_config.__dict__,
+            critic_model_config=self.critic_model_config.__dict__,
             task_config=self.task.config,
             continuous_actions=self.continuous_actions,
             on_policy=self.on_policy,
@@ -619,6 +624,7 @@ class Experiment(CallbackNotifier):
     def run(self):
         """Run the experiment until completion."""
         try:
+            seed_everything(self.seed)
             torch.cuda.empty_cache()
             self._collection_loop()
         except KeyboardInterrupt as interrupt:
@@ -632,6 +638,7 @@ class Experiment(CallbackNotifier):
 
     def evaluate(self):
         """Run just the evaluation loop once."""
+        seed_everything(self.seed)
         self._evaluation_loop()
         self.logger.commit()
         print(
