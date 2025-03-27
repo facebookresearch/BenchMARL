@@ -3,13 +3,12 @@
 #  This source code is licensed under the license found in the
 #  LICENSE file in the root directory of this source tree.
 #
-
-
+import copy
 from typing import Callable, Dict, List, Optional
 
 import numpy as np
 
-from benchmarl.environments.common import Task
+from benchmarl.environments.common import Task, TaskClass
 
 from benchmarl.utils import DEVICE_TYPING
 
@@ -137,6 +136,12 @@ class MyenvTask(Task):
 
     MY_TASK = None
 
+    @staticmethod
+    def associated_class():
+        return MyEnvClass
+
+
+class MyEnvClass(TaskClass):
     def get_env_fun(
         self,
         num_envs: int,
@@ -144,14 +149,14 @@ class MyenvTask(Task):
         seed: Optional[int],
         device: DEVICE_TYPING,
     ) -> Callable[[], EnvBase]:
-
+        config = copy.deepcopy(self.config)
         return lambda: PettingZooWrapper(
             MyCustomEnv2(),
             categorical_actions=True,
             device=device,
             seed=seed,
             return_state=False,
-            **self.config,
+            **config,
         )
 
     def supports_continuous_actions(self) -> bool:
