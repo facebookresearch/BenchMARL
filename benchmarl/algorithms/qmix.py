@@ -9,7 +9,7 @@ from typing import Dict, Iterable, Tuple, Type
 
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModule, TensorDictSequential
-from torchrl.data import CompositeSpec, UnboundedContinuousTensorSpec
+from torchrl.data import Composite, Unbounded
 from torchrl.modules import EGreedyModule, QMixer, QValueModule
 from torchrl.objectives import LossModule, QMixerLoss, ValueEstimators
 
@@ -83,14 +83,14 @@ class Qmix(Algorithm):
             self.action_spec[group, "action"].space.n,
         ]
 
-        actor_input_spec = CompositeSpec(
+        actor_input_spec = Composite(
             {group: self.observation_spec[group].clone().to(self.device)}
         )
 
-        actor_output_spec = CompositeSpec(
+        actor_output_spec = Composite(
             {
-                group: CompositeSpec(
-                    {"action_value": UnboundedContinuousTensorSpec(shape=logits_shape)},
+                group: Composite(
+                    {"action_value": Unbounded(shape=logits_shape)},
                     shape=(n_agents,),
                 )
             }
@@ -177,13 +177,19 @@ class Qmix(Algorithm):
 
     def get_mixer(self, group: str) -> TensorDictModule:
         n_agents = len(self.group_map[group])
-        group_observation_key = list(self.observation_spec[group].keys())[0]
 
         if self.state_spec is not None:
-            global_state_key = list(self.state_spec.keys())[0]
+            global_state_key = list(self.state_spec.keys(True, True))[0]
             state_shape = self.state_spec[global_state_key].shape
             in_keys = [(group, "chosen_action_value"), global_state_key]
         else:
+            group_observation_keys = list(self.observation_spec[group].keys(True, True))
+            if len(group_observation_keys) > 1:
+                raise ValueError(
+                    "QMIX called without a global state and multiple observation keys, currently the mixer"
+                    "takes only one observation key, please raise an issue if you need this fauture."
+                )
+            group_observation_key = group_observation_keys[0]
             state_shape = self.observation_spec[group, group_observation_key].shape
             in_keys = [(group, "chosen_action_value"), (group, group_observation_key)]
 

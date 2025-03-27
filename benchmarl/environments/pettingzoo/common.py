@@ -4,9 +4,10 @@
 #  LICENSE file in the root directory of this source tree.
 #
 
+import copy
 from typing import Callable, Dict, List, Optional
 
-from torchrl.data import CompositeSpec
+from torchrl.data import Composite
 from torchrl.envs import EnvBase, PettingZooEnv
 
 from benchmarl.environments.common import Task
@@ -35,9 +36,9 @@ class PettingZooTask(Task):
         seed: Optional[int],
         device: DEVICE_TYPING,
     ) -> Callable[[], EnvBase]:
+        config = copy.deepcopy(self.config)
         if self.supports_continuous_actions() and self.supports_discrete_actions():
-            self.config.update({"continuous_actions": continuous_actions})
-
+            config.update({"continuous_actions": continuous_actions})
         return lambda: PettingZooEnv(
             categorical_actions=True,
             device=device,
@@ -45,7 +46,7 @@ class PettingZooTask(Task):
             parallel=True,
             return_state=self.has_state(),
             render_mode="rgb_array",
-            **self.config
+            **config
         )
 
     def supports_continuous_actions(self) -> bool:
@@ -104,12 +105,12 @@ class PettingZooTask(Task):
     def group_map(self, env: EnvBase) -> Dict[str, List[str]]:
         return env.group_map
 
-    def state_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
+    def state_spec(self, env: EnvBase) -> Optional[Composite]:
         if "state" in env.observation_spec:
-            return CompositeSpec({"state": env.observation_spec["state"].clone()})
+            return Composite({"state": env.observation_spec["state"].clone()})
         return None
 
-    def action_mask_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
+    def action_mask_spec(self, env: EnvBase) -> Optional[Composite]:
         observation_spec = env.observation_spec.clone()
         for group in self.group_map(env):
             group_obs_spec = observation_spec[group]
@@ -124,7 +125,7 @@ class PettingZooTask(Task):
             return None
         return observation_spec
 
-    def observation_spec(self, env: EnvBase) -> CompositeSpec:
+    def observation_spec(self, env: EnvBase) -> Composite:
         observation_spec = env.observation_spec.clone()
         for group in self.group_map(env):
             group_obs_spec = observation_spec[group]
@@ -135,7 +136,7 @@ class PettingZooTask(Task):
             del observation_spec["state"]
         return observation_spec
 
-    def info_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
+    def info_spec(self, env: EnvBase) -> Optional[Composite]:
         observation_spec = env.observation_spec.clone()
         for group in self.group_map(env):
             group_obs_spec = observation_spec[group]
@@ -146,7 +147,7 @@ class PettingZooTask(Task):
             del observation_spec["state"]
         return observation_spec
 
-    def action_spec(self, env: EnvBase) -> CompositeSpec:
+    def action_spec(self, env: EnvBase) -> Composite:
         return env.full_action_spec
 
     @staticmethod

@@ -4,15 +4,14 @@
 #  LICENSE file in the root directory of this source tree.
 #
 
-
 import pytest
-
 from benchmarl.algorithms import (
     algorithm_config_registry,
     IddpgConfig,
     IppoConfig,
     IsacConfig,
     MaddpgConfig,
+    MappoConfig,
     MasacConfig,
     QmixConfig,
 )
@@ -74,6 +73,24 @@ class TestVmas:
         )
         experiment.run()
 
+    def test_collect_with_grad(
+        self,
+        experiment_config,
+        mlp_sequence_config,
+        algo_config: AlgorithmConfig = IppoConfig,
+        task: Task = VmasTask.BALANCE,
+    ):
+        task = task.get_from_yaml()
+        experiment_config.collect_with_grad = True
+        experiment = Experiment(
+            algorithm_config=algo_config.get_from_yaml(),
+            model_config=mlp_sequence_config,
+            seed=0,
+            config=experiment_config,
+            task=task,
+        )
+        experiment.run()
+
     @pytest.mark.parametrize(
         "algo_config", [IppoConfig, QmixConfig, IsacConfig, IddpgConfig]
     )
@@ -90,6 +107,60 @@ class TestVmas:
             algorithm_config=algo_config.get_from_yaml(),
             model_config=mlp_gnn_sequence_config,
             critic_model_config=mlp_gnn_sequence_config,
+            seed=0,
+            config=experiment_config,
+            task=task,
+        )
+        experiment.run()
+
+    @pytest.mark.parametrize(
+        "algo_config", [MaddpgConfig, IppoConfig, QmixConfig, MasacConfig]
+    )
+    @pytest.mark.parametrize("task", [VmasTask.NAVIGATION])
+    def test_gru(
+        self,
+        algo_config: AlgorithmConfig,
+        task: Task,
+        experiment_config,
+        gru_mlp_sequence_config,
+        share_params: bool = False,
+    ):
+        algo_config = algo_config.get_from_yaml()
+        if algo_config.has_critic():
+            algo_config.share_param_critic = share_params
+        experiment_config.share_policy_params = share_params
+        task = task.get_from_yaml()
+        experiment = Experiment(
+            algorithm_config=algo_config,
+            model_config=gru_mlp_sequence_config,
+            critic_model_config=gru_mlp_sequence_config,
+            seed=0,
+            config=experiment_config,
+            task=task,
+        )
+        experiment.run()
+
+    @pytest.mark.parametrize(
+        "algo_config", [IddpgConfig, MappoConfig, QmixConfig, IsacConfig]
+    )
+    @pytest.mark.parametrize("task", [VmasTask.NAVIGATION])
+    def test_lstm(
+        self,
+        algo_config: AlgorithmConfig,
+        task: Task,
+        experiment_config,
+        lstm_mlp_sequence_config,
+        share_params: bool = False,
+    ):
+        algo_config = algo_config.get_from_yaml()
+        if algo_config.has_critic():
+            algo_config.share_param_critic = share_params
+        experiment_config.share_policy_params = share_params
+        task = task.get_from_yaml()
+        experiment = Experiment(
+            algorithm_config=algo_config,
+            model_config=lstm_mlp_sequence_config,
+            critic_model_config=lstm_mlp_sequence_config,
             seed=0,
             config=experiment_config,
             task=task,

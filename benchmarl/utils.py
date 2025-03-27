@@ -6,10 +6,16 @@
 
 import importlib
 import random
-from typing import Any, Dict, Union
+import typing
+from typing import Any, Callable, Dict, List, Union
 
 import torch
 import yaml
+from torchrl.data import Composite
+from torchrl.envs import Compose, EnvBase, InitTracker, TensorDictPrimer, TransformedEnv
+
+if typing.TYPE_CHECKING:
+    from benchmarl.models import ModelConfig
 
 _has_numpy = importlib.util.find_spec("numpy") is not None
 
@@ -53,3 +59,53 @@ def seed_everything(seed: int):
         import numpy
 
         numpy.random.seed(seed)
+
+
+def _add_rnn_transforms(
+    env_fun: Callable[[], EnvBase],
+    group_map: Dict[str, List[str]],
+    model_config: "ModelConfig",
+) -> Callable[[], EnvBase]:
+    """
+    This function adds RNN specific transforms to the environment
+
+    Args:
+        env_fun (callable): a function that takes no args and creates an environment
+        group_map (Dict[str,List[str]]): the group_map of the agents
+        model_config (ModelConfig): the model configuration
+
+    Returns: a function that takes no args and creates an environment
+
+    """
+
+    def model_fun():
+        env = env_fun()
+        spec_actor = Composite(
+            {
+                group: Composite(
+                    model_config._get_model_state_spec_inner(group=group).expand(
+                        len(agents),
+                        *model_config._get_model_state_spec_inner(group=group).shape
+                    ),
+                    shape=(len(agents),),
+                )
+                for group, agents in group_map.items()
+            }
+        )
+
+        out_env = TransformedEnv(
+            env,
+            Compose(
+                *(
+                    [InitTracker(init_key="is_init")]
+                    + (
+                        [TensorDictPrimer(spec_actor, reset_key="_reset")]
+                        if len(spec_actor.keys(True, True)) > 0
+                        else []
+                    )
+                )
+            ),
+        )
+        return out_env
+
+    return model_fun

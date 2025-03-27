@@ -12,3 +12,4 @@ loss_critic_type: "l2"
 lmbda: 0.9
 scale_mapping: "biased_softplus_1.0"
 use_tanh_normal: True
+minibatch_advantage: False

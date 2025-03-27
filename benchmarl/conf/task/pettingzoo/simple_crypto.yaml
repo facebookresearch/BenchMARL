@@ -1,6 +1,7 @@
 defaults:
-  - _self_
   - pettingzoo_simple_crypto_config
+  - _self_
+
 
 task: "simple_crypto_v3"
 max_cycles: 100

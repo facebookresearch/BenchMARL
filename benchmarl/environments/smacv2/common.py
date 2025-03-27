@@ -3,12 +3,12 @@
 #  This source code is licensed under the license found in the
 #  LICENSE file in the root directory of this source tree.
 #
-
+import copy
 from typing import Callable, Dict, List, Optional
 
 import torch
 from tensordict import TensorDictBase
-from torchrl.data import CompositeSpec
+from torchrl.data import Composite
 from torchrl.envs import EnvBase
 from torchrl.envs.libs.smacv2 import SMACv2Env
 
@@ -42,8 +42,9 @@ class Smacv2Task(Task):
         seed: Optional[int],
         device: DEVICE_TYPING,
     ) -> Callable[[], EnvBase]:
+        config = copy.deepcopy(self.config)
         return lambda: SMACv2Env(
-            categorical_actions=True, seed=seed, device=device, **self.config
+            categorical_actions=True, seed=seed, device=device, **config
         )
 
     def supports_continuous_actions(self) -> bool:
@@ -61,33 +62,33 @@ class Smacv2Task(Task):
     def group_map(self, env: EnvBase) -> Dict[str, List[str]]:
         return env.group_map
 
-    def state_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
+    def state_spec(self, env: EnvBase) -> Optional[Composite]:
         observation_spec = env.observation_spec.clone()
         del observation_spec["info"]
         del observation_spec["agents"]
         return observation_spec
 
-    def action_mask_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
+    def action_mask_spec(self, env: EnvBase) -> Optional[Composite]:
         observation_spec = env.observation_spec.clone()
         del observation_spec["info"]
         del observation_spec["state"]
         del observation_spec[("agents", "observation")]
         return observation_spec
 
-    def observation_spec(self, env: EnvBase) -> CompositeSpec:
+    def observation_spec(self, env: EnvBase) -> Composite:
         observation_spec = env.observation_spec.clone()
         del observation_spec["info"]
         del observation_spec["state"]
         del observation_spec[("agents", "action_mask")]
         return observation_spec
 
-    def info_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
+    def info_spec(self, env: EnvBase) -> Optional[Composite]:
         observation_spec = env.observation_spec.clone()
         del observation_spec["state"]
         del observation_spec["agents"]
         return observation_spec
 
-    def action_spec(self, env: EnvBase) -> CompositeSpec:
+    def action_spec(self, env: EnvBase) -> Composite:
         return env.full_action_spec
 
     @staticmethod

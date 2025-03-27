@@ -1,6 +1,6 @@
 defaults:
-  - _self_
   - pettingzoo_multiwalker_config
+  - _self_
 
 task: "multiwalker_v9"
 # number of bipedal walker agents in environment

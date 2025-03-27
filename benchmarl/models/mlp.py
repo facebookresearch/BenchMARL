@@ -46,6 +46,8 @@ class Mlp(Model):
             share_params=kwargs.pop("share_params"),
             device=kwargs.pop("device"),
             action_spec=kwargs.pop("action_spec"),
+            model_index=kwargs.pop("model_index"),
+            is_critic=kwargs.pop("is_critic"),
         )
 
         self.input_features = sum(
@@ -99,7 +101,7 @@ class Mlp(Model):
             if input_shape[-1] != self.n_agents:
                 raise ValueError(
                     "If the MLP input has the agent dimension,"
-                    " the second to last spec dimension should be the number of agents, got {self.input_spec}"
+                    f" the second to last spec dimension should be the number of agents, got {self.input_spec}"
                 )
         if (
             self.output_has_agent_dim

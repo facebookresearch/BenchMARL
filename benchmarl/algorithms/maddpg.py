@@ -9,13 +9,8 @@ from typing import Dict, Iterable, Tuple, Type
 
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModule, TensorDictSequential
-from torchrl.data import CompositeSpec, UnboundedContinuousTensorSpec
-from torchrl.modules import (
-    AdditiveGaussianWrapper,
-    Delta,
-    ProbabilisticActor,
-    TanhDelta,
-)
+from torchrl.data import Composite, Unbounded
+from torchrl.modules import AdditiveGaussianModule, Delta, ProbabilisticActor, TanhDelta
 from torchrl.objectives import DDPGLoss, LossModule, ValueEstimators
 
 from benchmarl.algorithms.common import Algorithm, AlgorithmConfig
@@ -94,13 +89,13 @@ class Maddpg(Algorithm):
         if continuous:
             n_agents = len(self.group_map[group])
             logits_shape = list(self.action_spec[group, "action"].shape)
-            actor_input_spec = CompositeSpec(
+            actor_input_spec = Composite(
                 {group: self.observation_spec[group].clone().to(self.device)}
             )
-            actor_output_spec = CompositeSpec(
+            actor_output_spec = Composite(
                 {
-                    group: CompositeSpec(
-                        {"param": UnboundedContinuousTensorSpec(shape=logits_shape)},
+                    group: Composite(
+                        {"param": Unbounded(shape=logits_shape)},
                         shape=(n_agents,),
                     )
                 }
@@ -123,12 +118,14 @@ class Maddpg(Algorithm):
                 in_keys=[(group, "param")],
                 out_keys=[(group, "action")],
                 distribution_class=TanhDelta if self.use_tanh_mapping else Delta,
-                distribution_kwargs={
-                    "min": self.action_spec[(group, "action")].space.low,
-                    "max": self.action_spec[(group, "action")].space.high,
-                }
-                if self.use_tanh_mapping
-                else {},
+                distribution_kwargs=(
+                    {
+                        "low": self.action_spec[(group, "action")].space.low,
+                        "high": self.action_spec[(group, "action")].space.high,
+                    }
+                    if self.use_tanh_mapping
+                    else {}
+                ),
                 return_log_prob=False,
                 safe=not self.use_tanh_mapping,
             )
@@ -141,15 +138,17 @@ class Maddpg(Algorithm):
     def _get_policy_for_collection(
         self, policy_for_loss: TensorDictModule, group: str, continuous: bool
     ) -> TensorDictModule:
-        return AdditiveGaussianWrapper(
-            policy_for_loss,
+        noise_module = AdditiveGaussianModule(
+            spec=self.action_spec,
             annealing_num_steps=self.experiment_config.get_exploration_anneal_frames(
                 self.on_policy
             ),
             action_key=(group, "action"),
             sigma_init=self.experiment_config.exploration_eps_init,
             sigma_end=self.experiment_config.exploration_eps_end,
+            # device=policy_for_loss.device, TODO add device
         )
+        return TensorDictSequential(*policy_for_loss, noise_module)
 
     def process_batch(self, group: str, batch: TensorDictBase) -> TensorDictBase:
         keys = list(batch.keys(True, True))
@@ -189,18 +188,14 @@ class Maddpg(Algorithm):
         modules = []
 
         if self.share_param_critic:
-            critic_output_spec = CompositeSpec(
-                {"state_action_value": UnboundedContinuousTensorSpec(shape=(1,))}
+            critic_output_spec = Composite(
+                {"state_action_value": Unbounded(shape=(1,))}
             )
         else:
-            critic_output_spec = CompositeSpec(
+            critic_output_spec = Composite(
                 {
-                    group: CompositeSpec(
-                        {
-                            "state_action_value": UnboundedContinuousTensorSpec(
-                                shape=(n_agents, 1)
-                            )
-                        },
+                    group: Composite(
+                        {"state_action_value": Unbounded(shape=(n_agents, 1))},
                         shape=(n_agents,),
                     )
                 }
@@ -217,7 +212,7 @@ class Maddpg(Algorithm):
 
             critic_input_spec = self.state_spec.clone().update(
                 {
-                    "global_action": UnboundedContinuousTensorSpec(
+                    "global_action": Unbounded(
                         shape=(self.action_spec[group, "action"].shape[-1] * n_agents,)
                     )
                 }
@@ -238,7 +233,7 @@ class Maddpg(Algorithm):
             )
 
         else:
-            critic_input_spec = CompositeSpec(
+            critic_input_spec = Composite(
                 {
                     group: self.observation_spec[group]
                     .clone()
@@ -299,3 +294,7 @@ class MaddpgConfig(AlgorithmConfig):
     @staticmethod
     def on_policy() -> bool:
         return False
+
+    @staticmethod
+    def has_centralized_critic() -> bool:
+        return True

@@ -1,6 +1,7 @@
 defaults:
-  - _self_
   - pettingzoo_simple_world_comm_config
+  - _self_
+
 
 task: "simple_world_comm_v3"
 num_good: 2

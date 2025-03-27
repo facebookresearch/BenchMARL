@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 #
 
-
 import pytest
 
 from benchmarl.algorithms import algorithm_config_registry, MappoConfig, QmixConfig
@@ -33,6 +32,8 @@ class TestSmacv2:
                 task=task,
             )
             experiment.run()
+        else:
+            pytest.skip("No support for discrete actions")
 
     @pytest.mark.parametrize("algo_config", [QmixConfig, MappoConfig])
     @pytest.mark.parametrize(
@@ -70,6 +71,26 @@ class TestSmacv2:
             algorithm_config=algo_config.get_from_yaml(),
             model_config=mlp_gnn_sequence_config,
             critic_model_config=mlp_gnn_sequence_config,
+            seed=0,
+            config=experiment_config,
+            task=task,
+        )
+        experiment.run()
+
+    @pytest.mark.parametrize("algo_config", [QmixConfig])
+    @pytest.mark.parametrize("task", [Smacv2Task.PROTOSS_5_VS_5])
+    def test_gru(
+        self,
+        algo_config,
+        task,
+        experiment_config,
+        gru_mlp_sequence_config,
+    ):
+        task = task.get_from_yaml()
+        experiment = Experiment(
+            algorithm_config=algo_config.get_from_yaml(),
+            model_config=gru_mlp_sequence_config,
+            critic_model_config=gru_mlp_sequence_config,
             seed=0,
             config=experiment_config,
             task=task,

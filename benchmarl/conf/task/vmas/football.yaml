@@ -1,0 +1,66 @@
+defaults:
+  - vmas_football_config
+  - _self_
+
+
+max_steps: 500
+
+# Agents config
+n_blue_agents: 3
+n_red_agents: 3
+ai_red_agents: True  # What agents should be learning and what controlled by the heuristic (ai)
+
+# When you have 5 blue agents, physical differences can be introduced:
+# 1 goalkeeper -> slow and big
+# 2 defenders -> normal size and speed (agent_size, u_multiplier, max_speed)
+# 2 attackers -> small and fast
+physically_different: False
+
+# Agent spawning
+spawn_in_formation: False
+only_blue_formation: True  # Only spawn blue agents in formation
+formation_agents_per_column: 2
+randomise_formation_indices: False  # If False, each agent will always be in the same formation spot
+formation_noise: 0.2  # Noise on formation positions
+
+# Ai config
+n_traj_points: 0  # Number of spline trajectory points to plot for heuristic (ai) agents
+ai_strength: 1.0  # The speed of the ai 0<=x<=1
+ai_decision_strength: 1.0  # The decision strength of the ai 0<=x<=1
+ai_precision_strength: 1.0  # The precision strength of the ai 0<=x<=1
+
+# Task sizes
+agent_size: 0.025
+goal_size: 0.35
+goal_depth: 0.1
+pitch_length: 3.0
+pitch_width: 1.5
+ball_mass: 0.25
+ball_size: 0.02
+
+# Actions
+u_multiplier: 0.1
+
+# Actions shooting
+enable_shooting: False  # Whether to enable an extra 2 actions (for rotation and shooting). Only available for non-ai agents
+u_rot_multiplier: 0.0003
+u_shoot_multiplier: 0.6
+shooting_radius: 0.08
+shooting_angle: 1.5708
+
+# Speeds
+max_speed: 0.15
+ball_max_speed: 0.3
+
+# Rewards
+dense_reward: True
+pos_shaping_factor_ball_goal: 10.0  # Reward for moving the ball towards the opponents' goal. This can be annealed in a curriculum.
+pos_shaping_factor_agent_ball: 0.1  # Reward for moving the closest agent to the ball in a team closer to it.
+# This reward does not trigger if the agent is less than distance_to_ball_trigger from the ball or the ball is moving
+distance_to_ball_trigger: 0.4
+scoring_reward: 100.0  # Discrete reward for scoring
+
+# Observations
+observe_teammates: True
+observe_adversaries: True
+dict_obs: False

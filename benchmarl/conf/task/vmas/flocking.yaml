@@ -1,0 +1,9 @@
+defaults:
+  - vmas_flocking_config
+  - _self_
+
+
+max_steps: 100
+n_agents: 4
+n_obstacles: 5
+collision_reward: -0.1

@@ -5,21 +5,27 @@
 #
 
 import pathlib
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Type
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
 
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModule, TensorDictSequential
 from torchrl.data import (
-    DiscreteTensorSpec,
+    Categorical,
+    LazyMemmapStorage,
     LazyTensorStorage,
-    OneHotDiscreteTensorSpec,
+    OneHot,
     ReplayBuffer,
     TensorDictReplayBuffer,
 )
-from torchrl.data.replay_buffers import RandomSampler, SamplerWithoutReplacement
-from torchrl.envs import Compose, Transform
+from torchrl.data.replay_buffers import (
+    PrioritizedSampler,
+    RandomSampler,
+    SamplerWithoutReplacement,
+)
+from torchrl.envs import Compose, EnvBase, Transform
 from torchrl.objectives import LossModule
 from torchrl.objectives.utils import HardUpdate, SoftUpdate, TargetNetUpdater
 
@@ -41,6 +47,7 @@ class Algorithm(ABC):
         self.experiment = experiment
 
         self.device: DEVICE_TYPING = experiment.config.train_device
+        self.buffer_device: DEVICE_TYPING = experiment.config.buffer_device
         self.experiment_config = experiment.config
         self.model_config = experiment.model_config
         self.critic_model_config = experiment.critic_model_config
@@ -50,6 +57,16 @@ class Algorithm(ABC):
         self.action_spec = experiment.action_spec
         self.state_spec = experiment.state_spec
         self.action_mask_spec = experiment.action_mask_spec
+        self.has_independent_critic = (
+            experiment.algorithm_config.has_independent_critic()
+        )
+        self.has_centralized_critic = (
+            experiment.algorithm_config.has_centralized_critic()
+        )
+        self.has_critic = experiment.algorithm_config.has_critic
+        self.has_rnn = self.model_config.is_rnn or (
+            self.critic_model_config.is_rnn and self.has_critic
+        )
 
         # Cached values that will be instantiated only once and then remain fixed
         self._losses_and_updaters = {}
@@ -103,9 +120,7 @@ class Algorithm(ABC):
         """
         if group not in self._losses_and_updaters.keys():
             action_space = self.action_spec[group, "action"]
-            continuous = not isinstance(
-                action_space, (DiscreteTensorSpec, OneHotDiscreteTensorSpec)
-            )
+            continuous = not isinstance(action_space, (Categorical, OneHot))
             loss, use_target = self._get_loss(
                 group=group,
                 policy_for_loss=self.get_policy_for_loss(group),
@@ -141,11 +156,41 @@ class Algorithm(ABC):
         """
         memory_size = self.experiment_config.replay_buffer_memory_size(self.on_policy)
         sampling_size = self.experiment_config.train_minibatch_size(self.on_policy)
-        storing_device = self.device
-        sampler = SamplerWithoutReplacement() if self.on_policy else RandomSampler()
+        if self.has_rnn:
+            sequence_length = -(
+                -self.experiment_config.collected_frames_per_batch(self.on_policy)
+                // self.experiment_config.n_envs_per_worker(self.on_policy)
+            )
+            memory_size = -(-memory_size // sequence_length)
+            sampling_size = -(-sampling_size // sequence_length)
+
+        # Sampler
+        if self.on_policy:
+            sampler = SamplerWithoutReplacement()
+        elif self.experiment_config.off_policy_use_prioritized_replay_buffer:
+            sampler = PrioritizedSampler(
+                memory_size,
+                self.experiment_config.off_policy_prb_alpha,
+                self.experiment_config.off_policy_prb_beta,
+            )
+        else:
+            sampler = RandomSampler()
+
+        # Storage
+        if self.buffer_device == "disk" and not self.on_policy:
+            storage = LazyMemmapStorage(
+                memory_size,
+                device=self.device,
+                scratch_dir=self.experiment.folder_name / f"buffer_{group}",
+            )
+        else:
+            storage = LazyTensorStorage(
+                memory_size,
+                device=self.device if self.on_policy else self.buffer_device,
+            )
 
         return TensorDictReplayBuffer(
-            storage=LazyTensorStorage(memory_size, device=storing_device),
+            storage=storage,
             sampler=sampler,
             batch_size=sampling_size,
             priority_key=(group, "td_error"),
@@ -165,9 +210,7 @@ class Algorithm(ABC):
         """
         if group not in self._policies_for_loss.keys():
             action_space = self.action_spec[group, "action"]
-            continuous = not isinstance(
-                action_space, (DiscreteTensorSpec, OneHotDiscreteTensorSpec)
-            )
+            continuous = not isinstance(action_space, (Categorical, OneHot))
             self._policies_for_loss.update(
                 {
                     group: self._get_policy_for_loss(
@@ -192,9 +235,7 @@ class Algorithm(ABC):
             if group not in self._policies_for_collection.keys():
                 policy_for_loss = self.get_policy_for_loss(group)
                 action_space = self.action_spec[group, "action"]
-                continuous = not isinstance(
-                    action_space, (DiscreteTensorSpec, OneHotDiscreteTensorSpec)
-                )
+                continuous = not isinstance(action_space, (Categorical, OneHot))
                 policy_for_collection = self._get_policy_for_collection(
                     policy_for_loss,
                     group,
@@ -215,6 +256,22 @@ class Algorithm(ABC):
             group=group,
             loss=self.get_loss_and_updater(group)[0],
         )
+
+    def process_env_fun(
+        self,
+        env_fun: Callable[[], EnvBase],
+    ) -> Callable[[], EnvBase]:
+        """
+        This function can be used to wrap env_fun
+
+        Args:
+            env_fun (callable): a function that takes no args and creates an enviornment
+
+        Returns: a function that takes no args and creates an enviornment
+
+        """
+
+        return env_fun
 
     ###############################
     # Abstract methods to implement
@@ -356,14 +413,15 @@ class AlgorithmConfig:
 
         Returns: the loaded AlgorithmConfig
         """
+
         if path is None:
-            return cls(
-                **AlgorithmConfig._load_from_yaml(
-                    name=cls.associated_class().__name__,
-                )
+            config = AlgorithmConfig._load_from_yaml(
+                name=cls.associated_class().__name__
             )
+
         else:
-            return cls(**_read_yaml_config(path))
+            config = _read_yaml_config(path)
+        return cls(**config)
 
     @staticmethod
     @abstractmethod
@@ -396,3 +454,27 @@ class AlgorithmConfig:
         If the algorithm supports discrete actions
         """
         raise NotImplementedError
+
+    @staticmethod
+    def has_independent_critic() -> bool:
+        """
+        If the algorithm uses an independent critic
+        """
+        return False
+
+    @staticmethod
+    def has_centralized_critic() -> bool:
+        """
+        If the algorithm uses a centralized critic
+        """
+        return False
+
+    def has_critic(self) -> bool:
+        """
+        If the algorithm uses a critic
+        """
+        if self.has_centralized_critic() and self.has_independent_critic():
+            raise ValueError(
+                "Algorithm can either have a centralized critic or an indpendent one"
+            )
+        return self.has_centralized_critic() or self.has_independent_critic()

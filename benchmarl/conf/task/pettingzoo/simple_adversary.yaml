@@ -1,6 +1,7 @@
 defaults:
-  - _self_
   - pettingzoo_simple_adversary_config
+  - _self_
+
 
 task: "simple_adversary_v3"
 N: 2

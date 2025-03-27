@@ -10,28 +10,36 @@ import copy
 import importlib
 
 import os
+import pickle
+import shutil
 import time
-from collections import OrderedDict
+import warnings
+from collections import deque, OrderedDict
 from dataclasses import dataclass, MISSING
 from pathlib import Path
-from typing import Dict, List, Optional
+
+from typing import Any, Dict, List, Optional
 
 import torch
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictSequential
 from torchrl.collectors import SyncDataCollector
-from torchrl.envs import SerialEnv, TransformedEnv
+
+from torchrl.envs import ParallelEnv, SerialEnv, TransformedEnv
 from torchrl.envs.transforms import Compose
-from torchrl.envs.utils import ExplorationType, set_exploration_type
+from torchrl.envs.utils import ExplorationType, set_exploration_type, step_mdp
 from torchrl.record.loggers import generate_exp_name
 from tqdm import tqdm
+
+from benchmarl.algorithms import IppoConfig, MappoConfig
 
 from benchmarl.algorithms.common import AlgorithmConfig
 from benchmarl.environments import Task
 from benchmarl.experiment.callback import Callback, CallbackNotifier
 from benchmarl.experiment.logger import Logger
+from benchmarl.models import GnnConfig, SequenceModelConfig
 from benchmarl.models.common import ModelConfig
-from benchmarl.utils import _read_yaml_config, seed_everything
+from benchmarl.utils import _add_rnn_transforms, _read_yaml_config, seed_everything
 
 _has_hydra = importlib.util.find_spec("hydra") is not None
 if _has_hydra:
@@ -50,9 +58,12 @@ class ExperimentConfig:
 
     sampling_device: str = MISSING
     train_device: str = MISSING
+    buffer_device: str = MISSING
 
     share_policy_params: bool = MISSING
     prefer_continuous_actions: bool = MISSING
+    collect_with_grad: bool = MISSING
+    parallel_collection: bool = MISSING
 
     gamma: float = MISSING
     lr: float = MISSING
@@ -82,6 +93,9 @@ class ExperimentConfig:
     off_policy_train_batch_size: int = MISSING
     off_policy_memory_size: int = MISSING
     off_policy_init_random_frames: int = MISSING
+    off_policy_use_prioritized_replay_buffer: bool = MISSING
+    off_policy_prb_alpha: float = MISSING
+    off_policy_prb_beta: float = MISSING
 
     evaluation: bool = MISSING
     render: bool = MISSING
@@ -90,11 +104,15 @@ class ExperimentConfig:
     evaluation_deterministic_actions: bool = MISSING
 
     loggers: List[str] = MISSING
+    project_name: str = MISSING
     create_json: bool = MISSING
 
     save_folder: Optional[str] = MISSING
     restore_file: Optional[str] = MISSING
-    checkpoint_interval: float = MISSING
+    restore_map_location: Optional[Any] = MISSING
+    checkpoint_interval: int = MISSING
+    checkpoint_at_end: bool = MISSING
+    keep_checkpoints_num: Optional[int] = MISSING
 
     def train_batch_size(self, on_policy: bool) -> int:
         """
@@ -278,8 +296,15 @@ class ExperimentConfig:
                 f"checkpoint_interval ({self.checkpoint_interval}) "
                 f"is not a multiple of the collected_frames_per_batch ({self.collected_frames_per_batch(on_policy)})"
             )
+        if self.keep_checkpoints_num is not None and self.keep_checkpoints_num <= 0:
+            raise ValueError("keep_checkpoints_num must be greater than zero or null")
         if self.max_n_frames is None and self.max_n_iters is None:
-            raise ValueError("n_iters and total_frames are both not set")
+            raise ValueError("max_n_frames and max_n_iters are both not set")
+        if self.max_n_frames is not None and self.max_n_iters is not None:
+            warnings.warn(
+                f"max_n_frames and max_n_iters have both been set. The experiment will terminate after "
+                f"{self.get_max_n_iters(on_policy)} iterations ({self.get_max_n_frames(on_policy)} frames)."
+            )
 
 
 class Experiment(CallbackNotifier):
@@ -291,7 +316,10 @@ class Experiment(CallbackNotifier):
         algorithm_config (AlgorithmConfig): the algorithm configuration
         model_config (ModelConfig): the policy model configuration
         seed (int): the seed for the experiment
-        config (ExperimentConfig): the experiment config
+        config (ExperimentConfig): The experiment config. Note that some of the parameters
+            of this config may go un-consumed based on the provided algorithm or model config.
+            For example, all parameters off-policy algorithm would not be used when running
+            an experiment with an on-policy algorithm.
         critic_model_config (ModelConfig, optional): the policy model configuration.
             If None, it defaults to model_config
         callbacks (list of Callback, optional): callbacks for this experiment
@@ -316,8 +344,12 @@ class Experiment(CallbackNotifier):
         self.task = task
         self.model_config = model_config
         self.critic_model_config = (
-            critic_model_config if critic_model_config is not None else model_config
+            critic_model_config
+            if critic_model_config is not None
+            else copy.deepcopy(model_config)
         )
+        self.critic_model_config.is_critic = True
+
         self.algorithm_config = algorithm_config
         self.seed = seed
 
@@ -339,13 +371,40 @@ class Experiment(CallbackNotifier):
     def _setup(self):
         self.config.validate(self.on_policy)
         seed_everything(self.seed)
+        self._perform_checks()
         self._set_action_type()
+        self._setup_name()
         self._setup_task()
         self._setup_algorithm()
         self._setup_collector()
-        self._setup_name()
         self._setup_logger()
         self._on_setup()
+
+    def _perform_checks(self):
+        for config in (self.model_config, self.critic_model_config):
+            if isinstance(config, SequenceModelConfig):
+                for layer_config in config.model_configs[1:]:
+                    if isinstance(layer_config, GnnConfig) and (
+                        layer_config.position_key is not None
+                        or layer_config.velocity_key is not None
+                    ):
+                        raise ValueError(
+                            "GNNs reading position or velocity keys are currently only usable in first"
+                            " layer of sequence models"
+                        )
+
+        if self.algorithm_config in (MappoConfig, IppoConfig):
+            critic_model_config = self.critic_model_config
+            if isinstance(critic_model_config, SequenceModelConfig):
+                critic_model_config = self.critic_model_config.model_configs[0]
+            if (
+                isinstance(critic_model_config, GnnConfig)
+                and critic_model_config.topology == "from_pos"
+            ):
+                raise ValueError(
+                    "GNNs in PPO critics with topology 'from_pos' are currently not available, "
+                    "see https://github.com/pytorch/rl/issues/2537"
+                )
 
     def _set_action_type(self):
         if (
@@ -371,41 +430,27 @@ class Experiment(CallbackNotifier):
             )
 
     def _setup_task(self):
-        test_env = self.model_config.process_env_fun(
-            self.task.get_env_fun(
-                num_envs=self.config.evaluation_episodes,
-                continuous_actions=self.continuous_actions,
-                seed=self.seed,
-                device=self.config.sampling_device,
-            )
+        test_env = self.task.get_env_fun(
+            num_envs=self.config.evaluation_episodes,
+            continuous_actions=self.continuous_actions,
+            seed=self.seed,
+            device=self.config.sampling_device,
         )()
-        env_func = self.model_config.process_env_fun(
-            self.task.get_env_fun(
-                num_envs=self.config.n_envs_per_worker(self.on_policy),
-                continuous_actions=self.continuous_actions,
-                seed=self.seed,
-                device=self.config.sampling_device,
-            )
+        env_func = self.task.get_env_fun(
+            num_envs=self.config.n_envs_per_worker(self.on_policy),
+            continuous_actions=self.continuous_actions,
+            seed=self.seed,
+            device=self.config.sampling_device,
         )
 
         transforms_env = self.task.get_env_transforms(test_env)
         transforms_training = transforms_env + [
             self.task.get_reward_sum_transform(test_env)
         ]
-
         transforms_env = Compose(*transforms_env)
         transforms_training = Compose(*transforms_training)
 
-        if test_env.batch_size == ():
-            self.env_func = lambda: TransformedEnv(
-                SerialEnv(self.config.n_envs_per_worker(self.on_policy), env_func),
-                transforms_training.clone(),
-            )
-        else:
-            self.env_func = lambda: TransformedEnv(
-                env_func(), transforms_training.clone()
-            )
-
+        # Initialize test env
         self.test_env = TransformedEnv(test_env, transforms_env.clone()).to(
             self.config.sampling_device
         )
@@ -419,12 +464,39 @@ class Experiment(CallbackNotifier):
         self.train_group_map = copy.deepcopy(self.group_map)
         self.max_steps = self.task.max_steps(self.test_env)
 
+        # Add rnn transforms here so they do not show in the benchmarl specs
+        if self.model_config.is_rnn:
+            self.test_env = _add_rnn_transforms(
+                lambda: self.test_env, self.group_map, self.model_config
+            )()
+            env_func = _add_rnn_transforms(env_func, self.group_map, self.model_config)
+
+        # Initialize train env
+        if self.test_env.batch_size == ():
+            # If the environment is not vectorized, we simulate vectorization using parallel or serial environments
+            env_class = (
+                SerialEnv if not self.config.parallel_collection else ParallelEnv
+            )
+            self.env_func = lambda: TransformedEnv(
+                env_class(self.config.n_envs_per_worker(self.on_policy), env_func),
+                transforms_training.clone(),
+            )
+        else:
+            # Otherwise it is already vectorized
+            self.env_func = lambda: TransformedEnv(
+                env_func(), transforms_training.clone()
+            )
+
     def _setup_algorithm(self):
         self.algorithm = self.algorithm_config.get_algorithm(experiment=self)
+
+        self.test_env = self.algorithm.process_env_fun(lambda: self.test_env)()
+        self.env_func = self.algorithm.process_env_fun(self.env_func)
+
         self.replay_buffers = {
             group: self.algorithm.get_replay_buffer(
                 group=group,
-                transforms=self.task.get_replay_buffer_transforms(self.test_env),
+                transforms=self.task.get_replay_buffer_transforms(self.test_env, group),
             )
             for group in self.group_map.keys()
         }
@@ -455,54 +527,79 @@ class Experiment(CallbackNotifier):
             assert len(group_policy) == 1
             self.group_policies.update({group: group_policy[0]})
 
-        self.collector = SyncDataCollector(
-            self.env_func,
-            self.policy,
-            device=self.config.sampling_device,
-            storing_device=self.config.train_device,
-            frames_per_batch=self.config.collected_frames_per_batch(self.on_policy),
-            total_frames=self.config.get_max_n_frames(self.on_policy),
-            init_random_frames=self.config.off_policy_init_random_frames
-            if not self.on_policy
-            else 0,
-        )
+        if not self.config.collect_with_grad:
+            self.collector = SyncDataCollector(
+                self.env_func,
+                self.policy,
+                device=self.config.sampling_device,
+                storing_device=self.config.sampling_device,
+                frames_per_batch=self.config.collected_frames_per_batch(self.on_policy),
+                total_frames=self.config.get_max_n_frames(self.on_policy),
+                init_random_frames=(
+                    self.config.off_policy_init_random_frames
+                    if not self.on_policy
+                    else 0
+                ),
+            )
+        else:
+            if self.config.off_policy_init_random_frames and not self.on_policy:
+                raise TypeError(
+                    "Collection via rollouts does not support initial random frames as of now."
+                )
+            self.rollout_env = self.env_func().to(self.config.sampling_device)
 
     def _setup_name(self):
         self.algorithm_name = self.algorithm_config.associated_class().__name__.lower()
         self.model_name = self.model_config.associated_class().__name__.lower()
+        self.critic_model_name = (
+            self.critic_model_config.associated_class().__name__.lower()
+        )
         self.environment_name = self.task.env_name().lower()
         self.task_name = self.task.name.lower()
+        self._checkpointed_files = deque([])
 
-        if self.config.restore_file is not None and self.config.save_folder is not None:
-            raise ValueError(
-                "Experiment restore file and save folder have both been specified."
-                "Do not set a save_folder when you are reloading an experiment as"
-                "it will by default reloaded into the old folder."
-            )
-        if self.config.restore_file is None:
-            if self.config.save_folder is not None:
-                folder_name = Path(self.config.save_folder)
+        if self.config.save_folder is not None:
+            # If the user specified a folder for the experiment we use that
+            save_folder = Path(self.config.save_folder)
+        else:
+            # Otherwise, if the user is restoring from a folder, we will save in the folder they are restoring from
+            if self.config.restore_file is not None:
+                save_folder = Path(
+                    self.config.restore_file
+                ).parent.parent.parent.resolve()
+            # Otherwise, the user is not restoring and did not specify a save_folder so we save in the hydra directory
+            # of the experiment or in the directory where the experiment was run (if hydra is not used)
             else:
                 if _has_hydra and HydraConfig.initialized():
-                    folder_name = Path(HydraConfig.get().runtime.output_dir)
+                    save_folder = Path(HydraConfig.get().runtime.output_dir)
                 else:
-                    folder_name = Path(os.getcwd())
+                    save_folder = Path(os.getcwd())
+
+        if self.config.restore_file is None:
             self.name = generate_exp_name(
                 f"{self.algorithm_name}_{self.task_name}_{self.model_name}", ""
             )
-            self.folder_name = folder_name / self.name
-            if (
-                len(self.config.loggers)
-                or self.config.checkpoint_interval > 0
-                or self.config.create_json
-            ):
-                self.folder_name.mkdir(parents=False, exist_ok=False)
+            self.folder_name = save_folder / self.name
+
         else:
-            self.folder_name = Path(self.config.restore_file).parent.parent.resolve()
-            self.name = self.folder_name.name
+            # If restoring, we use the name of the previous experiment
+            self.name = Path(self.config.restore_file).parent.parent.resolve().name
+            self.folder_name = save_folder / self.name
+
+        self.folder_name.mkdir(parents=False, exist_ok=True)
+        with open(self.folder_name / "config.pkl", "wb") as f:
+            pickle.dump(self.task, f)
+            pickle.dump(self.task.config if self.task.config is not None else {}, f)
+            pickle.dump(self.algorithm_config, f)
+            pickle.dump(self.model_config, f)
+            pickle.dump(self.seed, f)
+            pickle.dump(self.config, f)
+            pickle.dump(self.critic_model_config, f)
+            pickle.dump(self.callbacks, f)
 
     def _setup_logger(self):
         self.logger = Logger(
+            project_name=self.config.project_name,
             experiment_name=self.name,
             folder_name=str(self.folder_name),
             experiment_config=self.config,
@@ -514,9 +611,11 @@ class Experiment(CallbackNotifier):
             seed=self.seed,
         )
         self.logger.log_hparams(
+            critic_model_name=self.critic_model_name,
             experiment_config=self.config.__dict__,
             algorithm_config=self.algorithm_config.__dict__,
             model_config=self.model_config.__dict__,
+            critic_model_config=self.critic_model_config.__dict__,
             task_config=self.task.config,
             continuous_actions=self.continuous_actions,
             on_policy=self.on_policy,
@@ -525,6 +624,7 @@ class Experiment(CallbackNotifier):
     def run(self):
         """Run the experiment until completion."""
         try:
+            seed_everything(self.seed)
             torch.cuda.empty_cache()
             self._collection_loop()
         except KeyboardInterrupt as interrupt:
@@ -536,17 +636,55 @@ class Experiment(CallbackNotifier):
             self.close()
             raise err
 
+    def evaluate(self):
+        """Run just the evaluation loop once."""
+        seed_everything(self.seed)
+        self._evaluation_loop()
+        self.logger.commit()
+        print(
+            f"Evaluation results logged to loggers={self.config.loggers}"
+            f"{' and to a json file in the experiment folder.' if self.config.create_json else ''}"
+        )
+
     def _collection_loop(self):
         pbar = tqdm(
             initial=self.n_iters_performed,
             total=self.config.get_max_n_iters(self.on_policy),
         )
-        sampling_start = time.time()
+
+        if not self.config.collect_with_grad:
+            iterator = iter(self.collector)
+        else:
+            reset_batch = self.rollout_env.reset()
 
         # Training/collection iterations
-        for batch in self.collector:
+        for _ in range(
+            self.n_iters_performed, self.config.get_max_n_iters(self.on_policy)
+        ):
+            iteration_start = time.time()
+            if not self.config.collect_with_grad:
+                batch = next(iterator)
+            else:
+                with set_exploration_type(ExplorationType.RANDOM):
+                    batch = self.rollout_env.rollout(
+                        max_steps=-(
+                            -self.config.collected_frames_per_batch(self.on_policy)
+                            // self.rollout_env.batch_size.numel()
+                        ),
+                        policy=self.policy,
+                        break_when_any_done=False,
+                        auto_reset=False,
+                        tensordict=reset_batch,
+                    )
+                    reset_batch = step_mdp(
+                        batch[..., -1],
+                        reward_keys=self.rollout_env.reward_keys,
+                        action_keys=self.rollout_env.action_keys,
+                        done_keys=self.rollout_env.done_keys,
+                    )
+
             # Logging collection
-            collection_time = time.time() - sampling_start
+            collection_time = time.time() - iteration_start
             current_frames = batch.numel()
             self.total_frames += current_frames
             self.mean_return = self.logger.log_collection(
@@ -559,20 +697,26 @@ class Experiment(CallbackNotifier):
 
             # Callback
             self._on_batch_collected(batch)
+            batch = batch.detach()
 
             # Loop over groups
             training_start = time.time()
             for group in self.train_group_map.keys():
                 group_batch = batch.exclude(*self._get_excluded_keys(group))
                 group_batch = self.algorithm.process_batch(group, group_batch)
-                group_batch = group_batch.reshape(-1)
-                self.replay_buffers[group].extend(group_batch)
+                if not self.algorithm.has_rnn:
+                    group_batch = group_batch.reshape(-1)
+
+                group_buffer = self.replay_buffers[group]
+                group_buffer.extend(group_batch.to(group_buffer.storage.device))
 
                 training_tds = []
                 for _ in range(self.config.n_optimizer_steps(self.on_policy)):
                     for _ in range(
-                        self.config.train_batch_size(self.on_policy)
-                        // self.config.train_minibatch_size(self.on_policy)
+                        -(
+                            -self.config.train_batch_size(self.on_policy)
+                            // self.config.train_minibatch_size(self.on_policy)
+                        )
                     ):
                         training_tds.append(self._optimizer_loop(group))
                 training_td = torch.stack(training_tds)
@@ -592,11 +736,25 @@ class Experiment(CallbackNotifier):
                     explore_layer.step(current_frames)
 
             # Update policy in collector
-            self.collector.update_policy_weights_()
+            if not self.config.collect_with_grad:
+                self.collector.update_policy_weights_()
 
-            # Timers
+            # Training timer
             training_time = time.time() - training_start
-            iteration_time = collection_time + training_time
+
+            # Evaluation
+            if (
+                self.config.evaluation
+                and (
+                    self.total_frames % self.config.evaluation_interval == 0
+                    or self.n_iters_performed == 0
+                )
+                and (len(self.config.loggers) or self.config.create_json)
+            ):
+                self._evaluation_loop()
+
+            # End of step
+            iteration_time = time.time() - iteration_start
             self.total_time += iteration_time
             self.logger.log(
                 {
@@ -610,16 +768,6 @@ class Experiment(CallbackNotifier):
                 },
                 step=self.n_iters_performed,
             )
-
-            # Evaluation
-            if (
-                self.config.evaluation
-                and (self.total_frames % self.config.evaluation_interval == 0)
-                and (len(self.config.loggers) or self.config.create_json)
-            ):
-                self._evaluation_loop()
-
-            # End of step
             self.n_iters_performed += 1
             self.logger.commit()
             if (
@@ -628,15 +776,23 @@ class Experiment(CallbackNotifier):
             ):
                 self._save_experiment()
             pbar.update()
-            sampling_start = time.time()
 
+        if self.config.checkpoint_at_end:
+            self._save_experiment()
         self.close()
 
     def close(self):
         """Close the experiment."""
-        self.collector.shutdown()
+        if not self.config.collect_with_grad:
+            self.collector.shutdown()
+        else:
+            self.rollout_env.close()
         self.test_env.close()
         self.logger.finish()
+
+        for buffer in self.replay_buffers.values():
+            if hasattr(buffer.storage, "scratch_dir"):
+                shutil.rmtree(buffer.storage.scratch_dir, ignore_errors=False)
 
     def _get_excluded_keys(self, group: str):
         excluded_keys = []
@@ -647,7 +803,7 @@ class Experiment(CallbackNotifier):
         return excluded_keys
 
     def _optimizer_loop(self, group: str) -> TensorDictBase:
-        subdata = self.replay_buffers[group].sample()
+        subdata = self.replay_buffers[group].sample().to(self.config.train_device)
         loss_vals = self.losses[group](subdata)
         training_td = loss_vals.detach()
         loss_vals = self.algorithm.process_loss_vals(group, loss_vals)
@@ -703,7 +859,7 @@ class Experiment(CallbackNotifier):
     def _evaluation_loop(self):
         evaluation_start = time.time()
         with set_exploration_type(
-            ExplorationType.MODE
+            ExplorationType.DETERMINISTIC
             if self.config.evaluation_deterministic_actions
             else ExplorationType.RANDOM
         ):
@@ -765,13 +921,14 @@ class Experiment(CallbackNotifier):
         )
         state_dict = OrderedDict(
             state=state,
-            collector=self.collector.state_dict(),
             **{f"loss_{k}": item.state_dict() for k, item in self.losses.items()},
             **{
-                f"buffer_{k}": item.state_dict()
+                f"buffer_{k}": item.state_dict() if len(item) else None
                 for k, item in self.replay_buffers.items()
             },
         )
+        if not self.config.collect_with_grad:
+            state_dict.update({"collector": self.collector.state_dict()})
         return state_dict
 
     def load_state_dict(self, state_dict: Dict) -> None:
@@ -783,8 +940,12 @@ class Experiment(CallbackNotifier):
         """
         for group in self.group_map.keys():
             self.losses[group].load_state_dict(state_dict[f"loss_{group}"])
-            self.replay_buffers[group].load_state_dict(state_dict[f"buffer_{group}"])
-        self.collector.load_state_dict(state_dict["collector"])
+            if state_dict[f"buffer_{group}"] is not None:
+                self.replay_buffers[group].load_state_dict(
+                    state_dict[f"buffer_{group}"]
+                )
+        if not self.config.collect_with_grad:
+            self.collector.load_state_dict(state_dict["collector"])
         self.total_time = state_dict["state"]["total_time"]
         self.total_frames = state_dict["state"]["total_frames"]
         self.n_iters_performed = state_dict["state"]["n_iters_performed"]
@@ -792,13 +953,64 @@ class Experiment(CallbackNotifier):
 
     def _save_experiment(self) -> None:
         """Checkpoint trainer"""
+        if self.config.keep_checkpoints_num is not None:
+            while len(self._checkpointed_files) >= self.config.keep_checkpoints_num:
+                file_to_delete = self._checkpointed_files.popleft()
+                file_to_delete.unlink(missing_ok=False)
+
         checkpoint_folder = self.folder_name / "checkpoints"
         checkpoint_folder.mkdir(parents=False, exist_ok=True)
         checkpoint_file = checkpoint_folder / f"checkpoint_{self.total_frames}.pt"
         torch.save(self.state_dict(), checkpoint_file)
+        self._checkpointed_files.append(checkpoint_file)
 
     def _load_experiment(self) -> Experiment:
         """Load trainer from checkpoint"""
-        loaded_dict: OrderedDict = torch.load(self.config.restore_file)
+        loaded_dict: OrderedDict = torch.load(
+            self.config.restore_file, map_location=self.config.restore_map_location
+        )
         self.load_state_dict(loaded_dict)
         return self
+
+    @staticmethod
+    def reload_from_file(restore_file: str) -> Experiment:
+        """
+        Restores the experiment from the checkpoint file.
+
+        This method expects the same folder structure created when an experiment is run.
+        The checkpoint file (``restore_file``) is in the checkpoints directory and a config.pkl file is
+        present a level above at restore_file/../../config.pkl
+
+        Args:
+            restore_file (str): The checkpoint file (.pt) of the experiment reload.
+
+        Returns:
+            The reloaded experiment.
+
+        """
+        experiment_folder = Path(restore_file).parent.parent.resolve()
+        config_file = experiment_folder / "config.pkl"
+        if not os.path.exists(config_file):
+            raise ValueError("config.pkl file not found in experiment folder.")
+        with open(config_file, "rb") as f:
+            task = pickle.load(f)
+            task_config = pickle.load(f)
+            algorithm_config = pickle.load(f)
+            model_config = pickle.load(f)
+            seed = pickle.load(f)
+            experiment_config = pickle.load(f)
+            critic_model_config = pickle.load(f)
+            callbacks = pickle.load(f)
+        task.config = task_config
+        experiment_config.restore_file = restore_file
+        experiment = Experiment(
+            task=task,
+            algorithm_config=algorithm_config,
+            model_config=model_config,
+            seed=seed,
+            config=experiment_config,
+            callbacks=callbacks,
+            critic_model_config=critic_model_config,
+        )
+        print(f"\nReloaded experiment {experiment.name} from {restore_file}.")
+        return experiment

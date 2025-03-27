@@ -10,7 +10,7 @@ from typing import Dict, Iterable, Optional, Tuple, Type, Union
 from tensordict import TensorDictBase
 from tensordict.nn import NormalParamExtractor, TensorDictModule, TensorDictSequential
 from torch.distributions import Categorical
-from torchrl.data import CompositeSpec, UnboundedContinuousTensorSpec
+from torchrl.data import Composite, Unbounded
 from torchrl.modules import (
     IndependentNormal,
     MaskedCategorical,
@@ -164,14 +164,14 @@ class Masac(Algorithm):
                 self.action_spec[group, "action"].space.n,
             ]
 
-        actor_input_spec = CompositeSpec(
+        actor_input_spec = Composite(
             {group: self.observation_spec[group].clone().to(self.device)}
         )
 
-        actor_output_spec = CompositeSpec(
+        actor_output_spec = Composite(
             {
-                group: CompositeSpec(
-                    {"logits": UnboundedContinuousTensorSpec(shape=logits_shape)},
+                group: Composite(
+                    {"logits": Unbounded(shape=logits_shape)},
                     shape=(n_agents,),
                 )
             }
@@ -199,15 +199,17 @@ class Masac(Algorithm):
                 spec=self.action_spec[group, "action"],
                 in_keys=[(group, "loc"), (group, "scale")],
                 out_keys=[(group, "action")],
-                distribution_class=IndependentNormal
-                if not self.use_tanh_normal
-                else TanhNormal,
-                distribution_kwargs={
-                    "min": self.action_spec[(group, "action")].space.low,
-                    "max": self.action_spec[(group, "action")].space.high,
-                }
-                if self.use_tanh_normal
-                else {},
+                distribution_class=(
+                    IndependentNormal if not self.use_tanh_normal else TanhNormal
+                ),
+                distribution_kwargs=(
+                    {
+                        "low": self.action_spec[(group, "action")].space.low,
+                        "high": self.action_spec[(group, "action")].space.high,
+                    }
+                    if self.use_tanh_normal
+                    else {}
+                ),
                 return_log_prob=True,
                 log_prob_key=(group, "log_prob"),
             )
@@ -281,18 +283,14 @@ class Masac(Algorithm):
         n_agents = len(self.group_map[group])
         n_actions = self.action_spec[group, "action"].space.n
         if self.share_param_critic:
-            critic_output_spec = CompositeSpec(
-                {"action_value": UnboundedContinuousTensorSpec(shape=(n_actions,))}
+            critic_output_spec = Composite(
+                {"action_value": Unbounded(shape=(n_actions,))}
             )
         else:
-            critic_output_spec = CompositeSpec(
+            critic_output_spec = Composite(
                 {
-                    group: CompositeSpec(
-                        {
-                            "action_value": UnboundedContinuousTensorSpec(
-                                shape=(n_agents, n_actions)
-                            )
-                        },
+                    group: Composite(
+                        {"action_value": Unbounded(shape=(n_agents, n_actions))},
                         shape=(n_agents,),
                     )
                 }
@@ -312,7 +310,7 @@ class Masac(Algorithm):
             )
 
         else:
-            critic_input_spec = CompositeSpec(
+            critic_input_spec = Composite(
                 {group: self.observation_spec[group].clone().to(self.device)}
             )
             value_module = self.critic_model_config.get_model(
@@ -343,18 +341,14 @@ class Masac(Algorithm):
         modules = []
 
         if self.share_param_critic:
-            critic_output_spec = CompositeSpec(
-                {"state_action_value": UnboundedContinuousTensorSpec(shape=(1,))}
+            critic_output_spec = Composite(
+                {"state_action_value": Unbounded(shape=(1,))}
             )
         else:
-            critic_output_spec = CompositeSpec(
+            critic_output_spec = Composite(
                 {
-                    group: CompositeSpec(
-                        {
-                            "state_action_value": UnboundedContinuousTensorSpec(
-                                shape=(n_agents, 1)
-                            )
-                        },
+                    group: Composite(
+                        {"state_action_value": Unbounded(shape=(n_agents, 1))},
                         shape=(n_agents,),
                     )
                 }
@@ -372,7 +366,7 @@ class Masac(Algorithm):
 
             critic_input_spec = self.state_spec.clone().update(
                 {
-                    "global_action": UnboundedContinuousTensorSpec(
+                    "global_action": Unbounded(
                         shape=(self.action_spec[group, "action"].shape[-1] * n_agents,)
                     )
                 }
@@ -393,7 +387,7 @@ class Masac(Algorithm):
             )
 
         else:
-            critic_input_spec = CompositeSpec(
+            critic_input_spec = Composite(
                 {
                     group: self.observation_spec[group]
                     .clone()
@@ -461,3 +455,7 @@ class MasacConfig(AlgorithmConfig):
     @staticmethod
     def on_policy() -> bool:
         return False
+
+    @staticmethod
+    def has_centralized_critic() -> bool:
+        return True

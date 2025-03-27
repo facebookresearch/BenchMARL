@@ -1,0 +1,9 @@
+defaults:
+  - magent_adversarial_pursuit_config
+  - _self_
+
+map_size: 45
+minimap_mode: False
+tag_penalty: -0.2
+max_cycles: 500
+extra_features: False

@@ -6,14 +6,22 @@ defaults:
 sampling_device: "cpu"
 # The device for training (e.g. cuda)
 train_device: "cpu"
+# The device for the replay buffer of off-policy algorithms (e.g. cuda).
+# Use "disk" to store it on disk (in the experiment save_folder)
+buffer_device: "cpu"
 
 # Whether to share the parameters of the policy within agent groups
 share_policy_params: True
 # If an algorithm and an env support both continuous and discrete actions, what should be preferred
 prefer_continuous_actions: True
+# If False collection is done using a collector (under no grad). If True, collection is done with gradients.
+collect_with_grad: False
+# In case of non-vectorized environments, whether to run collection of multiple processes
+# If this is used, there will be n_envs_per_worker processes, collecting frames_per_batch/n_envs_per_worker frames each
+parallel_collection: False
 
 # Discount factor
-gamma: 0.9
+gamma: 0.99
 # Learning rate
 lr: 0.00005
 # The epsilon parameter of the adam optimizer
@@ -27,7 +35,7 @@ clip_grad_val: 5
 soft_target_update: True
 # If soft_target_update is True, this is its polyak_tau
 polyak_tau: 0.005
-# If soft_target_update is False, this is the frequency of the hard trarget updates in terms of n_optimizer_steps
+# If soft_target_update is False, this is the frequency of the hard target updates in terms of n_optimizer_steps
 hard_target_update_frequency: 5
 
 # When an exploration wrapper is used. This is its initial epsilon for annealing
@@ -69,6 +77,13 @@ off_policy_train_batch_size: 128
 off_policy_memory_size: 1_000_000
 # Number of random action frames to prefill the replay buffer with
 off_policy_init_random_frames: 0
+# whether to use priorities while sampling from the replay buffer
+off_policy_use_prioritized_replay_buffer: False
+# exponent that determines how much prioritization is used when off_policy_use_prioritized_replay_buffer = True
+# PRB reduces to random sampling when alpha=0
+off_policy_prb_alpha: 0.6
+# importance sampling negative exponent when off_policy_use_prioritized_replay_buffer = True
+off_policy_prb_beta: 0.4
 
 
 evaluation: True
@@ -82,15 +97,27 @@ evaluation_episodes: 1
 evaluation_deterministic_actions: True
 
 # List of loggers to use, options are: wandb, csv, tensorboard, mflow
-loggers: []
+loggers: [csv]
+# Wandb project name
+project_name: "benchmarl"
 # Create a json folder as part of the output in the format of marl-eval
 create_json: True
 
 # Absolute path to the folder where the experiment will log.
 # If null, this will default to the hydra output dir (if using hydra) or to the current folder when the script is run (if not).
+# If you are reloading an experiment with "restore_file", this will default to the reloaded experiment folder.
 save_folder: null
 # Absolute path to a checkpoint file where the experiment was saved. If null the experiment is started fresh.
 restore_file: null
+# Map location given to `torch.load()` when reloading.
+# If you are reloading in a cpu-only machine a gpu experiment, you can use `restore_map_location: {"cuda:0":"cpu"}`
+# to map gpu tensors to the cpu
+restore_map_location: null
 # Interval for experiment saving in terms of collected frames (this should be a multiple of on/off_policy_collected_frames_per_batch).
 # Set it to 0 to disable checkpointing
 checkpoint_interval: 0
+# Whether to checkpoint when the experiment is done
+checkpoint_at_end: False
+# How many checkpoints to keep. As new checkpoints are taken, temporally older checkpoints are deleted to keep this number of
+# checkpoints. The checkpoint at the end is included in this number. Set to `null` to keep all checkpoints.
+keep_checkpoints_num: 3
