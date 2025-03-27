@@ -10,6 +10,7 @@ import copy
 import importlib
 
 import os
+import pickle
 import shutil
 import time
 import warnings
@@ -298,7 +299,12 @@ class ExperimentConfig:
         if self.keep_checkpoints_num is not None and self.keep_checkpoints_num <= 0:
             raise ValueError("keep_checkpoints_num must be greater than zero or null")
         if self.max_n_frames is None and self.max_n_iters is None:
-            raise ValueError("n_iters and total_frames are both not set")
+            raise ValueError("max_n_frames and max_n_iters are both not set")
+        if self.max_n_frames is not None and self.max_n_iters is not None:
+            warnings.warn(
+                f"max_n_frames and max_n_iters have both been set. The experiment will terminate after "
+                f"{self.get_max_n_iters(on_policy)} iterations ({self.get_max_n_frames(on_policy)} frames)."
+            )
 
 
 class Experiment(CallbackNotifier):
@@ -310,7 +316,10 @@ class Experiment(CallbackNotifier):
         algorithm_config (AlgorithmConfig): the algorithm configuration
         model_config (ModelConfig): the policy model configuration
         seed (int): the seed for the experiment
-        config (ExperimentConfig): the experiment config
+        config (ExperimentConfig): The experiment config. Note that some of the parameters
+            of this config may go un-consumed based on the provided algorithm or model config.
+            For example, all parameters off-policy algorithm would not be used when running
+            an experiment with an on-policy algorithm.
         critic_model_config (ModelConfig, optional): the policy model configuration.
             If None, it defaults to model_config
         callbacks (list of Callback, optional): callbacks for this experiment
@@ -529,7 +538,7 @@ class Experiment(CallbackNotifier):
                 self.env_func,
                 self.policy,
                 device=self.config.sampling_device,
-                storing_device=self.config.train_device,
+                storing_device=self.config.sampling_device,
                 frames_per_batch=self.config.collected_frames_per_batch(self.on_policy),
                 total_frames=self.config.get_max_n_frames(self.on_policy),
                 init_random_frames=(
@@ -548,6 +557,9 @@ class Experiment(CallbackNotifier):
     def _setup_name(self):
         self.algorithm_name = self.algorithm_config.associated_class().__name__.lower()
         self.model_name = self.model_config.associated_class().__name__.lower()
+        self.critic_model_name = (
+            self.critic_model_config.associated_class().__name__.lower()
+        )
         self.environment_name = self.task.env_name().lower()
         self.task_name = self.task.name.lower()
         self._checkpointed_files = deque([])
@@ -580,12 +592,16 @@ class Experiment(CallbackNotifier):
             self.name = Path(self.config.restore_file).parent.parent.resolve().name
             self.folder_name = save_folder / self.name
 
-        if (
-            len(self.config.loggers)
-            or self.config.checkpoint_interval > 0
-            or self.config.create_json
-        ):
-            self.folder_name.mkdir(parents=False, exist_ok=True)
+        self.folder_name.mkdir(parents=False, exist_ok=True)
+        with open(self.folder_name / "config.pkl", "wb") as f:
+            pickle.dump(self.task, f)
+            pickle.dump(self.task.config if self.task.config is not None else {}, f)
+            pickle.dump(self.algorithm_config, f)
+            pickle.dump(self.model_config, f)
+            pickle.dump(self.seed, f)
+            pickle.dump(self.config, f)
+            pickle.dump(self.critic_model_config, f)
+            pickle.dump(self.callbacks, f)
 
     def _setup_logger(self):
         self.logger = Logger(
@@ -601,9 +617,11 @@ class Experiment(CallbackNotifier):
             seed=self.seed,
         )
         self.logger.log_hparams(
+            critic_model_name=self.critic_model_name,
             experiment_config=self.config.__dict__,
             algorithm_config=self.algorithm_config.__dict__,
             model_config=self.model_config.__dict__,
+            critic_model_config=self.critic_model_config.__dict__,
             task_config=self.task.config,
             continuous_actions=self.continuous_actions,
             on_policy=self.on_policy,
@@ -612,6 +630,7 @@ class Experiment(CallbackNotifier):
     def run(self):
         """Run the experiment until completion."""
         try:
+            seed_everything(self.seed)
             torch.cuda.empty_cache()
             self._collection_loop()
         except KeyboardInterrupt as interrupt:
@@ -625,6 +644,7 @@ class Experiment(CallbackNotifier):
 
     def evaluate(self):
         """Run just the evaluation loop once."""
+        seed_everything(self.seed)
         self._evaluation_loop()
         self.logger.commit()
         print(
@@ -692,7 +712,9 @@ class Experiment(CallbackNotifier):
                 group_batch = self.algorithm.process_batch(group, group_batch)
                 if not self.algorithm.has_rnn:
                     group_batch = group_batch.reshape(-1)
-                self.replay_buffers[group].extend(group_batch)
+
+                group_buffer = self.replay_buffers[group]
+                group_buffer.extend(group_batch.to(group_buffer.storage.device))
 
                 training_tds = []
                 for _ in range(self.config.n_optimizer_steps(self.on_policy)):
@@ -955,3 +977,46 @@ class Experiment(CallbackNotifier):
         )
         self.load_state_dict(loaded_dict)
         return self
+
+    @staticmethod
+    def reload_from_file(restore_file: str) -> Experiment:
+        """
+        Restores the experiment from the checkpoint file.
+
+        This method expects the same folder structure created when an experiment is run.
+        The checkpoint file (``restore_file``) is in the checkpoints directory and a config.pkl file is
+        present a level above at restore_file/../../config.pkl
+
+        Args:
+            restore_file (str): The checkpoint file (.pt) of the experiment reload.
+
+        Returns:
+            The reloaded experiment.
+
+        """
+        experiment_folder = Path(restore_file).parent.parent.resolve()
+        config_file = experiment_folder / "config.pkl"
+        if not os.path.exists(config_file):
+            raise ValueError("config.pkl file not found in experiment folder.")
+        with open(config_file, "rb") as f:
+            task = pickle.load(f)
+            task_config = pickle.load(f)
+            algorithm_config = pickle.load(f)
+            model_config = pickle.load(f)
+            seed = pickle.load(f)
+            experiment_config = pickle.load(f)
+            critic_model_config = pickle.load(f)
+            callbacks = pickle.load(f)
+        task.config = task_config
+        experiment_config.restore_file = restore_file
+        experiment = Experiment(
+            task=task,
+            algorithm_config=algorithm_config,
+            model_config=model_config,
+            seed=seed,
+            config=experiment_config,
+            callbacks=callbacks,
+            critic_model_config=critic_model_config,
+        )
+        print(f"\nReloaded experiment {experiment.name} from {restore_file}.")
+        return experiment
