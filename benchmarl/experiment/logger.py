@@ -250,6 +250,14 @@ class Logger:
                 if isinstance(logger, WandbLogger):
                     logger.log_video("eval/video", vid, fps=20, commit=False)
                 else:
+                    # Other loggers cannot deal with odd video sizes so we check if the video dimensions are odd and make them even
+                    for index in (-1, -2):
+                        if vid.shape[index] % 2 != 0:
+                            vid = vid.index_select(
+                                index, torch.arange(1, vid.shape[index])
+                            )
+                    # End of check
+
                     logger.log_video("eval_video", vid, step=step)
 
     def commit(self):
