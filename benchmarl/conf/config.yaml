@@ -1,8 +1,8 @@
 defaults:
   - experiment: base_experiment
-  - algorithm: ???
-  - task: ???
-  - model: layers/mlp
+  - algorithm: ippo
+  - task: vmas/navigation_pos
+  - model: layers/gnn
   - model@critic_model: layers/mlp
   - _self_
 
