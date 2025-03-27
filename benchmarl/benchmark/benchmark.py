@@ -6,10 +6,8 @@
 
 from typing import Iterator, Optional, Sequence, Set, Union
 
-from environments import TaskClass
-
 from benchmarl.algorithms.common import AlgorithmConfig
-from benchmarl.environments import Task
+from benchmarl.environments import Task, TaskClass
 from benchmarl.experiment import Experiment, ExperimentConfig
 from benchmarl.models.common import ModelConfig
 
