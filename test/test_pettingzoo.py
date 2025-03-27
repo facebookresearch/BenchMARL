@@ -47,6 +47,7 @@ class TestPettingzoo:
         ):
             pytest.skip()
 
+        task = task.get_from_yaml()
         # To not run unsupported algo-task pairs
         if (
             not task.supports_continuous_actions()
@@ -57,7 +58,6 @@ class TestPettingzoo:
         ):
             pytest.skip()
 
-        task = task.get_from_yaml()
         experiment_config.prefer_continuous_actions = prefer_continuous
         experiment = Experiment(
             algorithm_config=algo_config.get_from_yaml(),
