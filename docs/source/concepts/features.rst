@@ -82,7 +82,7 @@ To evaluate an experiment, you can:
    experiment = reload_experiment_from_file(checkpoint_file)
    experiment.evaluate()
 
-This will run an iteration of evaluation, logging it to the experiment loggers (and to json if ``create_json==True``.
+This will run an iteration of evaluation, logging it to the experiment loggers (and to json if :attr:`benchmarl.experiment.ExperimentConfig.create_json` ``=True``).
 
 There is a command line script which automates this:
 
@@ -90,6 +90,30 @@ There is a command line script which automates this:
 
    python benchmarl/evaluate.py ../outputs/2024-09-09/20-39-31/mappo_balance_mlp__cd977b69_24_09_09-20_39_31/checkpoints/checkpoint_100.pt
 
+Rendering
+---------
+
+Rendering is performed by default during evaluation (:py:attr:`benchmarl.experiment.ExperimentConfig.render` ``= True``).
+If multiple evaluation episodes are requested (:py:attr:`benchmarl.experiment.ExperimentConfig.evaluation_episodes` ``>1``), then only the first one will be rendered.
+
+Renderings will be made available in the loggers you chose (:py:attr:`benchmarl.experiment.ExperimentConfig.loggers`):
+
+- In Wandb, renderings are reported under ``eval/video``
+- In CSV, renderings are saved in the experiment folder under ``video``
+
+Devices
+-------
+
+It is possible to choose different devices for simulation, training, and buffer storage (in the off-policy case).
+
+These devices can be any :class:`torch.device` and are set via :attr:`benchmarl.experiment.ExperimentConfig.sampling_device`,
+:attr:`benchmarl.experiment.ExperimentConfig.train_device`, :attr:`benchmarl.experiment.ExperimentConfig.buffer_device`.
+
+:attr:`~benchmarl.experiment.ExperimentConfig.buffer_device` can also be set to ``"disk"`` to store buffers on disk.
+
+Note that for vectorized simulators such as `VMAS <https://github.com/proroklab/VectorizedMultiAgentSimulator>`__, choosing
+:attr:`~benchmarl.experiment.ExperimentConfig.sampling_device` ``="cuda"`` and :attr:`~benchmarl.experiment.ExperimentConfig.train_device` ``="cuda"``
+will give important speed-ups as both simulation and training will be run in a batch on the GPU, with no data being moved around.
 
 Callbacks
 ---------
