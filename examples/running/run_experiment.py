@@ -18,23 +18,11 @@ if __name__ == "__main__":
     # Loads from "benchmarl/conf/model/layers/mlp.yaml"
     model_config = MlpConfig.get_from_yaml()
     critic_model_config = MlpConfig.get_from_yaml()
-
     # Loading from yaml
-    task1 = (
-        VmasTask.BALANCE.get_from_yaml()
-    )  # Get from yaml automatically converts to TaskClass
-    task2 = (
-        VmasTask.BALANCE.get_from_yaml()
-    )  # Get from yaml automatically converts to TaskClass
-    task1.config.update({"a": 1})
-    task2.config.update({"a": 2})
-    assert task1.config["a"] == 1
-    assert task2.config["a"] == 2
-
-    # You can pass either task1 or task1_immutable to the experiment
+    task = VmasTask.BALANCE.get_from_yaml()
 
     experiment = Experiment(
-        task=task1,
+        task=task,
         algorithm_config=algorithm_config,
         model_config=model_config,
         critic_model_config=critic_model_config,

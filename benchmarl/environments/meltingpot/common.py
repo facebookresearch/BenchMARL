@@ -22,7 +22,7 @@ from benchmarl.environments.common import Task, TaskClass
 from benchmarl.utils import DEVICE_TYPING
 
 
-class MeltingPotTaskClass(TaskClass):
+class MeltingPotClass(TaskClass):
     def get_env_fun(
         self,
         num_envs: int,
@@ -187,4 +187,4 @@ class MeltingPotTask(Task):
 
     @staticmethod
     def associated_class():
-        return MeltingPotTaskClass
+        return MeltingPotClass

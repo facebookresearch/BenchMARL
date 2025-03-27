@@ -16,7 +16,7 @@ from benchmarl.environments.common import Task, TaskClass
 from benchmarl.utils import DEVICE_TYPING
 
 
-class Smacv2TaskClass(TaskClass):
+class Smacv2Class(TaskClass):
     def get_env_fun(
         self,
         num_envs: int,
@@ -115,4 +115,4 @@ class Smacv2Task(Task):
 
     @staticmethod
     def associated_class():
-        return Smacv2TaskClass
+        return Smacv2Class

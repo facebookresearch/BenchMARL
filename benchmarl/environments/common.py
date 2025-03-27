@@ -17,6 +17,8 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Type
 
 from tensordict import TensorDictBase
+from torch import Tensor
+
 from torchrl.data import Composite
 from torchrl.envs import EnvBase, RewardSum, Transform
 
@@ -53,6 +55,22 @@ def _get_task_config_class(environemnt_name: str, task_name: str):
 
 
 class TaskClass(abc.ABC):
+    """
+    The class associated with an environment.
+
+    This class contains the logic on how to construct tasks for a specific environment.
+
+    The :meth:`TaskClass.get_env_fun` is the core method of this class, which will define the logic on how to construct
+    a :class:`torchrl.EnvBase` given :meth:`TaskClass.config` and :meth:`TaskClass.name`.
+
+    This methods, algonside all other abstract ones, is what users need to implement to introiduce new tasks.
+
+    Args:
+       name (str): The name of the task
+       config (Dict[str, Any]): The configuration of the task
+
+    """
+
     def __init__(self, name: str, config: Dict[str, Any]):
         self.name = name
         if config is None:
@@ -222,7 +240,7 @@ class TaskClass(abc.ABC):
     @abstractmethod
     def env_name() -> str:
         """
-        The name of the environment in the benchmarl/conf/task folder
+        The name of the environment in the ``benchmarl/conf/task`` folder
         """
         raise NotImplementedError
 
@@ -275,7 +293,22 @@ class TaskClass(abc.ABC):
         return []
 
     @staticmethod
-    def render_callback(experiment, env: EnvBase, data: TensorDictBase):
+    def render_callback(experiment, env: EnvBase, data: TensorDictBase) -> Tensor:
+        """
+        The render callback function for the enviornment.
+
+        This function is called at every step during evaluation to provide pixels for rendering.
+
+        Args:
+            experiment (Experiment): The Benchmarl experiment.
+            env (EnvBase): An environment created via self.get_env_fun()()
+            data (TensorDictBase): the current rollout data from the enviornment.
+
+        Returns:
+            The :class:`torch.Tensor` containing the pixels
+
+
+        """
         try:
             return env.render(mode="rgb_array")
         except TypeError:
@@ -293,19 +326,27 @@ class TaskClass(abc.ABC):
 
 
 class Task(Enum):
-    """Task.
+    """Enum of tasks in an environment.
 
     Tasks are enums, one enum for each environment.
-    Each enum member can be converted to a TaskClass by calling ``get_task()`` which by default behaves like
-    ``get_from_yaml()`` or by calling ``get_task(config={...})``, providing your own config.
+    Each enviornment usually contains multiple tasks.
 
-    Each new environment should inherit from Task and instantiate its members as
+    Tasks are used just to enumerate the available tasks, to convert a :class:`Task` into its corresponding instantiation,
+    you can call :meth:`Task.get_from_yaml` which will load the task config form yaml into the associated :class:`TaskClass`.
+
+    Each enum member can also be converted to a :class:`TaskClass` by calling :meth:`Task.get_task`, (which by default behaves like
+    :meth:`Task.get_from_yaml`) or by calling ``get_task(config={...})``, providing your own config.
+
+    Each new environment should inherit from :class:`Task` and instantiate its members as:
 
     TASK_1 = None
+
     TASK_2 = None
+
     ...
 
-    Tasks configs are loaded from benchmarl/conf/environments
+
+    Tasks configs are loaded from ``benchmarl/conf/task``.
     """
 
     @staticmethod
@@ -317,18 +358,23 @@ class Task(Enum):
 
     @classmethod
     def env_name(cls) -> str:
+        """
+        The name of the environment in the ``benchmarl/conf/task`` folder
+        """
         return cls.associated_class().env_name()
 
     def get_task(self, config: Optional[Dict[str, Any]] = None) -> TaskClass:
         """
-        Get the ``TaskClass`` object associated with this enum element.
+        Get the :class:`TaskClass` object associated with this enum element by passing it the task name and config.
+
+        If no config is given, it will be loaded from ``benchmarl/conf/task/self.env_name()/self.name`` using :meth:`Task.get_from_yaml`.
 
         Args:
             config (dict): Optional configuration of the task.
             If not provided, the default configuration will be loaded from yaml.
 
         Returns:
-            The TaskClass object for the task.
+            The :class:`TaskClass` object for the task.
 
         """
         if config is None:
@@ -341,17 +387,6 @@ class Task(Enum):
         obj._value_ = value
         return obj
 
-    @property
-    def config(self):
-        raise ValueError(
-            "Task.config is deprecated, use Task.get_task().config instead"
-        )
-
-    def update_config(self, config: Dict[str, Any]) -> Task:
-        raise ValueError(
-            "Task.update_config is deprecated please use Task.get_task().config.update instead"
-        )
-
     @staticmethod
     def _load_from_yaml(name: str) -> Dict[str, Any]:
         yaml_path = Path(__file__).parent.parent / "conf" / "task" / f"{name}.yaml"
@@ -363,9 +398,10 @@ class Task(Enum):
 
         Args:
             path (str, optional): The full path of the yaml file to load from. If None, it will default to
-                benchmarl/conf/task/self.env_name()/self.name
+                ``benchmarl/conf/task/self.env_name()/self.name``
 
-        Returns: the task with the loaded config
+        Returns:
+            the :class:`TaskClass` with the loaded config
         """
         environment_name = self.env_name()
         task_name = self.name.lower()
@@ -377,8 +413,94 @@ class Task(Enum):
         config = _type_check_task_config(environment_name, task_name, config)
         return self.get_task(config=config)
 
+    ######################
+    # Deprecated functions
+    ######################
+
+    @property
+    def config(self):
+        raise ValueError(
+            "Task.config is deprecated, use Task.get_task().config instead"
+        )
+
+    def update_config(self, config: Dict[str, Any]) -> Task:
+        raise ValueError(
+            "Task.update_config is deprecated please use Task.get_task().config.update() instead"
+        )
+
     def supports_continuous_actions(self) -> bool:
-        return self.get_task().supports_continuous_actions()
+        raise ValueError(
+            "Called function is deprecated is deprecated, please use Task.get_task().function() instead"
+        )
 
     def supports_discrete_actions(self) -> bool:
-        return self.get_task().supports_discrete_actions()
+        raise ValueError(
+            "Called function is deprecated is deprecated, please use Task.get_task().function() instead"
+        )
+
+    def max_steps(self, env: EnvBase) -> int:
+        raise ValueError(
+            "Called function is deprecated is deprecated, please use Task.get_task().function() instead"
+        )
+
+    def has_render(self, env: EnvBase) -> bool:
+        raise ValueError(
+            "Called function is deprecated is deprecated, please use Task.get_task().function() instead"
+        )
+
+    def group_map(self, env: EnvBase) -> Dict[str, List[str]]:
+        raise ValueError(
+            "Called function is deprecated is deprecated, please use Task.get_task().function() instead"
+        )
+
+    def observation_spec(self, env: EnvBase) -> Composite:
+        raise ValueError(
+            "Called function is deprecated is deprecated, please use Task.get_task().function() instead"
+        )
+
+    def info_spec(self, env: EnvBase) -> Optional[Composite]:
+        raise ValueError(
+            "Called function is deprecated is deprecated, please use Task.get_task().function() instead"
+        )
+
+    def state_spec(self, env: EnvBase) -> Optional[Composite]:
+        raise ValueError(
+            "Called function is deprecated is deprecated, please use Task.get_task().function() instead"
+        )
+
+    def action_spec(self, env: EnvBase) -> Composite:
+        raise ValueError(
+            "Called function is deprecated is deprecated, please use Task.get_task().function() instead"
+        )
+
+    def action_mask_spec(self, env: EnvBase) -> Optional[Composite]:
+        raise ValueError(
+            "Called function is deprecated is deprecated, please use Task.get_task().function() instead"
+        )
+
+    @staticmethod
+    def log_info(batch: TensorDictBase) -> Dict[str, float]:
+        raise ValueError(
+            "Called function is deprecated is deprecated, please use Task.get_task().function() instead"
+        )
+
+    def get_reward_sum_transform(self, env: EnvBase) -> Transform:
+        raise ValueError(
+            "Called function is deprecated is deprecated, please use Task.get_task().function() instead"
+        )
+
+    def get_env_transforms(self, env: EnvBase) -> List[Transform]:
+        raise ValueError(
+            "Called function is deprecated is deprecated, please use Task.get_task().function() instead"
+        )
+
+    def get_replay_buffer_transforms(self, env: EnvBase, group: str) -> List[Transform]:
+        raise ValueError(
+            "Called function is deprecated is deprecated, please use Task.get_task().function() instead"
+        )
+
+    @staticmethod
+    def render_callback(experiment, env: EnvBase, data: TensorDictBase):
+        raise ValueError(
+            "Called function is deprecated is deprecated, please use Task.get_task().function() instead"
+        )

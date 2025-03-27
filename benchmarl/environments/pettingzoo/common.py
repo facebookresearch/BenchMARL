@@ -15,7 +15,7 @@ from benchmarl.environments.common import Task, TaskClass
 from benchmarl.utils import DEVICE_TYPING
 
 
-class PettingZooTaskClass(TaskClass):
+class PettingZooClass(TaskClass):
     def get_env_fun(
         self,
         num_envs: int,
@@ -158,4 +158,4 @@ class PettingZooTask(Task):
 
     @staticmethod
     def associated_class():
-        return PettingZooTaskClass
+        return PettingZooClass
