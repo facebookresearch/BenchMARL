@@ -1,8 +1,10 @@
 # Creating a new task
 
 In the following we will see how to:
-- Create new tasks from a new environment
-- Create new tasks from an existing environment
+1. Create new tasks from a new environment
+2. Create new tasks from an existing environment
+
+
 
 ## Creating new tasks from a new environment
 
@@ -41,3 +43,8 @@ To create a new task (e.g., `task_3`) in an existing environment , follow these 
 
 3. (Optional) Add `task_3.py` to [`environments/customenv`](environments/customenv) and 
 the default `customenv_task_3_config` at the top of `task_3.yaml`.
+
+
+## PettingZoo example
+
+PR [#84](https://github.com/facebookresearch/BenchMARL/pull/84) contains an example on how to add a your own PettingZoo task.
