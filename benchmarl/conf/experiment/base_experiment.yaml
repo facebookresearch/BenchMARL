@@ -55,7 +55,7 @@ max_n_frames: 3_000_000
 on_policy_collected_frames_per_batch: 6000
 # Number of environments used for collection
 # If the environment is vectorized, this will be the number of batched environments.
-# Otherwise batching will be simulated and each env will be run sequentially.
+# Otherwise batching will be simulated and each env will be run sequentially or parallelly depending on parallel_collection.
 on_policy_n_envs_per_worker: 1
 # This is the number of times collected_frames_per_batch will be split into minibatches and trained
 on_policy_n_minibatch_iters: 45
@@ -67,7 +67,7 @@ on_policy_minibatch_size: 400
 off_policy_collected_frames_per_batch: 6000
 # Number of environments used for collection
 # If the environment is vectorized, this will be the number of batched environments.
-# Otherwise batching will be simulated and each env will be run sequentially.
+# Otherwise batching will be simulated and each env will be run sequentially or parallelly depending on parallel_collection.
 off_policy_n_envs_per_worker: 1
 # This is the number of times off_policy_train_batch_size will be sampled from the buffer and trained over.
 off_policy_n_optimizer_steps: 1000
@@ -93,7 +93,7 @@ render: True
 evaluation_interval: 120_000
 # Number of episodes that evaluation is run on
 evaluation_episodes: 1
-# If True, when stochastic policies are evaluated, their mode is taken, otherwise, if False, they are sampled
+# If True, when stochastic policies are evaluated, their deterministic value is taken, otherwise, if False, they are sampled
 evaluation_deterministic_actions: True
 
 # List of loggers to use, options are: wandb, csv, tensorboard, mflow
