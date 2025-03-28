@@ -4,14 +4,14 @@
 #  LICENSE file in the root directory of this source tree.
 #
 
-from .common import _get_task_config_class, Task
-from .magent.common import MAgentTask
-from .meltingpot.common import MeltingPotTask
+from .common import _get_task_config_class, Task, TaskClass
+from .magent.common import MAgentClass, MAgentTask
+from .meltingpot.common import MeltingPotClass, MeltingPotTask
 
 from .myenv.common import MyEnvClass, MyenvTask
-from .pettingzoo.common import PettingZooTask
-from .smacv2.common import Smacv2Task
-from .vmas.common import VmasTask
+from .pettingzoo.common import PettingZooClass, PettingZooTask
+from .smacv2.common import Smacv2Class, Smacv2Task
+from .vmas.common import VmasClass, VmasTask
 
 # The enum classes for the environments available.
 # This is the only object in this file you need to modify when adding a new environment.
