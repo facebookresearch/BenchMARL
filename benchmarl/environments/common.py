@@ -322,6 +322,8 @@ class TaskClass(abc.ABC):
         return self.__repr__()
 
     def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
         return self.name == other.name and self.config == other.config
 
 
