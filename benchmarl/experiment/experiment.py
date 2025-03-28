@@ -312,7 +312,7 @@ class Experiment(CallbackNotifier):
     Main experiment class in BenchMARL.
 
     Args:
-        task (TaskClass): the task class
+        task (TaskClass): the task
         algorithm_config (AlgorithmConfig): the algorithm configuration
         model_config (ModelConfig): the policy model configuration
         seed (int): the seed for the experiment
@@ -343,7 +343,7 @@ class Experiment(CallbackNotifier):
 
         if isinstance(task, Task):
             warnings.warn(
-                "Call `.get_task()` on your task Enum before passing it to the experiment. "
+                "Call `.get_task()` or `.get_from_yaml()` on your task Enum before passing it to the experiment. "
                 "If you do not do this, benchmarl will load the default task config from yaml."
             )
             task = task.get_task()
