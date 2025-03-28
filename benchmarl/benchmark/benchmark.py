@@ -4,10 +4,10 @@
 #  LICENSE file in the root directory of this source tree.
 #
 
-from typing import Iterator, Optional, Sequence, Set
+from typing import Iterator, Optional, Sequence, Set, Union
 
 from benchmarl.algorithms.common import AlgorithmConfig
-from benchmarl.environments import Task
+from benchmarl.environments import Task, TaskClass
 from benchmarl.experiment import Experiment, ExperimentConfig
 from benchmarl.models.common import ModelConfig
 
@@ -18,9 +18,9 @@ class Benchmark:
     Benchmarks are collections of experiments to compare.
 
     Args:
-        algorithm_configs (list of AlgorithmConfig): the algorithms to benchmark
+        algorithm_configs (sequence of AlgorithmConfig): the algorithms to benchmark
         model_config (ModelConfig): the config of the policy model
-        tasks (list of Task):  the tasks to benchmark
+        tasks (sequence of Task):  the tasks to benchmark
         seeds (set of int): the seeds for the benchmark
         experiment_config (ExperimentConfig): the experiment config
         critic_model_config (ModelConfig, optional): the config of the critic model. Defaults to model_config
@@ -31,7 +31,7 @@ class Benchmark:
         self,
         algorithm_configs: Sequence[AlgorithmConfig],
         model_config: ModelConfig,
-        tasks: Sequence[Task],
+        tasks: Sequence[Union[Task, TaskClass]],
         seeds: Set[int],
         experiment_config: ExperimentConfig,
         critic_model_config: Optional[ModelConfig] = None,

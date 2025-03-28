@@ -7,7 +7,7 @@
 import contextlib
 
 import pytest
-from benchmarl.environments import _task_class_registry, Task, task_config_registry
+from benchmarl.environments import _task_class_registry, task_config_registry
 from benchmarl.hydra_config import load_task_config_from_hydra
 from hydra import compose, initialize
 
@@ -41,15 +41,13 @@ def test_loading_tasks(task_name):
             if not task_has_dataclass
             else contextlib.nullcontext()
         ):
-            task: Task = load_task_config_from_hydra(
-                cfg.task, task_name=task_name_hydra
-            )
+            task = load_task_config_from_hydra(cfg.task, task_name=task_name_hydra)
 
         with (
             pytest.warns(match=warn_message)
             if not task_has_dataclass
             else contextlib.nullcontext()
         ):
-            task_from_yaml: Task = task_config_registry[task_name].get_from_yaml()
+            task_from_yaml = task_config_registry[task_name].get_from_yaml()
 
         assert task == task_from_yaml
