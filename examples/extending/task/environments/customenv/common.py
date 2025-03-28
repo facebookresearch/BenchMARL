@@ -6,10 +6,11 @@
 
 from typing import Callable, Dict, List, Optional
 
-from benchmarl.environments.common import Task
+from benchmarl.environments.common import Task, TaskClass
 from benchmarl.utils import DEVICE_TYPING
 
 from tensordict import TensorDictBase
+
 from torchrl.data import CompositeSpec
 from torchrl.envs import EnvBase
 from torchrl.envs.libs import YourTorchRLEnvConstructor
@@ -22,6 +23,12 @@ class CustomEnvTask(Task):
     TASK_1 = None  # Loaded automatically from conf/task/customenv/task_1
     TASK_2 = None  # Loaded automatically from conf/task/customenv/task_2
 
+    @staticmethod
+    def associated_class():
+        return CustomEnvClass
+
+
+class CustomEnvClass(TaskClass):
     def get_env_fun(
         self,
         num_envs: int,

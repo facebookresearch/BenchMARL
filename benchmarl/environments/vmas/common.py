@@ -10,42 +10,11 @@ from torchrl.data import Composite
 from torchrl.envs import EnvBase
 from torchrl.envs.libs.vmas import VmasEnv
 
-from benchmarl.environments.common import Task
+from benchmarl.environments.common import Task, TaskClass
 from benchmarl.utils import DEVICE_TYPING
 
 
-class VmasTask(Task):
-    """Enum for VMAS tasks."""
-
-    BALANCE = None
-    SAMPLING = None
-    NAVIGATION = None
-    TRANSPORT = None
-    REVERSE_TRANSPORT = None
-    WHEEL = None
-    DISPERSION = None
-    MULTI_GIVE_WAY = None
-    DROPOUT = None
-    GIVE_WAY = None
-    WIND_FLOCKING = None
-    PASSAGE = None
-    JOINT_PASSAGE = None
-    JOINT_PASSAGE_SIZE = None
-    BALL_PASSAGE = None
-    BALL_TRAJECTORY = None
-    BUZZ_WIRE = None
-    FLOCKING = None
-    DISCOVERY = None
-    FOOTBALL = None
-    SIMPLE_ADVERSARY = None
-    SIMPLE_CRYPTO = None
-    SIMPLE_PUSH = None
-    SIMPLE_REFERENCE = None
-    SIMPLE_SPEAKER_LISTENER = None
-    SIMPLE_SPREAD = None
-    SIMPLE_TAG = None
-    SIMPLE_WORLD_COMM = None
-
+class VmasClass(TaskClass):
     def get_env_fun(
         self,
         num_envs: int,
@@ -111,3 +80,40 @@ class VmasTask(Task):
     @staticmethod
     def env_name() -> str:
         return "vmas"
+
+
+class VmasTask(Task):
+    """Enum for VMAS tasks."""
+
+    BALANCE = None
+    SAMPLING = None
+    NAVIGATION = None
+    TRANSPORT = None
+    REVERSE_TRANSPORT = None
+    WHEEL = None
+    DISPERSION = None
+    MULTI_GIVE_WAY = None
+    DROPOUT = None
+    GIVE_WAY = None
+    WIND_FLOCKING = None
+    PASSAGE = None
+    JOINT_PASSAGE = None
+    JOINT_PASSAGE_SIZE = None
+    BALL_PASSAGE = None
+    BALL_TRAJECTORY = None
+    BUZZ_WIRE = None
+    FLOCKING = None
+    DISCOVERY = None
+    FOOTBALL = None
+    SIMPLE_ADVERSARY = None
+    SIMPLE_CRYPTO = None
+    SIMPLE_PUSH = None
+    SIMPLE_REFERENCE = None
+    SIMPLE_SPEAKER_LISTENER = None
+    SIMPLE_SPREAD = None
+    SIMPLE_TAG = None
+    SIMPLE_WORLD_COMM = None
+
+    @staticmethod
+    def associated_class():
+        return VmasClass
