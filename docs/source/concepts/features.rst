@@ -74,7 +74,11 @@ In Python, this is equivalent to:
 Evaluating
 ----------
 
-To evaluate an experiment, you can:
+Evaluation is automatically run throughout training and can be configured from :class:`~benchmarl.experiment.ExperimentConfig`.
+By default, evaluation will be run in different domain randomised environments throughout training.
+If you want to always evaluate in the same exact (seeded) environments, set :attr:`benchmarl.experiment.ExperimentConfig.evaluation_static`.
+
+To evaluate a saved experiment, you can:
 
 .. code-block:: python
 
