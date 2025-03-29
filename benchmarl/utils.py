@@ -3,7 +3,7 @@
 #  This source code is licensed under the license found in the
 #  LICENSE file in the root directory of this source tree.
 #
-
+import contextlib
 import importlib
 import random
 import typing
@@ -59,6 +59,23 @@ def seed_everything(seed: int):
         import numpy
 
         numpy.random.seed(seed)
+
+
+@contextlib.contextmanager
+def local_seed():
+    torch_state = torch.random.get_rng_state()
+    if _has_numpy:
+        import numpy as np
+
+        np_state = np.random.get_state()
+    py_state = random.getstate()
+
+    yield
+
+    torch.random.set_rng_state(torch_state)
+    if _has_numpy:
+        np.random.set_state(np_state)
+    random.setstate(py_state)
 
 
 def _add_rnn_transforms(
