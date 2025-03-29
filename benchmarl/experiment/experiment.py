@@ -872,7 +872,13 @@ class Experiment(CallbackNotifier):
     def _evaluation_loop(self):
         if self.config.evaluation_static:
             seed_everything(self.seed)
-            self.test_env.set_seed(self.seed)
+            try:
+                self.test_env.set_seed(self.seed)
+            except NotImplementedError:
+                warnings.warn(
+                    "`experiment.evaluation_static` set to true but the environment does not allow to set seeds."
+                    "Static evaluation is not guaranteed."
+                )
         evaluation_start = time.time()
         with set_exploration_type(
             ExplorationType.DETERMINISTIC
