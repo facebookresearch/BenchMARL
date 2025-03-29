@@ -54,7 +54,6 @@ def seed_everything(seed: int):
     """
     random.seed(seed)
     torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
     if _has_numpy:
         import numpy
 
