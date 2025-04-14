@@ -115,7 +115,11 @@ def _add_rnn_transforms(
                 *(
                     [InitTracker(init_key="is_init")]
                     + (
-                        [TensorDictPrimer(spec_actor, reset_key="_reset")]
+                        [
+                            TensorDictPrimer(
+                                spec_actor, reset_key="_reset", expand_specs=True
+                            )
+                        ]
                         if len(spec_actor.keys(True, True)) > 0
                         else []
                     )
