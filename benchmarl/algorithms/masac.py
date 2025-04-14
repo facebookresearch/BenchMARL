@@ -3,6 +3,7 @@
 #  This source code is licensed under the license found in the
 #  LICENSE file in the root directory of this source tree.
 #
+import warnings
 from dataclasses import dataclass, MISSING
 from typing import Dict, Iterable, Optional, Tuple, Type, Union
 
@@ -19,7 +20,6 @@ from torchrl.modules import (
     TanhNormal,
 )
 from torchrl.objectives import DiscreteSACLoss, LossModule, SACLoss, ValueEstimators
-from yaml import warnings
 
 from benchmarl.algorithms.common import Algorithm, AlgorithmConfig
 from benchmarl.models.common import ModelConfig
