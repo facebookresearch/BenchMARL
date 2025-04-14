@@ -7,6 +7,7 @@ import warnings
 from dataclasses import dataclass, MISSING
 from typing import Dict, Iterable, Optional, Tuple, Type, Union
 
+import torch
 import torch.nn.functional
 from tensordict import TensorDictBase
 from tensordict.nn import NormalParamExtractor, TensorDictModule, TensorDictSequential
