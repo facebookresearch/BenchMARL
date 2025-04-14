@@ -3,7 +3,6 @@
 #  This source code is licensed under the license found in the
 #  LICENSE file in the root directory of this source tree.
 #
-
 from dataclasses import dataclass, MISSING
 from typing import Dict, Iterable, Optional, Tuple, Type, Union
 
@@ -114,7 +113,7 @@ class Masac(Algorithm):
         else:
             loss_module = DiscreteSACLoss(
                 actor_network=policy_for_loss,
-                qvalue_network=self.get_discrete_value_module(group),
+                qvalue_network=self.get_discrete_value_module_coupled(group),
                 num_qvalue_nets=self.num_qvalue_nets,
                 loss_function=self.loss_function,
                 alpha_init=self.alpha_init,
@@ -279,22 +278,13 @@ class Masac(Algorithm):
     # Custom new methods
     #####################
 
-    def get_discrete_value_module(self, group: str) -> TensorDictModule:
+    def get_discrete_value_module_coupled(self, group: str) -> TensorDictModule:
         n_agents = len(self.group_map[group])
         n_actions = self.action_spec[group, "action"].space.n
-        if self.share_param_critic:
-            critic_output_spec = Composite(
-                {"action_value": Unbounded(shape=(n_actions,))}
-            )
-        else:
-            critic_output_spec = Composite(
-                {
-                    group: Composite(
-                        {"action_value": Unbounded(shape=(n_agents, n_actions))},
-                        shape=(n_agents,),
-                    )
-                }
-            )
+
+        critic_output_spec = Composite(
+            {"action_value": Unbounded(shape=(n_actions * n_agents,))}
+        )
 
         if self.state_spec is not None:
             value_module = self.critic_model_config.get_model(
@@ -304,7 +294,7 @@ class Masac(Algorithm):
                 centralised=True,
                 input_has_agent_dim=False,
                 agent_group=group,
-                share_params=self.share_param_critic,
+                share_params=True,
                 device=self.device,
                 action_spec=self.action_spec,
             )
@@ -320,21 +310,89 @@ class Masac(Algorithm):
                 centralised=True,
                 input_has_agent_dim=True,
                 agent_group=group,
-                share_params=self.share_param_critic,
+                share_params=True,
                 device=self.device,
                 action_spec=self.action_spec,
             )
-        if self.share_param_critic:
-            expand_module = TensorDictModule(
-                lambda value: value.unsqueeze(-2).expand(
-                    *value.shape[:-1], n_agents, n_actions
-                ),
-                in_keys=["action_value"],
-                out_keys=[(group, "action_value")],
-            )
-            value_module = TensorDictSequential(value_module, expand_module)
+
+        expand_module = TensorDictModule(
+            lambda value: value.reshape(value.shape[:-1], n_agents, n_actions),
+            in_keys=["action_value"],
+            out_keys=[(group, "action_value")],
+        )
+        value_module = TensorDictSequential(value_module, expand_module)
 
         return value_module
+
+    # def get_discrete_value_module_decoupled(self, group: str) -> TensorDictModule:
+    #     n_agents = len(self.group_map[group])
+    #     n_actions = self.action_spec[group, "action"].space.n
+    #     modules = []
+    #
+    #     critic_output_spec = Composite(
+    #         {
+    #             group: Composite(
+    #                 {"action_value": Unbounded(shape=(n_agents, n_actions))},
+    #                 shape=(n_agents,),
+    #             )
+    #         }
+    #     )
+    #
+    #     if self.state_spec is not None:
+    #         global_state_key = list(self.state_spec.keys(True, True))[0]
+    #         modules.append(
+    #             TensorDictModule(
+    #                 lambda state: state.unsqueeze(
+    #                     -len(self.state_spec.shape) - 1
+    #                 ).expand(
+    #                     *state.shape[: -len(self.state_spec.shape)],
+    #                     n_agents,
+    #                     *self.state_spec.shape
+    #                 ),
+    #                 in_keys=[global_state_key],
+    #                 out_keys=[unravel_key((group, global_state_key))],
+    #             )
+    #         )
+    #         critic_input_spec = Composite(
+    #             {
+    #                 group: self.state_spec.clone()
+    #                 .expand(n_agents, *self.state_spec.shape)
+    #                 .to(self.device)
+    #             }
+    #         )
+    #     else:
+    #         def process_keys(observation_keys):
+    #             pass
+    #         observation_keys = list(self.observation_spec.keys(True, True))
+    #         modules.append(
+    #             TensorDictModule(
+    #                 process_keys,
+    #                 in_keys=observation_keys,
+    #                 out_keys=[_unravel_key_to_tuple(key)[] for key in observation_keys],
+    #             )
+    #         )
+    #         critic_input_spec = Composite(
+    #             {
+    #                 group: self.observation_spec[group]
+    #                 .clone()
+    #                 .expand(n_agents, math.prod(self.observation_spec.shape))
+    #                 .to(self.device)
+    #             }
+    #         )
+    #
+    #     value_module = self.critic_model_config.get_model(
+    #         input_spec=critic_input_spec,
+    #         output_spec=critic_output_spec,
+    #         n_agents=n_agents,
+    #         centralised=False,  # We handle the centralization in the code above
+    #         input_has_agent_dim=True,
+    #         agent_group=group,
+    #         share_params=self.share_param_critic,
+    #         device=self.device,
+    #         action_spec=self.action_spec,
+    #     )
+    #
+    #     return TensorDictSequential(*modules)
 
     def get_continuous_value_module(self, group: str) -> TensorDictModule:
         n_agents = len(self.group_map[group])
