@@ -140,6 +140,7 @@ class Vdn(Algorithm):
             action_mask_key=action_mask_key,
             eps_init=self.experiment_config.exploration_eps_init,
             eps_end=self.experiment_config.exploration_eps_end,
+            device=self.device,
         )
         return TensorDictSequential(*policy_for_loss, greedy)
 
