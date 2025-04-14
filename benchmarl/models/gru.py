@@ -186,16 +186,18 @@ class MultiAgentGRU(torch.nn.Module):
         seq = input.shape[1]
         assert input.shape == (batch, seq, self.n_agents, self.input_size)
 
-        if h_0 is not None:  # Collection
-            # Set hidden to 0 when is_init
-            h_0 = torch.where(expand_as_right(is_init, h_0), 0, h_0)
+        if not training:  # Collection
+            h_0 = torch.where(
+                expand_as_right(is_init, h_0), 0, h_0
+            )  # Set hidden to 0 when is_init
+            is_init = is_init.unsqueeze(
+                1
+            )  # If in collection emulate the sequence dimension
 
-        if not training:  # If in collection emulate the sequence dimension
-            is_init = is_init.unsqueeze(1)
         assert is_init.shape == (batch, seq, 1)
         is_init = is_init.unsqueeze(-2).expand(batch, seq, self.n_agents, 1)
 
-        if h_0 is None:
+        if training:
             if self.centralised and self.share_params:
                 shape = (
                     batch,
