@@ -14,7 +14,7 @@ Here are the steps to create a new task and a new environment.
 This is an enum with task entries and a class with abstract functions you need to implement. The entries of the enum will be the 
 uppercase names of your tasks.
 2. Create a `conf/task/customenv` folder with a yaml configuration file for each of your tasks. This folder will have a 
-yaml configuration for each task. You can see [`conf/task/customenv`](conf/task/customenv) for an example. 
+yaml configuration for each task. You can see [`conf/task/customenv`](conf/task/customenv) for an example. (**NOTE:** only include the `defaults` section at the top of the file if you are doing step 6)
 3. Place your task script in [`benchmarl/environments/customenv/common.py`](../../../benchmarl/environments) and 
 your config in [`benchmarl/conf/task/customenv`](../../../benchmarl/conf/task) (or any other place you want to 
 override from).
