@@ -3,12 +3,15 @@
 #  This source code is licensed under the license found in the
 #  LICENSE file in the root directory of this source tree.
 #
-
+import warnings
 from dataclasses import dataclass, MISSING
 from typing import Dict, Iterable, Optional, Tuple, Type, Union
 
+import torch
+import torch.nn.functional
 from tensordict import TensorDictBase
 from tensordict.nn import NormalParamExtractor, TensorDictModule, TensorDictSequential
+from tensordict.utils import _unravel_key_to_tuple, unravel_key
 from torch.distributions import Categorical
 from torchrl.data import Composite, Unbounded
 from torchrl.modules import (
@@ -47,6 +50,11 @@ class Masac(Algorithm):
             choices: "softplus", "exp", "relu", "biased_softplus_1";
         use_tanh_normal (bool): if ``True``, use TanhNormal as the continuyous action distribution with support bound
             to the action domain. Otherwise, an IndependentNormal is used.
+        coupled_discrete_values (bool): only relevant for discrete action spaces. if ``True``, the critic will predict
+            n_agents x n_actions action values given the global state (or concatenation of agents' observations). if ``False``,
+            the critic will predict n_actions values given the global state and the actions of the other agents. This
+            is done for all agents in parallel. ``True`` is more theoretically sound and should be preferred. However,
+            if the number of outputs gets too large, you may want to try ``False``.
     """
 
     def __init__(
@@ -63,7 +71,8 @@ class Masac(Algorithm):
         fixed_alpha: bool,
         scale_mapping: str,
         use_tanh_normal: bool,
-        **kwargs
+        coupled_discrete_values: bool,
+        **kwargs,
     ):
         super().__init__(**kwargs)
 
@@ -79,6 +88,7 @@ class Masac(Algorithm):
         self.fixed_alpha = fixed_alpha
         self.scale_mapping = scale_mapping
         self.use_tanh_normal = use_tanh_normal
+        self.coupled_discrete_values = coupled_discrete_values
 
     #############################
     # Overridden abstract methods
@@ -112,9 +122,16 @@ class Masac(Algorithm):
             )
 
         else:
+            if self.coupled_discrete_values and not self.share_param_critic:
+                warnings.warn(
+                    "disabling share_param_critic in MASAC with discrete actions and coupled_discrete_values has not effect"
+                    "as the critic is already able to predict different values for different agents."
+                )
             loss_module = DiscreteSACLoss(
                 actor_network=policy_for_loss,
-                qvalue_network=self.get_discrete_value_module(group),
+                qvalue_network=self.get_discrete_value_module_decoupled(group)
+                if not self.coupled_discrete_values
+                else self.get_discrete_value_module_coupled(group),
                 num_qvalue_nets=self.num_qvalue_nets,
                 loss_function=self.loss_function,
                 alpha_init=self.alpha_init,
@@ -279,62 +296,177 @@ class Masac(Algorithm):
     # Custom new methods
     #####################
 
-    def get_discrete_value_module(self, group: str) -> TensorDictModule:
+    def get_discrete_value_module_coupled(self, group: str) -> TensorDictModule:
+        # Predict n_agents x n_actions values having access to the global state
+        # this is more theoretically sound but might have a lot of outputs, for large number of agents you
+        # may want to use the decoupled version
         n_agents = len(self.group_map[group])
         n_actions = self.action_spec[group, "action"].space.n
-        if self.share_param_critic:
-            critic_output_spec = Composite(
-                {"action_value": Unbounded(shape=(n_actions,))}
-            )
-        else:
-            critic_output_spec = Composite(
-                {
-                    group: Composite(
-                        {"action_value": Unbounded(shape=(n_agents, n_actions))},
-                        shape=(n_agents,),
-                    )
-                }
-            )
+
+        critic_output_spec = Composite(
+            {"action_value": Unbounded(shape=(n_actions * n_agents,))},
+            device=self.device,
+        )
 
         if self.state_spec is not None:
-            value_module = self.critic_model_config.get_model(
-                input_spec=self.state_spec,
-                output_spec=critic_output_spec,
-                n_agents=n_agents,
-                centralised=True,
-                input_has_agent_dim=False,
-                agent_group=group,
-                share_params=self.share_param_critic,
-                device=self.device,
-                action_spec=self.action_spec,
-            )
-
+            critic_input_spec = self.state_spec
+            input_has_agent_dim = False
         else:
             critic_input_spec = Composite(
                 {group: self.observation_spec[group].clone().to(self.device)}
             )
-            value_module = self.critic_model_config.get_model(
+            input_has_agent_dim = True
+
+        value_module = self.critic_model_config.get_model(
+            input_spec=critic_input_spec,
+            output_spec=critic_output_spec,
+            n_agents=n_agents,
+            centralised=True,
+            input_has_agent_dim=input_has_agent_dim,
+            agent_group=group,
+            share_params=True,
+            device=self.device,
+            action_spec=self.action_spec,
+        )
+
+        expand_module = TensorDictModule(
+            lambda value: value.reshape(*value.shape[:-1], n_agents, n_actions),
+            in_keys=["action_value"],
+            out_keys=[(group, "action_value")],
+        )
+        value_module = TensorDictSequential(value_module, expand_module)
+
+        return value_module
+
+    def get_discrete_value_module_decoupled(self, group: str) -> TensorDictModule:
+        # Predict n_actions values having access to the global state and the actions of other agents,
+        # do this for all agents in parallel
+        n_agents = len(self.group_map[group])
+        n_actions = self.action_spec[group, "action"].space.n
+        modules = []
+
+        critic_output_spec = Composite(
+            {
+                group: Composite(
+                    {"action_value": Unbounded(shape=(n_agents, n_actions))},
+                    shape=(n_agents,),
+                )
+            },
+            device=self.device,
+        )
+        modules.append(
+            TensorDictModule(
+                lambda action: _others_actions(
+                    action, n_actions=n_actions, n_agents=n_agents
+                ),
+                in_keys=[(group, "logits")],
+                out_keys=[(group, "others_action")],
+            )
+        )
+        critic_input_spec = Composite(
+            {
+                group: Composite(
+                    {
+                        "others_action": Unbounded(
+                            shape=(n_agents, n_actions * (n_agents - 1))
+                        )
+                    },
+                    shape=(n_agents,),
+                ),
+            },
+            device=self.device,
+        )
+
+        if self.state_spec is not None:
+            global_state_key = _unravel_key_to_tuple(
+                list(self.state_spec.keys(True, True))[0]
+            )
+            new_global_state_key = list(global_state_key)
+            new_global_state_key[-1] = new_global_state_key[-1] + "_expanded"
+            new_global_state_key = tuple(new_global_state_key)
+            modules.append(
+                TensorDictModule(
+                    lambda state: state.unsqueeze(
+                        -len(self.state_spec[global_state_key].shape) - 1
+                    ).expand(
+                        *state.shape[: -len(self.state_spec[global_state_key].shape)],
+                        n_agents,
+                        *self.state_spec[global_state_key].shape,
+                    ),
+                    in_keys=[global_state_key],
+                    out_keys=[unravel_key((group, new_global_state_key))],
+                )
+            )
+            critic_input_spec[group].update(
+                {
+                    new_global_state_key: self.state_spec[global_state_key]
+                    .clone()
+                    .unsqueeze(0)
+                    .expand(n_agents, *self.state_spec[global_state_key].shape)
+                    .to(self.device)
+                }
+            )
+        else:
+            observation_keys = list(self.observation_spec.keys(True, True))
+
+            def process_keys(*observation_values):
+                return_values = []
+                for key, value in zip(observation_keys, observation_values):
+                    spec = self.observation_spec[key]
+                    batch_size = value.shape[: -len(spec.shape)]
+                    value = value.repeat(
+                        *(1 for _ in range(len(batch_size))),
+                        n_agents,
+                        *(1 for _ in range(len(spec.shape[1:]))),
+                    )
+                    value = value.view(
+                        *batch_size,
+                        n_agents,
+                        *spec.shape[1:-1],
+                        spec.shape[-1] * n_agents,
+                    )
+                    return_values.append(value)
+                return tuple(return_values)
+
+            def process_key(key):
+                key = list(_unravel_key_to_tuple(key))
+                key[-1] = key[-1] + "_expanded"
+                return tuple(key)
+
+            modules.append(
+                TensorDictModule(
+                    process_keys,
+                    in_keys=observation_keys,
+                    out_keys=[process_key(key) for key in observation_keys],
+                )
+            )
+            critic_input_spec[group].update(
+                {
+                    process_key(key): val.reshape(
+                        *val.shape[1:-1], val.shape[-1] * n_agents
+                    )
+                    .unsqueeze(0)
+                    .expand(n_agents, *val.shape[1:-1], val.shape[-1] * n_agents)
+                    .to(self.device)
+                    for key, val in self.observation_spec[group].items()
+                }
+            )
+
+        modules.append(
+            self.critic_model_config.get_model(
                 input_spec=critic_input_spec,
                 output_spec=critic_output_spec,
                 n_agents=n_agents,
-                centralised=True,
+                centralised=False,  # We handle the centralization in the code above
                 input_has_agent_dim=True,
                 agent_group=group,
                 share_params=self.share_param_critic,
                 device=self.device,
                 action_spec=self.action_spec,
             )
-        if self.share_param_critic:
-            expand_module = TensorDictModule(
-                lambda value: value.unsqueeze(-2).expand(
-                    *value.shape[:-1], n_agents, n_actions
-                ),
-                in_keys=["action_value"],
-                out_keys=[(group, "action_value")],
-            )
-            value_module = TensorDictSequential(value_module, expand_module)
+        )
 
-        return value_module
+        return TensorDictSequential(*modules)
 
     def get_continuous_value_module(self, group: str) -> TensorDictModule:
         n_agents = len(self.group_map[group])
@@ -423,6 +555,35 @@ class Masac(Algorithm):
         return TensorDictSequential(*modules)
 
 
+def _others_actions(logits, n_actions, n_agents):
+    actions = logits.argmax(dim=-1)
+
+    # input shape ..., n_agents
+    batch_size = actions.shape[:-1]
+    actions = torch.nn.functional.one_hot(
+        actions, num_classes=n_actions
+    )  # ..., n_agents, n_actions
+    actions = actions.repeat(
+        *(1 for _ in range(len(batch_size))), n_agents, 1
+    )  # ..., 2* n_agents, n_actions
+    actions = actions.view(*batch_size, n_agents, n_agents, n_actions)
+    indices = (
+        torch.eye(n_agents, n_agents, device=actions.device, dtype=torch.bool)
+        .unsqueeze(-1)
+        .expand(n_agents, n_agents, n_actions)
+    )
+    while len(indices.shape) < len(actions.shape):
+        indices = indices.unsqueeze(0)
+    indices = indices.expand(actions.shape)
+    actions = actions.masked_select(
+        ~indices
+    )  # shape ..., n_agents, n_agents-1, n_actions
+
+    actions = actions.view(*batch_size, n_agents, (n_agents - 1) * n_actions)
+    # out shape ..., n_agents, n_agents-1 * n_actions
+    return actions.to(torch.float32)
+
+
 @dataclass
 class MasacConfig(AlgorithmConfig):
     """Configuration dataclass for :class:`~benchmarl.algorithms.Masac`."""
@@ -439,6 +600,7 @@ class MasacConfig(AlgorithmConfig):
     fixed_alpha: bool = MISSING
     scale_mapping: str = MISSING
     use_tanh_normal: bool = MISSING
+    coupled_discrete_values: bool = MISSING
 
     @staticmethod
     def associated_class() -> Type[Algorithm]:

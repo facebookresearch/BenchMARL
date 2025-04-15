@@ -217,20 +217,7 @@ class Maddpg(Algorithm):
                     )
                 }
             )
-
-            modules.append(
-                self.critic_model_config.get_model(
-                    input_spec=critic_input_spec,
-                    output_spec=critic_output_spec,
-                    n_agents=n_agents,
-                    centralised=True,
-                    input_has_agent_dim=False,
-                    agent_group=group,
-                    share_params=self.share_param_critic,
-                    device=self.device,
-                    action_spec=self.action_spec,
-                )
-            )
+            input_has_agent_dim = False
 
         else:
             critic_input_spec = Composite(
@@ -240,20 +227,21 @@ class Maddpg(Algorithm):
                     .update(self.action_spec[group])
                 }
             )
+            input_has_agent_dim = True
 
-            modules.append(
-                self.critic_model_config.get_model(
-                    input_spec=critic_input_spec,
-                    output_spec=critic_output_spec,
-                    n_agents=n_agents,
-                    centralised=True,
-                    input_has_agent_dim=True,
-                    agent_group=group,
-                    share_params=self.share_param_critic,
-                    device=self.device,
-                    action_spec=self.action_spec,
-                )
+        modules.append(
+            self.critic_model_config.get_model(
+                input_spec=critic_input_spec,
+                output_spec=critic_output_spec,
+                n_agents=n_agents,
+                centralised=True,
+                input_has_agent_dim=input_has_agent_dim,
+                agent_group=group,
+                share_params=self.share_param_critic,
+                device=self.device,
+                action_spec=self.action_spec,
             )
+        )
 
         if self.share_param_critic:
             modules.append(
