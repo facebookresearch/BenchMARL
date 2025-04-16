@@ -157,39 +157,49 @@ class Plotting:
     ############################
 
     @staticmethod
-    def performance_profile_figure(environment_comparison_matrix):
+    def performance_profile_figure(environment_comparison_matrix, **kwargs):
         return performance_profiles(
             environment_comparison_matrix,
             metric_name=Plotting.METRIC_TO_PLOT,
             metrics_to_normalize=Plotting.METRICS_TO_NORMALIZE,
+            **kwargs
         )
 
     @staticmethod
-    def aggregate_scores(environment_comparison_matrix):
+    def aggregate_scores(environment_comparison_matrix, **kwargs):
         return aggregate_scores(
             dictionary=environment_comparison_matrix,
-            metric_name=Plotting.METRIC_TO_PLOT,
-            metrics_to_normalize=Plotting.METRICS_TO_NORMALIZE,
-            save_tabular_as_latex=True,
+            **{
+                "metric_name": Plotting.METRIC_TO_PLOT,
+                "metrics_to_normalize": Plotting.METRICS_TO_NORMALIZE,
+                "save_tabular_as_latex": True,
+                **kwargs,
+            }
         )
 
     @staticmethod
     def probability_of_improvement(
-        environment_comparison_matrix, algorithms_to_compare: List[List[str]]
+        environment_comparison_matrix, algorithms_to_compare: List[List[str]], **kwargs
     ):
         return probability_of_improvement(
             environment_comparison_matrix,
-            metric_name=Plotting.METRIC_TO_PLOT,
-            metrics_to_normalize=Plotting.METRICS_TO_NORMALIZE,
             algorithms_to_compare=algorithms_to_compare,
+            **{
+                "metric_name": Plotting.METRIC_TO_PLOT,
+                "metrics_to_normalize": Plotting.METRICS_TO_NORMALIZE,
+                **kwargs,
+            }
         )
 
     @staticmethod
-    def environemnt_sample_efficiency_curves(sample_effeciency_matrix):
+    def environemnt_sample_efficiency_curves(sample_effeciency_matrix, **kwargs):
         return sample_efficiency_curves(
             dictionary=sample_effeciency_matrix,
-            metric_name=Plotting.METRIC_TO_PLOT,
-            metrics_to_normalize=Plotting.METRICS_TO_NORMALIZE,
+            **{
+                "metric_name": Plotting.METRIC_TO_PLOT,
+                "metrics_to_normalize": Plotting.METRICS_TO_NORMALIZE,
+                **kwargs,
+            }
         )
 
     ############################
@@ -197,13 +207,16 @@ class Plotting:
     ############################
 
     @staticmethod
-    def task_sample_efficiency_curves(processed_data, task, env):
+    def task_sample_efficiency_curves(processed_data, task, env, **kwargs):
         return plot_single_task(
             processed_data=processed_data,
             environment_name=env,
             task_name=task,
-            metric_name="return",
-            metrics_to_normalize=Plotting.METRICS_TO_NORMALIZE,
+            **{
+                "metric_name": Plotting.METRIC_TO_PLOT,
+                "metrics_to_normalize": Plotting.METRICS_TO_NORMALIZE,
+                **kwargs,
+            }
         )
 
 
