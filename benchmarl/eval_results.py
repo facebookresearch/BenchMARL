@@ -130,7 +130,9 @@ class Plotting:
 
     @classmethod
     def process_data(
-        cls, raw_data: Dict, metrics_to_normalize: Optional[List[str]] = None
+        cls,
+        raw_data: Dict,
+        metrics_to_normalize: Optional[List[str]] = METRICS_TO_NORMALIZE,
     ) -> Dict:
         """Call ``data_process_pipeline`` to normalize the chosen metrics and to clean the data
 
@@ -144,7 +146,7 @@ class Plotting:
 
         return data_process_pipeline(
             raw_data=raw_data,
-            metrics_to_normalize=metrics_to_normalize or cls.METRICS_TO_NORMALIZE,
+            metrics_to_normalize=metrics_to_normalize,
         )
 
     @classmethod
@@ -152,12 +154,12 @@ class Plotting:
         cls,
         processed_data,
         env_name: str,
-        metrics_to_normalize: Optional[List[str]] = None,
+        metrics_to_normalize: Optional[List[str]] = METRICS_TO_NORMALIZE,
     ):
         return create_matrices_for_rliable(
             data_dictionary=processed_data,
             environment_name=env_name,
-            metrics_to_normalize=metrics_to_normalize or cls.METRICS_TO_NORMALIZE,
+            metrics_to_normalize=metrics_to_normalize,
         )
 
     ############################
@@ -168,14 +170,14 @@ class Plotting:
     def performance_profile_figure(
         cls,
         environment_comparison_matrix,
-        metric_name: Optional[str] = None,
-        metrics_to_normalize: Optional[List[str]] = None,
+        metric_name: Optional[str] = METRIC_TO_PLOT,
+        metrics_to_normalize: Optional[List[str]] = METRICS_TO_NORMALIZE,
         **kwargs
     ):
         return performance_profiles(
             environment_comparison_matrix,
-            metric_name=metric_name or cls.METRIC_TO_PLOT,
-            metrics_to_normalize=metrics_to_normalize or cls.METRICS_TO_NORMALIZE,
+            metric_name=metric_name,
+            metrics_to_normalize=metrics_to_normalize,
             **kwargs,
         )
 
@@ -183,15 +185,15 @@ class Plotting:
     def aggregate_scores(
         cls,
         environment_comparison_matrix,
-        metric_name: Optional[str] = None,
-        metrics_to_normalize: Optional[List[str]] = None,
+        metric_name: Optional[str] = METRIC_TO_PLOT,
+        metrics_to_normalize: Optional[List[str]] = METRICS_TO_NORMALIZE,
         save_tabular_as_latex: bool = True,
         **kwargs
     ):
         return aggregate_scores(
             dictionary=environment_comparison_matrix,
-            metric_name=metric_name or cls.METRIC_TO_PLOT,
-            metrics_to_normalize=metrics_to_normalize or cls.METRICS_TO_NORMALIZE,
+            metric_name=metric_name,
+            metrics_to_normalize=metrics_to_normalize,
             save_tabular_as_latex=save_tabular_as_latex,
             **kwargs,
         )
@@ -201,15 +203,15 @@ class Plotting:
         cls,
         environment_comparison_matrix,
         algorithms_to_compare: List[List[str]],
-        metric_name: Optional[str] = None,
-        metrics_to_normalize: Optional[List[str]] = None,
+        metric_name: Optional[str] = METRIC_TO_PLOT,
+        metrics_to_normalize: Optional[List[str]] = METRICS_TO_NORMALIZE,
         **kwargs
     ):
         return probability_of_improvement(
             environment_comparison_matrix,
             algorithms_to_compare=algorithms_to_compare,
-            metric_name=metric_name or cls.METRIC_TO_PLOT,
-            metrics_to_normalize=metrics_to_normalize or cls.METRICS_TO_NORMALIZE,
+            metric_name=metric_name,
+            metrics_to_normalize=metrics_to_normalize,
             **kwargs,
         )
 
@@ -217,14 +219,14 @@ class Plotting:
     def environemnt_sample_efficiency_curves(
         cls,
         sample_effeciency_matrix,
-        metric_name: Optional[str] = None,
-        metrics_to_normalize: Optional[List[str]] = None,
+        metric_name: Optional[str] = METRIC_TO_PLOT,
+        metrics_to_normalize: Optional[List[str]] = METRICS_TO_NORMALIZE,
         **kwargs
     ):
         return sample_efficiency_curves(
             dictionary=sample_effeciency_matrix,
-            metric_name=metric_name or cls.METRIC_TO_PLOT,
-            metrics_to_normalize=metrics_to_normalize or cls.METRICS_TO_NORMALIZE,
+            metric_name=metric_name,
+            metrics_to_normalize=metrics_to_normalize,
             **kwargs,
         )
 
@@ -238,16 +240,16 @@ class Plotting:
         processed_data,
         task,
         env,
-        metric_name: Optional[str] = None,
-        metrics_to_normalize: Optional[List[str]] = None,
+        metric_name: Optional[str] = METRIC_TO_PLOT,
+        metrics_to_normalize: Optional[List[str]] = METRICS_TO_NORMALIZE,
         **kwargs
     ):
         return plot_single_task(
             processed_data=processed_data,
             environment_name=env,
             task_name=task,
-            metric_name=metric_name or cls.METRIC_TO_PLOT,
-            metrics_to_normalize=metrics_to_normalize or cls.METRICS_TO_NORMALIZE,
+            metric_name=metric_name,
+            metrics_to_normalize=metrics_to_normalize,
             **kwargs,
         )
 
