@@ -128,7 +128,7 @@ class Plotting:
     METRICS_TO_NORMALIZE = ["return"]
     METRIC_TO_PLOT = "return"
 
-    @classmethod
+    @staticmethod
     def process_data(
         cls,
         raw_data: Dict,
@@ -149,7 +149,7 @@ class Plotting:
             metrics_to_normalize=metrics_to_normalize,
         )
 
-    @classmethod
+    @staticmethod
     def create_matrices(
         cls,
         processed_data,
@@ -166,7 +166,7 @@ class Plotting:
     # Environment level plotting
     ############################
 
-    @classmethod
+    @staticmethod
     def performance_profile_figure(
         cls,
         environment_comparison_matrix,
@@ -181,7 +181,7 @@ class Plotting:
             **kwargs,
         )
 
-    @classmethod
+    @staticmethod
     def aggregate_scores(
         cls,
         environment_comparison_matrix,
@@ -198,7 +198,7 @@ class Plotting:
             **kwargs,
         )
 
-    @classmethod
+    @staticmethod
     def probability_of_improvement(
         cls,
         environment_comparison_matrix,
@@ -215,7 +215,7 @@ class Plotting:
             **kwargs,
         )
 
-    @classmethod
+    @staticmethod
     def environemnt_sample_efficiency_curves(
         cls,
         sample_effeciency_matrix,
@@ -234,7 +234,7 @@ class Plotting:
     # Task level plotting
     ############################
 
-    @classmethod
+    @staticmethod
     def task_sample_efficiency_curves(
         cls,
         processed_data,
