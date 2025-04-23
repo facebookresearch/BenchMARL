@@ -137,6 +137,7 @@ class Plotting:
 
         Args:
             raw_data (dict): the input data
+            metrics_to_normalize (optional, List[str]): the list of metrics to normalize
 
         Returns:
             the processed dict
