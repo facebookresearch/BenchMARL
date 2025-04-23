@@ -130,7 +130,6 @@ class Plotting:
 
     @staticmethod
     def process_data(
-        cls,
         raw_data: Dict,
         metrics_to_normalize: Optional[List[str]] = METRICS_TO_NORMALIZE,
     ) -> Dict:
@@ -151,7 +150,6 @@ class Plotting:
 
     @staticmethod
     def create_matrices(
-        cls,
         processed_data,
         env_name: str,
         metrics_to_normalize: Optional[List[str]] = METRICS_TO_NORMALIZE,
@@ -168,7 +166,6 @@ class Plotting:
 
     @staticmethod
     def performance_profile_figure(
-        cls,
         environment_comparison_matrix,
         metric_name: Optional[str] = METRIC_TO_PLOT,
         metrics_to_normalize: Optional[List[str]] = METRICS_TO_NORMALIZE,
@@ -183,7 +180,6 @@ class Plotting:
 
     @staticmethod
     def aggregate_scores(
-        cls,
         environment_comparison_matrix,
         metric_name: Optional[str] = METRIC_TO_PLOT,
         metrics_to_normalize: Optional[List[str]] = METRICS_TO_NORMALIZE,
@@ -200,7 +196,6 @@ class Plotting:
 
     @staticmethod
     def probability_of_improvement(
-        cls,
         environment_comparison_matrix,
         algorithms_to_compare: List[List[str]],
         metric_name: Optional[str] = METRIC_TO_PLOT,
@@ -217,7 +212,6 @@ class Plotting:
 
     @staticmethod
     def environemnt_sample_efficiency_curves(
-        cls,
         sample_effeciency_matrix,
         metric_name: Optional[str] = METRIC_TO_PLOT,
         metrics_to_normalize: Optional[List[str]] = METRICS_TO_NORMALIZE,
@@ -236,7 +230,6 @@ class Plotting:
 
     @staticmethod
     def task_sample_efficiency_curves(
-        cls,
         processed_data,
         task,
         env,
