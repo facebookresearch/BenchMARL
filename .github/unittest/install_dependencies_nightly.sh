@@ -20,11 +20,5 @@ cd ..
 conda install anaconda::cmake -y
 python -m pip install "pybind11[global]"
 
-
-git clone https://github.com/pytorch/tensordict.git
-cd tensordict
-python setup.py develop
-cd ..
-git clone https://github.com/pytorch/rl.git
-cd rl
-python setup.py develop
+pip install git+https://github.com/pytorch/tensordict.git
+pip install git+https://github.com/pytorch/rl.git
