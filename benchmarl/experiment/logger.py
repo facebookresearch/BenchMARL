@@ -10,7 +10,7 @@ import warnings
 from collections.abc import MutableMapping, Sequence
 from pathlib import Path
 
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import torch
@@ -38,7 +38,7 @@ class Logger:
         model_name: str,
         group_map: Dict[str, List[str]],
         seed: int,
-        project_name: str,
+        wandb_extra_kwargs: Dict[str, Any],
     ):
         self.experiment_config = experiment_config
         self.algorithm_name = algorithm_name
@@ -69,8 +69,8 @@ class Logger:
                     experiment_name=experiment_name,
                     wandb_kwargs={
                         "group": task_name,
-                        "project": project_name,
                         "id": experiment_name,
+                        **wandb_extra_kwargs,
                     },
                 )
             )
