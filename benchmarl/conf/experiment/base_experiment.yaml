@@ -106,7 +106,6 @@ loggers: [csv,wandb]
 # wandb.init includes: entity, tags, notes, etc.
 wandb_extra_kwargs:
   project: "benchmarl"
-
 # Create a json folder as part of the output in the format of marl-eval
 create_json: True
 
