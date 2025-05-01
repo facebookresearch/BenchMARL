@@ -11,8 +11,8 @@ python -m pip install torch torchvision "av<14"
 
 cd ../BenchMARL
 pip install -e .
-pip uninstall --yes torchrl
-pip uninstall --yes tensordict
+
+pip uninstall --yes torchrl tensordict
 
 cd ..
 
