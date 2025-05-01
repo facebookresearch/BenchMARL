@@ -11,15 +11,14 @@ python -m pip install torch torchvision "av<14"
 
 cd ../BenchMARL
 pip install -e .
-pip uninstall --yes torchrl
-pip uninstall --yes tensordict
+
+pip uninstall --yes torchrl tensordict
 
 cd ..
 
-git clone https://github.com/pytorch/tensordict.git
-cd tensordict
-python setup.py develop
-cd ..
-git clone https://github.com/pytorch/rl.git
-cd rl
-python setup.py develop
+# install cmake
+conda install anaconda::cmake -y
+python -m pip install "pybind11[global]"
+
+pip install git+https://github.com/pytorch/tensordict.git
+pip install git+https://github.com/pytorch/rl.git
