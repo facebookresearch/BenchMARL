@@ -75,9 +75,10 @@ def load_task_config_from_hydra(cfg: DictConfig, task_name: str) -> TaskClass:
     cfg_dict_checked = OmegaConf.to_object(cfg)
     if is_dataclass(cfg_dict_checked):
         cfg_dict_checked = cfg_dict_checked.__dict__
-    cfg_dict_checked = _type_check_task_config(
-        environment_name, inner_task_name, cfg_dict_checked
-    )  # Only needed for the warning
+    else:
+        cfg_dict_checked = _type_check_task_config(
+            environment_name, inner_task_name, cfg_dict_checked
+        )  # Only needed for the warning
     return task_config_registry[task_name].get_task(cfg_dict_checked)
 
 

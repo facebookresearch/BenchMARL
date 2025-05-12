@@ -101,11 +101,12 @@ evaluation_static: False
 
 # List of loggers to use, options are: wandb, csv, tensorboard, mflow
 loggers: [csv,wandb]
+# Wandb project name (kept for backward compatibility)
+project_name: "benchmarl"
 # Wandb extra kwargs passed to the WandbLogger (~superset of wandb.init kwargs)
 # WandbLogger includes: offline, save_dir, project, video_fps
 # wandb.init includes: entity, tags, notes, etc.
-wandb_extra_kwargs:
-  project: "benchmarl"
+wandb_extra_kwargs: {}
 # Create a json folder as part of the output in the format of marl-eval
 create_json: True
 

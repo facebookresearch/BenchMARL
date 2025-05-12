@@ -38,6 +38,7 @@ class Logger:
         model_name: str,
         group_map: Dict[str, List[str]],
         seed: int,
+        project_name: str,
         wandb_extra_kwargs: Dict[str, Any],
     ):
         self.experiment_config = experiment_config
@@ -62,6 +63,11 @@ class Logger:
 
         self.loggers: List[torchrl.record.loggers.Logger] = []
         for logger_name in experiment_config.loggers:
+            wandb_project = wandb_extra_kwargs.get("project", project_name)
+            if wandb_project != project_name:
+                raise ValueError(
+                    f"wandb_extra_kwargs.project ({wandb_project}) is different from the project_name ({project_name})"
+                )
             self.loggers.append(
                 get_logger(
                     logger_type=logger_name,
@@ -70,6 +76,7 @@ class Logger:
                     wandb_kwargs={
                         "group": task_name,
                         "id": experiment_name,
+                        "project": project_name,
                         **wandb_extra_kwargs,
                     },
                 )

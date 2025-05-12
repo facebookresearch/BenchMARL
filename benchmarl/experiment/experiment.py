@@ -110,6 +110,7 @@ class ExperimentConfig:
     evaluation_static: bool = MISSING
 
     loggers: List[str] = MISSING
+    project_name: str = MISSING
     wandb_extra_kwargs: Dict[str, Any] = MISSING
     create_json: bool = MISSING
 
@@ -620,6 +621,7 @@ class Experiment(CallbackNotifier):
             task_name=self.task_name,
             group_map=self.group_map,
             seed=self.seed,
+            project_name=self.config.project_name,
             wandb_extra_kwargs=self.config.wandb_extra_kwargs,
         )
         self.logger.log_hparams(
