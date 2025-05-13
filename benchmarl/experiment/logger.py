@@ -10,7 +10,7 @@ import warnings
 from collections.abc import MutableMapping, Sequence
 from pathlib import Path
 
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import torch
@@ -39,6 +39,7 @@ class Logger:
         group_map: Dict[str, List[str]],
         seed: int,
         project_name: str,
+        wandb_extra_kwargs: Dict[str, Any],
     ):
         self.experiment_config = experiment_config
         self.algorithm_name = algorithm_name
@@ -62,6 +63,11 @@ class Logger:
 
         self.loggers: List[torchrl.record.loggers.Logger] = []
         for logger_name in experiment_config.loggers:
+            wandb_project = wandb_extra_kwargs.get("project", project_name)
+            if wandb_project != project_name:
+                raise ValueError(
+                    f"wandb_extra_kwargs.project ({wandb_project}) is different from the project_name ({project_name})"
+                )
             self.loggers.append(
                 get_logger(
                     logger_type=logger_name,
@@ -69,8 +75,9 @@ class Logger:
                     experiment_name=experiment_name,
                     wandb_kwargs={
                         "group": task_name,
-                        "project": project_name,
                         "id": experiment_name,
+                        "project": project_name,
+                        **wandb_extra_kwargs,
                     },
                 )
             )
