@@ -76,3 +76,10 @@ the domain and want to easily take a picture of the landscape.
    modules/algorithms
    modules/environments
    modules/models
+
+.. raw:: html
+
+    <div style="text-align:center; padding:1em;">
+      <a href="https://opensource.fb.com/legal/terms" target="_blank" rel="noopener noreferrer">Terms of Use</a> |
+      <a href="https://opensource.fb.com/legal/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+    </div>
