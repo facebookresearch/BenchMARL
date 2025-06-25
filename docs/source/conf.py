@@ -52,7 +52,11 @@ html_logo = (
     "https://raw.githubusercontent.com/matteobettini/benchmarl_sphinx_theme/master/benchmarl"
     "_sphinx_theme/static/img/benchmarl_logo.png"
 )
-html_theme_options = {"logo_only": True, "navigation_depth": 2}
+html_theme_options = {
+    "logo_only": True, 
+    "navigation_depth": 2,
+    "extra_footer": '<div><a href="https://opensource.fb.com/legal/terms" target="_blank" rel="noopener noreferrer">Terms of Use</a> | <a href="https://opensource.fb.com/legal/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a></div>',
+}
 # html_favicon = ('')
 html_css_files = [
     "css/mytheme.css",
