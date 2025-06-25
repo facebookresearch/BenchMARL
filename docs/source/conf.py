@@ -8,7 +8,7 @@ import benchmarl_sphinx_theme
 # -- Project information
 
 project = "BenchMARL"
-copyright = 'Meta Platforms, Inc. <div><a href="https://opensource.fb.com/legal/terms" target="_blank" rel="noopener noreferrer">Terms of Use</a> | <a href="https://opensource.fb.com/legal/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a></div>'
+copyright = "Meta Platforms, Inc"
 author = "Matteo Bettini"
 version = benchmarl.__version__
 
