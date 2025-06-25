@@ -8,7 +8,7 @@ import benchmarl_sphinx_theme
 # -- Project information
 
 project = "BenchMARL"
-copyright = "Copyright © Meta Platforms, Inc"
+copyright = "Meta Platforms, Inc"
 author = "Matteo Bettini"
 version = benchmarl.__version__
 
