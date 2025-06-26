@@ -9,3 +9,5 @@ activation_kwargs: null
 
 norm_class: null
 norm_kwargs: null
+
+num_feature_dims: 1
