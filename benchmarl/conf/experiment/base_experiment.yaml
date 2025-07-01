@@ -26,6 +26,8 @@ gamma: 0.99
 lr: 0.00005
 # The epsilon parameter of the adam optimizer
 adam_eps: 0.000001
+# Extra kwargs for the adam optimizer
+adam_extra_kwargs: {}
 # Clips grad norm if true and clips grad value if false
 clip_grad_norm: True
 # The value for the clipping, if null no clipping
