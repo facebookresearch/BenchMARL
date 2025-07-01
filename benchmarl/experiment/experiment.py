@@ -686,6 +686,7 @@ class Experiment(CallbackNotifier):
                             // self.rollout_env.batch_size.numel()
                         ),
                         policy=self.policy,
+                        auto_cast_to_device=True,
                         break_when_any_done=False,
                         auto_reset=False,
                         tensordict=reset_batch,
