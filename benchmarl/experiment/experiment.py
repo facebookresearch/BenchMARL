@@ -611,6 +611,21 @@ class Experiment(CallbackNotifier):
             pickle.dump(self.callbacks, f)
 
     def _setup_logger(self):
+        hparams_kwargs = {
+            "critic_model_name": self.critic_model_name,
+            "experiment_config": self.config.__dict__,
+            "algorithm_config": self.algorithm_config.__dict__,
+            "model_config": self.model_config.__dict__,
+            "critic_model_config": self.critic_model_config.__dict__,
+            "task_config": self.task.config,
+            "continuous_actions": self.continuous_actions,
+            "on_policy": self.on_policy,
+            "algorithm_name": self.algorithm_name,
+            "model_name": self.model_name,
+            "task_name": self.task_name,
+            "environment_name": self.environment_name,
+            "seed": self.seed,
+        }
         self.logger = Logger(
             experiment_name=self.name,
             folder_name=str(self.folder_name),
@@ -622,18 +637,12 @@ class Experiment(CallbackNotifier):
             group_map=self.group_map,
             seed=self.seed,
             project_name=self.config.project_name,
-            wandb_extra_kwargs=self.config.wandb_extra_kwargs,
+            wandb_extra_kwargs={
+                **self.config.wandb_extra_kwargs,
+                "config": hparams_kwargs,
+            },
         )
-        self.logger.log_hparams(
-            critic_model_name=self.critic_model_name,
-            experiment_config=self.config.__dict__,
-            algorithm_config=self.algorithm_config.__dict__,
-            model_config=self.model_config.__dict__,
-            critic_model_config=self.critic_model_config.__dict__,
-            task_config=self.task.config,
-            continuous_actions=self.continuous_actions,
-            on_policy=self.on_policy,
-        )
+        self.logger.log_hparams(**hparams_kwargs)
 
     def run(self):
         """Run the experiment until completion."""

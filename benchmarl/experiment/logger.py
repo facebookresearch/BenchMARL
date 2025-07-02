@@ -83,15 +83,6 @@ class Logger:
             )
 
     def log_hparams(self, **kwargs):
-        kwargs.update(
-            {
-                "algorithm_name": self.algorithm_name,
-                "model_name": self.model_name,
-                "task_name": self.task_name,
-                "environment_name": self.environment_name,
-                "seed": self.seed,
-            }
-        )
         for logger in self.loggers:
             if isinstance(logger, TensorboardLogger):
                 # Tensorboard does not like nested dictionaries -> flatten them
