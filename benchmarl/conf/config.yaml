@@ -1,7 +1,7 @@
 defaults:
   - experiment: base_experiment
-  - algorithm: ???
-  - task: ???
+  - algorithm: ippo
+  - task: myenv/my_task
   - model: layers/mlp
   - model@critic_model: layers/mlp
   - _self_
