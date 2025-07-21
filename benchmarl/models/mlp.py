@@ -122,13 +122,14 @@ class Mlp(Model):
             )
 
     def _forward(self, tensordict: TensorDictBase) -> TensorDictBase:
-        # Gather in_key
-        full_input = torch.cat(
-            [tensordict.get(in_key) for in_key in self.in_keys], dim=-1
+        # Gather in_key and flatten the last self.num_feature_dims dimensions
+        input = torch.cat(
+            [
+                torch.flatten(tensordict.get(in_key), start_dim=-self.num_feature_dims)
+                for in_key in self.in_keys
+            ],
+            dim=-1,
         )
-        input = torch.flatten(
-            full_input, start_dim=-self.num_feature_dims
-        )  # flatten the last self.num_feature_dims dimensions
 
         # Has multi-agent input dimension
         if self.input_has_agent_dim:
@@ -160,13 +161,13 @@ class MlpConfig(ModelConfig):
     num_cells: Sequence[int] = MISSING
     layer_class: Type[nn.Module] = MISSING
 
+    num_feature_dims: int = MISSING
+
     activation_class: Type[nn.Module] = MISSING
     activation_kwargs: Optional[dict] = None
 
     norm_class: Type[nn.Module] = None
     norm_kwargs: Optional[dict] = None
-
-    num_feature_dims: int = 1
 
     @staticmethod
     def associated_class():
