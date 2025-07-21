@@ -161,13 +161,13 @@ class MlpConfig(ModelConfig):
     num_cells: Sequence[int] = MISSING
     layer_class: Type[nn.Module] = MISSING
 
-    num_feature_dims: int = MISSING
-
     activation_class: Type[nn.Module] = MISSING
     activation_kwargs: Optional[dict] = None
 
     norm_class: Type[nn.Module] = None
     norm_kwargs: Optional[dict] = None
+
+    num_feature_dims: int = 1
 
     @staticmethod
     def associated_class():
