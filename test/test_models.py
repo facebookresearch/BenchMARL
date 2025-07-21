@@ -449,3 +449,131 @@ class TestDeepsets:
         input_td = input_spec.expand(batch_size).rand()
         out_td = model(input_td)
         assert output_spec.expand(batch_size).is_in(out_td)
+
+
+class TestMlp:
+    @pytest.mark.parametrize("share_params", [True, False])
+    @pytest.mark.parametrize("batch_size", [(), (2,), (3, 2)])
+    @pytest.mark.parametrize(
+        "in_features", [((4,), (3,)), ((2, 4), (2, 4)), ((2, 2, 1), (3, 1, 5))]
+    )
+    def test_mlp_num_feature_dims(
+        self,
+        share_params,
+        batch_size,
+        in_features,
+        centralised=True,
+        input_has_agent_dim=True,
+        model_name="mlp",
+        n_agents=3,
+        out_features=2,
+    ):
+
+        torch.manual_seed(0)
+
+        config = model_config_registry[model_name].get_from_yaml()
+        config.num_feature_dims = len(in_features[0])
+
+        multi_agent_input_shape = (n_agents, *in_features[0])
+        other_multi_agent_input_shape = (n_agents, *in_features[1])
+
+        input_spec = Composite(
+            {
+                "agents": Composite(
+                    {
+                        "observation": Unbounded(shape=multi_agent_input_shape),
+                        "other": Unbounded(shape=other_multi_agent_input_shape),
+                    },
+                    shape=(n_agents,),
+                )
+            }
+        )
+
+        if output_has_agent_dim(centralised=centralised, share_params=share_params):
+            output_spec = Composite(
+                {
+                    "agents": Composite(
+                        {"out": Unbounded(shape=(n_agents, out_features))},
+                        shape=(n_agents,),
+                    )
+                },
+            )
+        else:
+            output_spec = Composite(
+                {"out": Unbounded(shape=(out_features,))},
+            )
+
+        model = config.get_model(
+            input_spec=input_spec,
+            output_spec=output_spec,
+            share_params=share_params,
+            centralised=centralised,
+            input_has_agent_dim=input_has_agent_dim,
+            n_agents=n_agents,
+            device="cpu",
+            agent_group="agents",
+            action_spec=None,
+        )
+        input_td = input_spec.expand(batch_size).rand()
+        out_td = model(input_td)
+        assert output_spec.expand(batch_size).is_in(out_td)
+
+    @pytest.mark.parametrize("share_params", [True, False])
+    @pytest.mark.parametrize("in_features", [((4,), (3, 1)), ((2, 4), (4,))])
+    def test_mlp_num_feature_dims_wrong_input(
+        self,
+        share_params,
+        in_features,
+        centralised=True,
+        input_has_agent_dim=True,
+        model_name="mlp",
+        n_agents=3,
+        out_features=2,
+    ):
+
+        torch.manual_seed(0)
+
+        config = model_config_registry[model_name].get_from_yaml()
+        config.num_feature_dims = len(in_features[0])
+
+        multi_agent_input_shape = (n_agents, *in_features[0])
+        other_multi_agent_input_shape = (n_agents, *in_features[1])
+
+        input_spec = Composite(
+            {
+                "agents": Composite(
+                    {
+                        "observation": Unbounded(shape=multi_agent_input_shape),
+                        "other": Unbounded(shape=other_multi_agent_input_shape),
+                    },
+                    shape=(n_agents,),
+                )
+            }
+        )
+
+        if output_has_agent_dim(centralised=centralised, share_params=share_params):
+            output_spec = Composite(
+                {
+                    "agents": Composite(
+                        {"out": Unbounded(shape=(n_agents, out_features))},
+                        shape=(n_agents,),
+                    )
+                },
+            )
+        else:
+            output_spec = Composite(
+                {"out": Unbounded(shape=(out_features,))},
+            )
+
+        with pytest.raises(ValueError):
+            config.get_model(
+                input_spec=input_spec,
+                output_spec=output_spec,
+                share_params=share_params,
+                centralised=centralised,
+                input_has_agent_dim=input_has_agent_dim,
+                n_agents=n_agents,
+                device="cpu",
+                agent_group="agents",
+                action_spec=None,
+            )
