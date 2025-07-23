@@ -695,6 +695,7 @@ class Experiment(CallbackNotifier):
                             // self.rollout_env.batch_size.numel()
                         ),
                         policy=self.policy,
+                        auto_cast_to_device=True,
                         break_when_any_done=False,
                         auto_reset=False,
                         tensordict=reset_batch,
@@ -725,7 +726,9 @@ class Experiment(CallbackNotifier):
             # Loop over groups
             training_start = time.time()
             for group in self.train_group_map.keys():
-                group_batch = batch.exclude(*self._get_excluded_keys(group))
+                group_batch = batch.exclude(*self._get_excluded_keys(group)).to(
+                    self.config.train_device
+                )
                 group_batch = self.algorithm.process_batch(group, group_batch)
                 if not self.algorithm.has_rnn:
                     group_batch = group_batch.reshape(-1)
