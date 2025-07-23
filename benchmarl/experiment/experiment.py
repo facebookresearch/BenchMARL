@@ -73,6 +73,7 @@ class ExperimentConfig:
     gamma: float = MISSING
     lr: float = MISSING
     adam_eps: float = MISSING
+    adam_extra_kwargs: Dict[str, Any] = MISSING
     clip_grad_norm: bool = MISSING
     clip_grad_val: Optional[float] = MISSING
 
@@ -524,7 +525,10 @@ class Experiment(CallbackNotifier):
         self.optimizers = {
             group: {
                 loss_name: torch.optim.Adam(
-                    params, lr=self.config.lr, eps=self.config.adam_eps
+                    params,
+                    lr=self.config.lr,
+                    eps=self.config.adam_eps,
+                    **self.config.adam_extra_kwargs,
                 )
                 for loss_name, params in self.algorithm.get_parameters(group).items()
             }
