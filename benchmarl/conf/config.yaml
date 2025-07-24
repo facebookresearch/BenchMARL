@@ -4,6 +4,7 @@ defaults:
   - task: ???
   - model: layers/mlp
   - model@critic_model: layers/mlp
+  - callback@callbacks.c1: lr_scheduler
   - _self_
 
 seed: 0
