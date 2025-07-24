@@ -16,9 +16,13 @@ from benchmarl.algorithms import (
     QmixConfig,
 )
 from benchmarl.algorithms.common import AlgorithmConfig
+from benchmarl.callbacks import LRSchedulerCallback
 from benchmarl.environments import Task, VmasTask
 from benchmarl.experiment import Experiment
+
+from benchmarl.hydra_config import load_callbacks_from_hydra
 from benchmarl.models import MlpConfig
+from hydra import compose, initialize
 from torch import nn
 from utils import _has_vmas
 from utils_experiment import ExperimentUtils
@@ -210,5 +214,56 @@ class TestVmas:
             seed=0,
             config=experiment_config,
             task=task,
+        )
+        experiment.run()
+
+
+@pytest.mark.skipif(not _has_vmas, reason="VMAS not found")
+class TestLRSchedulerCallbackInVmas:
+    callback_params_override = {
+        "StepLR": [
+            "scheduler_params={step_size: 100, gamma: 0.9}",
+        ],
+        "CosineAnnealingLR": [
+            "scheduler_params={T_max: 1000}",
+        ],
+        "ExponentialLR": [
+            "scheduler_params={gamma: 0.95}",
+        ],
+    }
+
+    @pytest.mark.parametrize("scheduler_type", callback_params_override.keys())
+    def test_lr_scheduler(
+        self,
+        scheduler_type,
+        experiment_config,
+        mlp_sequence_config,
+    ):
+        """Test LR scheduler configuration creation with different parameters."""
+        with initialize(version_base=None, config_path="../benchmarl/conf"):
+            cfg = compose(
+                config_name="config",
+                overrides=[
+                    "algorithm=mappo",
+                    "task=vmas/balance",
+                    "callback@callbacks.c1=lr_scheduler",
+                    f"callbacks.c1.scheduler_class=torch.optim.lr_scheduler.{scheduler_type}",
+                    *[
+                        f"++callbacks.c1.{override}"
+                        for override in self.callback_params_override[scheduler_type]
+                    ],
+                    "callbacks.c1.log_lr=True",
+                ],
+            )
+            callbacks = load_callbacks_from_hydra(cfg.callbacks)
+            assert isinstance(callbacks[0], LRSchedulerCallback)
+
+        experiment = Experiment(
+            algorithm_config=MappoConfig.get_from_yaml(),
+            model_config=mlp_sequence_config,
+            seed=0,
+            config=experiment_config,
+            task=VmasTask.NAVIGATION.get_from_yaml(),
+            callbacks=callbacks,
         )
         experiment.run()
