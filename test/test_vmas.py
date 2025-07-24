@@ -16,7 +16,6 @@ from benchmarl.algorithms import (
     QmixConfig,
 )
 from benchmarl.algorithms.common import AlgorithmConfig
-from benchmarl.callbacks import LRSchedulerCallback
 from benchmarl.environments import Task, VmasTask
 from benchmarl.experiment import Experiment
 
@@ -222,7 +221,7 @@ class TestVmas:
 class TestLRSchedulerCallbackInVmas:
     callback_params_override = {
         "StepLR": [
-            "scheduler_params={step_size: 100, gamma: 0.9}",
+            "scheduler_params={step_size: 2, gamma: 0.9}",
         ],
         "CosineAnnealingLR": [
             "scheduler_params={T_max: 1000}",
@@ -232,14 +231,7 @@ class TestLRSchedulerCallbackInVmas:
         ],
     }
 
-    @pytest.mark.parametrize("scheduler_type", callback_params_override.keys())
-    def test_lr_scheduler(
-        self,
-        scheduler_type,
-        experiment_config,
-        mlp_sequence_config,
-    ):
-        """Test LR scheduler configuration creation with different parameters."""
+    def _get_callbacks(self, scheduler_type):
         with initialize(version_base=None, config_path="../benchmarl/conf"):
             cfg = compose(
                 config_name="config",
@@ -256,7 +248,22 @@ class TestLRSchedulerCallbackInVmas:
                 ],
             )
             callbacks = load_callbacks_from_hydra(cfg.callbacks)
-            assert isinstance(callbacks[0], LRSchedulerCallback)
+            return callbacks
+
+    def _get_lr(self, experiment: Experiment):
+        return next(
+            iter(next(iter(experiment.callbacks[0].schedulers.values())).values())
+        ).get_last_lr()[0]
+
+    @pytest.mark.parametrize("scheduler_type", callback_params_override.keys())
+    def test_lr_scheduler(
+        self,
+        scheduler_type,
+        experiment_config,
+        mlp_sequence_config,
+    ):
+        """Test LR scheduler configuration creation with different parameters."""
+        callbacks = self._get_callbacks(scheduler_type)
 
         experiment = Experiment(
             algorithm_config=MappoConfig.get_from_yaml(),
@@ -267,3 +274,44 @@ class TestLRSchedulerCallbackInVmas:
             callbacks=callbacks,
         )
         experiment.run()
+
+    @pytest.mark.parametrize("scheduler_type", callback_params_override.keys())
+    def test_reloading_trainer(
+        self,
+        scheduler_type,
+        experiment_config,
+        mlp_sequence_config,
+    ):
+        algorithm_config = MappoConfig.get_from_yaml()
+        task = VmasTask.NAVIGATION.get_from_yaml()
+
+        max_n_iters = experiment_config.max_n_iters
+        experiment = Experiment(
+            algorithm_config=algorithm_config,
+            model_config=mlp_sequence_config,
+            seed=0,
+            config=experiment_config,
+            task=task,
+            callbacks=self._get_callbacks(scheduler_type),
+        )
+        initial_lr = self._get_lr(experiment)
+        experiment.run()
+        exp_folder = experiment.folder_name
+        end_lr = self._get_lr(experiment)
+        assert initial_lr != end_lr
+
+        experiment_config.max_n_iters = max_n_iters + 3
+        experiment_config.restore_file = (
+            exp_folder / "checkpoints" / f"checkpoint_{experiment.total_frames}.pt"
+        )
+        experiment_config.save_folder = None
+        experiment = Experiment(
+            algorithm_config=algorithm_config,
+            model_config=mlp_sequence_config,
+            seed=0,
+            config=experiment_config,
+            task=task,
+            callbacks=self._get_callbacks(scheduler_type),
+        )
+        reloaded_lr = self._get_lr(experiment)
+        assert reloaded_lr == end_lr

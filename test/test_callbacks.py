@@ -32,7 +32,7 @@ def test_loading_callbacks(callback_name):
 class TestLRSchedulerCallback:
     callback_params_override = {
         "StepLR": [
-            "scheduler_params={step_size: 100, gamma: 0.9}",
+            "scheduler_params={step_size: 2, gamma: 0.9}",
         ],
         "CosineAnnealingLR": [
             "scheduler_params={T_max: 1000}",

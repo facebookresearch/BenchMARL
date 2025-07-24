@@ -60,15 +60,31 @@ class LRSchedulerCallback(Callback):
 
         self.schedulers = {}
         for group in self.experiment.optimizers:
-            self.schedulers[group] = []
-            for optimizer in self.experiment.optimizers[group].values():
+            self.schedulers[group] = {}
+            for name, optimizer in self.experiment.optimizers[group].items():
                 scheduler = scheduler_class(optimizer, **kwargs)
-                self.schedulers[group].append(scheduler)
+                self.schedulers[group][name] = scheduler
+
+    def on_load_state_dict(self, state_dict: Dict[str, Any]):
+        for group in self.schedulers:
+            for name, scheduler in self.schedulers[group].items():
+                scheduler.load_state_dict(state_dict[f"schedulers_{group}_{name}"])
+
+    def on_state_dict(self, state_dict: Dict[str, Any]):
+        state_dict.update(
+            {
+                f"schedulers_{group}_{name}": scheduler.state_dict()
+                for group in self.schedulers
+                for name, scheduler in self.schedulers[group].items()
+            }
+        )
 
     def on_batch_collected(self, batch: TensorDictBase):
         if self.log_lr and not self.initial_logging:
             to_log = {
-                f"train/{group}/lr": self.schedulers[group][0].get_last_lr()[0]
+                f"train/{group}/lr": next(
+                    iter(self.schedulers[group].values())
+                ).get_last_lr()[0]
                 for group in self.experiment.group_map.keys()
             }
             self.experiment.logger.log(to_log, step=self.experiment.n_iters_performed)
@@ -76,11 +92,11 @@ class LRSchedulerCallback(Callback):
 
     def on_train_end(self, training_td: TensorDictBase, group: str):
         """Step the scheduler after each collection step."""
-        for scheduler in self.schedulers[group]:
+        for scheduler in self.schedulers[group].values():
             scheduler.step()
 
         if self.log_lr:
-            lr = self.schedulers[group][0].get_last_lr()[0]
+            lr = next(iter(self.schedulers[group].values())).get_last_lr()[0]
             to_log = {f"train/{group}/lr": lr}
             self.experiment.logger.log(to_log, step=self.experiment.n_iters_performed)
 

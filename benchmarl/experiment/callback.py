@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from typing import List
+from typing import Any, Dict, List
 
 from tensordict import TensorDictBase
 
@@ -26,6 +26,10 @@ class Callback:
 
     def on_setup(self):
         """A callback called atexperiment setup."""
+        pass
+
+    def on_load_state_dict(self, state_dict: Dict[str, Any]):
+        """A callback called at state_dict load."""
         pass
 
     def on_batch_collected(self, batch: TensorDictBase):
@@ -73,6 +77,10 @@ class Callback:
         """
         pass
 
+    def on_state_dict(self, state_dict: Dict[str, Any]):
+        """A callback called at state_dict save."""
+        pass
+
 
 class CallbackNotifier:
     def __init__(self, experiment, callbacks: List[Callback]):
@@ -83,6 +91,10 @@ class CallbackNotifier:
     def _on_setup(self):
         for callback in self.callbacks:
             callback.on_setup()
+
+    def _on_load_state_dict(self, state_dict: Dict[str, Any]):
+        for callback in self.callbacks:
+            callback.on_load_state_dict(state_dict)
 
     def _on_batch_collected(self, batch: TensorDictBase):
         for callback in self.callbacks:
@@ -106,3 +118,7 @@ class CallbackNotifier:
     def _on_evaluation_end(self, rollouts: List[TensorDictBase]):
         for callback in self.callbacks:
             callback.on_evaluation_end(rollouts)
+
+    def _on_state_dict(self, state_dict: Dict[str, Any]):
+        for callback in self.callbacks:
+            callback.on_state_dict(state_dict)

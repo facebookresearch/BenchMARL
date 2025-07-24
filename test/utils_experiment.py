@@ -4,11 +4,9 @@
 #  LICENSE file in the root directory of this source tree.
 #
 
-from typing import List, Optional
-
 from benchmarl.algorithms.common import AlgorithmConfig
 from benchmarl.environments import Task
-from benchmarl.experiment import Callback, Experiment, ExperimentConfig
+from benchmarl.experiment import Experiment, ExperimentConfig
 from benchmarl.models.common import ModelConfig
 
 
@@ -19,7 +17,6 @@ class ExperimentUtils:
         task: Task,
         experiment_config: ExperimentConfig,
         model_config: ModelConfig,
-        callbacks: Optional[List[Callback]] = None,
     ):
         max_n_iters = experiment_config.max_n_iters
         experiment = Experiment(
@@ -28,7 +25,6 @@ class ExperimentUtils:
             seed=0,
             config=experiment_config,
             task=task,
-            callbacks=callbacks,
         )
         experiment.run()
 
@@ -47,7 +43,6 @@ class ExperimentUtils:
             seed=0,
             config=experiment_config,
             task=task,
-            callbacks=callbacks,
         )
         for param1, param2 in zip(
             list(experiment.policy.parameters()), list(policy.parameters())
