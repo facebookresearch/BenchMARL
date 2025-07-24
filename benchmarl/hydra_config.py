@@ -49,7 +49,7 @@ def load_experiment_from_hydra(
     task_config = load_task_config_from_hydra(cfg.task, task_name)
     model_config = load_model_config_from_hydra(cfg.model)
     critic_model_config = load_model_config_from_hydra(cfg.critic_model)
-    _callbacks = load_callbacks_from_hydra(getattr(cfg, "callbacks", {}))
+    _callbacks = load_callbacks_from_hydra(getattr(cfg, "callbacks", None) or {})
 
     return Experiment(
         task=task_config,

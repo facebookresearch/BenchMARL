@@ -29,6 +29,20 @@ def test_loading_callbacks(callback_name):
         )
 
 
+def test_disabling_callbacks():
+    with initialize(version_base=None, config_path="../benchmarl/conf"):
+        cfg = compose(
+            config_name="config",
+            overrides=[
+                "algorithm=mappo",
+                "task=vmas/balance",
+                "callbacks=null",
+            ],
+        )
+        callbacks = load_callbacks_from_hydra(getattr(cfg, "callbacks", None) or {})
+        assert len(callbacks) == 0
+
+
 class TestLRSchedulerCallback:
     callback_params_override = {
         "StepLR": [
