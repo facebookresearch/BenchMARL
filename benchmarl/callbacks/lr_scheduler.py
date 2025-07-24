@@ -7,6 +7,8 @@
 from dataclasses import dataclass, MISSING
 from typing import Any, Dict
 
+from tensordict import TensorDictBase
+
 from benchmarl.callbacks.common import CallbackConfig
 from benchmarl.experiment.callback import Callback
 from benchmarl.utils import _class_from_name
@@ -44,6 +46,7 @@ class LRSchedulerCallback(Callback):
         self.log_lr = log_lr
 
         self.schedulers = None
+        self.initial_logging = False
 
     def on_setup(self):
         """Setup the scheduler after the experiment is initialized."""
@@ -55,25 +58,30 @@ class LRSchedulerCallback(Callback):
             if k in scheduler_class.__init__.__code__.co_varnames
         }
 
-        self.schedulers = []
-        for optimizer_group in self.experiment.optimizers.values():
-            for optimizer in optimizer_group.values():
+        self.schedulers = {}
+        for group in self.experiment.optimizers:
+            self.schedulers[group] = []
+            for optimizer in self.experiment.optimizers[group].values():
                 scheduler = scheduler_class(optimizer, **kwargs)
-                self.schedulers.append(scheduler)
+                self.schedulers[group].append(scheduler)
 
-        if len(self.schedulers) == 0:
-            raise ValueError("No optimizer found in the experiment")
+    def on_batch_collected(self, batch: TensorDictBase):
+        if self.log_lr and not self.initial_logging:
+            to_log = {
+                f"train/{group}/lr": self.schedulers[group][0].get_last_lr()[0]
+                for group in self.experiment.group_map.keys()
+            }
+            self.experiment.logger.log(to_log, step=self.experiment.n_iters_performed)
+            self.initial_logging = True
 
-    def on_train_step(self, batch, group: str):
-        """Step the scheduler during training."""
-        for scheduler in self.schedulers:
+    def on_train_end(self, training_td: TensorDictBase, group: str):
+        """Step the scheduler after each collection step."""
+        for scheduler in self.schedulers[group]:
             scheduler.step()
 
         if self.log_lr:
-            lr = self.schedulers[0].get_last_lr()[0]
-            to_log = {
-                f"train/{group}/lr": lr for group in self.experiment.group_map.keys()
-            }
+            lr = self.schedulers[group][0].get_last_lr()[0]
+            to_log = {f"train/{group}/lr": lr}
             self.experiment.logger.log(to_log, step=self.experiment.n_iters_performed)
 
         return None
