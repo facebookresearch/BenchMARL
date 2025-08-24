@@ -1,0 +1,14 @@
+# benchmarl/conf/task/vmas/target_defense.yaml
+max_steps: 250
+num_defenders: 3
+num_attackers: 1
+sensing_radius: 0.15
+attacker_sensing_radius: 0.15
+speed_ratio: 0.2
+target_distance: 0.05
+randomize_attacker_x: true
+num_spawn_positions: 3
+enable_wall_constraints: false
+wall_epsilon: 0.03
+fixed_attacker_policy: true
+use_apollonius: true

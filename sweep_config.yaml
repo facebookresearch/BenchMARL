@@ -1,0 +1,27 @@
+# Hyperparameter sweep configuration
+# @package _global_
+
+defaults:
+  - base_config
+
+hydra:
+  mode: MULTIRUN
+  sweeper:
+    _target_: hydra._internal.core_plugins.basic_sweeper.BasicSweeper
+    max_batch_size: 4  # Run 4 jobs in parallel
+
+# Parameter sweeps
+task:
+  num_defenders: 1
+  num_attackers: 1  
+  num_spawn_positions: 4
+  sensing_radius: choice(0.1, 0.15, 0.2, 0.25)
+  speed_ratio: choice(0.1, 0.2, 0.3, 0.4)
+
+experiment:
+  max_n_frames: 1000000
+  evaluation_interval: 100000
+  render: true
+  wandb_extra_kwargs:
+    tags: ["PARAMETER_SWEEP", "1v1"]
+    notes: "Automated sweep: sensing_radius vs speed_ratio"
