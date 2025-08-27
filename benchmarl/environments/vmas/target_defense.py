@@ -21,6 +21,8 @@ class TaskConfig:
     target_distance: float = MISSING
     randomize_attacker_x: bool = MISSING
     num_spawn_positions: int = MISSING
+    spawn_area_mode: bool = MISSING
+    spawn_area_width: float = MISSING
     enable_wall_constraints: bool = MISSING
     wall_epsilon: float = MISSING
     fixed_attacker_policy: bool = MISSING
@@ -84,6 +86,8 @@ class Scenario(BaseScenario):
         max_steps = kwargs.get('max_steps', 200)  # Default max steps
         enable_wall_constraints = kwargs.get('enable_wall_constraints', True)
         use_apollonius = kwargs.get('use_apollonius', True)
+        spawn_area_mode = kwargs.get('spawn_area_mode', False)  # New: area-based spawning
+        spawn_area_width = kwargs.get('spawn_area_width', 0.2)  # New: spawn area height (fraction of world)
         
         # Store scenario parameters
         self.batch_dim = batch_dim
@@ -104,6 +108,8 @@ class Scenario(BaseScenario):
         self.fixed_attacker_policy = fixed_attacker_policy
         self.num_spawn_positions = num_spawn_positions
         self.max_steps = max_steps
+        self.spawn_area_mode = spawn_area_mode
+        self.spawn_area_width = spawn_area_width
         
         # Speed settings
         self.defender_max_speed = 0.05
@@ -223,8 +229,38 @@ class Scenario(BaseScenario):
                 defender.state.pos[env_index, Y] = vmas_y
                 defender.state.vel[env_index, :] = 0
         
-        # Create spawn positions once for all attackers (top edge y=1)
-        if self.randomize_attacker_x:
+        # Create spawn positions once for all attackers (top edge y=1 or area-based)
+        if self.spawn_area_mode:
+            # NEW: Area-based spawning - attackers can spawn anywhere in top area band
+            if env_index is None:
+                batch_size = attackers[0].state.pos.shape[0] if attackers else self.batch_dim
+                
+                for env_idx in range(batch_size):
+                    for i, attacker in enumerate(attackers):
+                        # Random X position across full width [0, 1] in world coordinates
+                        random_x_world = torch.rand(1).item()  # [0, 1]
+                        random_x_vmas = self._world_to_vmas(random_x_world)
+                        
+                        # Random Y position in spawn area band [1-spawn_area_width, 1] in world coordinates
+                        spawn_area_min_y = 1.0 - self.spawn_area_width  # e.g., 0.8 for 0.2 width
+                        random_y_world = spawn_area_min_y + torch.rand(1).item() * self.spawn_area_width
+                        random_y_vmas = self._world_to_vmas(random_y_world)
+                        
+                        attacker.state.pos[env_idx, X] = random_x_vmas
+                        attacker.state.pos[env_idx, Y] = random_y_vmas
+            else:
+                # Single environment reset
+                for i, attacker in enumerate(attackers):
+                    random_x_world = torch.rand(1).item()
+                    random_x_vmas = self._world_to_vmas(random_x_world)
+                    
+                    spawn_area_min_y = 1.0 - self.spawn_area_width
+                    random_y_world = spawn_area_min_y + torch.rand(1).item() * self.spawn_area_width
+                    random_y_vmas = self._world_to_vmas(random_y_world)
+                    
+                    attacker.state.pos[env_index, X] = random_x_vmas
+                    attacker.state.pos[env_index, Y] = random_y_vmas
+        elif self.randomize_attacker_x:
             # Create equally spaced spawn positions along top edge
             # For K positions, space them evenly across [0.1, 0.9] in world coordinates
             if self.num_spawn_positions == 1:
@@ -297,16 +333,25 @@ class Scenario(BaseScenario):
                 else:
                     attacker.state.pos[env_index, X] = vmas_x
         
-        # Set Y position and velocity for all attackers (top edge y=1)
-        world_y = 1.0  # Top edge in world coordinates
-        vmas_y = self._world_to_vmas(world_y)
-        for attacker in attackers:
-            if env_index is None:
-                attacker.state.pos[:, Y] = vmas_y
-                attacker.state.vel[:, :] = 0
-            else:
-                attacker.state.pos[env_index, Y] = vmas_y
-                attacker.state.vel[env_index, :] = 0
+        # Set Y position and velocity for all attackers (only if NOT using area spawning)
+        if not self.spawn_area_mode:
+            # Original behavior: set Y to top edge
+            world_y = 1.0  # Top edge in world coordinates
+            vmas_y = self._world_to_vmas(world_y)
+            for attacker in attackers:
+                if env_index is None:
+                    attacker.state.pos[:, Y] = vmas_y
+                    attacker.state.vel[:, :] = 0
+                else:
+                    attacker.state.pos[env_index, Y] = vmas_y
+                    attacker.state.vel[env_index, :] = 0
+        else:
+            # Area spawning mode: Y positions already set above, just reset velocity
+            for attacker in attackers:
+                if env_index is None:
+                    attacker.state.vel[:, :] = 0
+                else:
+                    attacker.state.vel[env_index, :] = 0
         
         # Reset episode tracking - track each attacker separately
         if env_index is None:
@@ -455,53 +500,129 @@ class Scenario(BaseScenario):
         
         geoms = []
         
-        # 1. Add sensing radius circles around defenders
+        # 1. Add enhanced sensing radius circles around defenders
         defenders = [a for a in self.world.agents if a.is_defender]
-        for defender in defenders:
+        for i, defender in enumerate(defenders):
             pos = defender.state.pos[env_index]
+            
+            # Main sensing circle (thick outline)
             sensing_circle = Circle(
                 pos=pos,
                 radius=self.sensing_radius,
-                color=(0.0, 0.0, 1.0, 0.1),  # Transparent blue
-                filled=False
+                color=(0.0, 0.0, 1.0, 0.4),  # More visible blue
+                filled=False,
+                width=4
             )
             geoms.append(sensing_circle)
+            
+            # Add filled sensing area
+            sensing_area = Circle(
+                pos=pos,
+                radius=self.sensing_radius,
+                color=(0.0, 0.3, 1.0, 0.08),  # Very light blue fill
+                filled=True
+            )
+            geoms.append(sensing_area)
         
-        # 2. Add target line (bottom edge y=-0.5 in VMAS)
+        # 2. Enhanced target line (bottom edge y=-0.5 in VMAS)
+        # Main target line (thick red)
         target_line = Line(
             start=(-0.5, -0.5),
             end=(0.5, -0.5),
-            color=(1.0, 0.0, 0.0, 0.8),  # Red target line
-            width=3
+            color=(1.0, 0.0, 0.0, 0.95),  # Bright red
+            width=6
         )
         geoms.append(target_line)
         
-        # 3. Add spawn line (top edge y=0.5 in VMAS)
+        # Target danger zone
+        target_zone = Line(
+            start=(-0.5, -0.47),
+            end=(0.5, -0.47),
+            color=(1.0, 0.2, 0.2, 0.4),  # Light red zone
+            width=10
+        )
+        geoms.append(target_zone)
+        
+        # 3. Enhanced spawn line (top edge y=0.5 in VMAS)
+        # Main spawn line (thick green)
         spawn_line = Line(
             start=(-0.5, 0.5),
             end=(0.5, 0.5),
-            color=(0.0, 1.0, 0.0, 0.8),  # Green spawn line
-            width=3
+            color=(0.0, 1.0, 0.0, 0.95),  # Bright green
+            width=6
         )
         geoms.append(spawn_line)
         
-        # 4. Add spawn position markers
-        if self.randomize_attacker_x and hasattr(self, 'num_spawn_positions'):
-            # Create spawn position markers
+        # Spawn zone highlight
+        spawn_zone = Line(
+            start=(-0.5, 0.47),
+            end=(0.5, 0.47),
+            color=(0.2, 1.0, 0.2, 0.4),  # Light green zone
+            width=10
+        )
+        geoms.append(spawn_zone)
+        
+        # 4. Enhanced spawn position markers or spawn area
+        if hasattr(self, 'spawn_area_mode') and self.spawn_area_mode:
+            # NEW: Show spawn area band instead of discrete positions
+            spawn_area_min_y = 1.0 - self.spawn_area_width  # World coordinates
+            spawn_area_min_vmas = self._world_to_vmas(spawn_area_min_y)
+            
+            # Draw spawn area rectangle
+            spawn_area_top = Line(
+                start=(-0.5, 0.5),
+                end=(0.5, 0.5),
+                color=(0.0, 1.0, 0.0, 0.6),  # Green area border
+                width=4
+            )
+            geoms.append(spawn_area_top)
+            
+            spawn_area_bottom = Line(
+                start=(-0.5, spawn_area_min_vmas),
+                end=(0.5, spawn_area_min_vmas),
+                color=(0.0, 1.0, 0.0, 0.6),  # Green area border
+                width=4
+            )
+            geoms.append(spawn_area_bottom)
+            
+            # Add area shading lines
+            for i in range(5):  # Add several horizontal lines to show area
+                y_pos = spawn_area_min_vmas + i * (0.5 - spawn_area_min_vmas) / 4
+                area_line = Line(
+                    start=(-0.5, y_pos),
+                    end=(0.5, y_pos),
+                    color=(0.0, 1.0, 0.0, 0.2),  # Very light green
+                    width=1
+                )
+                geoms.append(area_line)
+                
+        elif self.randomize_attacker_x and hasattr(self, 'num_spawn_positions'):
+            # Calculate spawn positions
             if self.num_spawn_positions == 1:
                 spawn_positions = [0.0]
             else:
                 spacing = 0.8 / (self.num_spawn_positions - 1)
                 spawn_positions = [-0.4 + i * spacing for i in range(self.num_spawn_positions)]
             
-            for spawn_x in spawn_positions:
+            for i, spawn_x in enumerate(spawn_positions):
+                # Main spawn marker (larger and more visible)
                 spawn_marker = Circle(
                     pos=(spawn_x, 0.5),
-                    radius=0.03,
-                    color=(0.0, 1.0, 0.0, 0.6),  # Green spawn markers
+                    radius=0.05,
+                    color=(0.0, 0.8, 0.0, 0.8),  # Dark green
                     filled=True
                 )
                 geoms.append(spawn_marker)
+                
+                # Spawn marker border
+                spawn_border = Circle(
+                    pos=(spawn_x, 0.5),
+                    radius=0.05,
+                    color=(0.0, 0.4, 0.0, 0.9),  # Darker green border
+                    filled=False,
+                    width=2
+                )
+                geoms.append(spawn_border)
         
         # 5. Add trajectory lines for all agents
         if hasattr(self, 'agent_trajectories'):
@@ -534,33 +655,50 @@ class Scenario(BaseScenario):
                             )
                             geoms.append(trajectory_segment)
         
-        # 6. Add border walls
-        # Left wall
+        # 6. Enhanced border walls
+        # Left wall (thick and visible)
         left_wall = Line(
             start=(-0.5, -0.5),
             end=(-0.5, 0.5),
-            color=(0.5, 0.5, 0.5, 0.8),  # Gray walls
-            width=2
+            color=(0.2, 0.2, 0.2, 0.9),  # Dark gray
+            width=5
         )
         geoms.append(left_wall)
         
-        # Right wall
+        # Right wall (thick and visible)
         right_wall = Line(
             start=(0.5, -0.5),
             end=(0.5, 0.5),
-            color=(0.5, 0.5, 0.5, 0.8),
-            width=2
+            color=(0.2, 0.2, 0.2, 0.9),  # Dark gray
+            width=5
         )
         geoms.append(right_wall)
         
-        # Top wall (already have spawn line, but add wall)
-        top_wall = Line(
-            start=(-0.5, 0.5),
-            end=(0.5, 0.5),
-            color=(0.5, 0.5, 0.5, 0.8),
-            width=2
-        )
-        geoms.append(top_wall)
+        # 7. Add sensing event indicators
+        if hasattr(self, 'attacker_sensed') and self.attacker_sensed is not None:
+            attackers = [a for a in self.world.agents if not a.is_defender]
+            for a_idx in range(self.num_attackers):
+                if a_idx < len(attackers) and self.attacker_sensed[env_index, a_idx]:
+                    att_pos = attackers[a_idx].state.pos[env_index]
+                    
+                    # Bright sensing success indicator
+                    sensing_event = Circle(
+                        pos=att_pos,
+                        radius=0.08,
+                        color=(1.0, 1.0, 0.0, 0.9),  # Bright yellow
+                        filled=True
+                    )
+                    geoms.append(sensing_event)
+                    
+                    # Sensing event border (pulsing effect)
+                    sensing_border = Circle(
+                        pos=att_pos,
+                        radius=0.08,
+                        color=(1.0, 0.5, 0.0, 0.9),  # Orange border
+                        filled=False,
+                        width=4
+                    )
+                    geoms.append(sensing_border)
         
         return geoms
     
