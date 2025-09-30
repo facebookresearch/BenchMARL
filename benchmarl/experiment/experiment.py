@@ -532,6 +532,7 @@ class Experiment(CallbackNotifier):
         }
 
     # comment
+    #  more
     def _setup_collector(self):
         self.policy = self.algorithm.get_policy_for_collection()
 
