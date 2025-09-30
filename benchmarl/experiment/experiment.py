@@ -531,6 +531,7 @@ class Experiment(CallbackNotifier):
             for group in self.group_map.keys()
         }
 
+    # comment
     def _setup_collector(self):
         self.policy = self.algorithm.get_policy_for_collection()
 
