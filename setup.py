@@ -52,7 +52,7 @@ setup(
         "hydra-core",
         "torchvision",
         "av<14",
-        "numpy<2",
+        "numpy",
     ],
     extras_require={
         "vmas": ["vmas>=1.3.4"],
