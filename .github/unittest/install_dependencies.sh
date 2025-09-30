@@ -9,3 +9,7 @@ if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
 cd ../BenchMARL
 pip install -e .
+
+# install cmake
+conda install anaconda::cmake -y
+python -m pip install "pybind11[global]"
