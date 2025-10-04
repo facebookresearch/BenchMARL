@@ -57,7 +57,7 @@ class Gnn(Model):
         topology (str): Topology of the graph adjacency matrix. Options: "full", "empty", "from_pos". "from_pos" builds
             the topology dynamically based on ``position_key`` and ``edge_radius``.
         self_loops (str): Whether the resulting adjacency matrix will have self loops.
-        gnn_class (Type[torch_geometric.nn.MessagePassing]): the gnn convolution class to use
+        gnn_class (Type[torch.nn.Module]): the gnn convolution class to use
         gnn_kwargs (dict, optional): the dict of arguments to pass to the gnn conv class
         position_key (str, optional): if provided, it will need to match a leaf key in the tensordict coming from the env
             (in the `observation_spec`) representing the agent position.
@@ -124,7 +124,7 @@ class Gnn(Model):
         self,
         topology: str,
         self_loops: bool,
-        gnn_class: Type[torch_geometric.nn.MessagePassing],
+        gnn_class: Type[torch.nn.Module],
         gnn_kwargs: Optional[dict],
         position_key: Optional[str],
         exclude_pos_from_node_features: Optional[bool],
@@ -142,6 +142,9 @@ class Gnn(Model):
         self.edge_radius = edge_radius
         self.pos_features = pos_features
         self.vel_features = vel_features
+        self.is_message_passing = issubclass(
+            gnn_class, torch_geometric.nn.MessagePassing
+        )
 
         super().__init__(**kwargs)
 
@@ -164,9 +167,24 @@ class Gnn(Model):
 
         if gnn_kwargs is None:
             gnn_kwargs = {}
-        gnn_kwargs.update(
-            {"in_channels": self.input_features, "out_channels": self.output_features}
-        )
+        if self.is_message_passing:
+            gnn_kwargs.update(
+                {
+                    "in_channels": self.input_features,
+                    "out_channels": self.output_features,
+                }
+            )
+        else:
+            if self.input_features != self.output_features:
+                raise ValueError(
+                    "Input and output features must be the same for non-MessagePassing GNN classes"
+                )
+            gnn_kwargs.update(
+                {
+                    "channels": self.input_features,
+                    "heads": gnn_kwargs.get("heads", 1),
+                }
+            )
         self.gnn_supports_edge_attrs = (
             "edge_dim" in inspect.getfullargspec(gnn_class).args
         )
@@ -315,18 +333,20 @@ class Gnn(Model):
         input = torch.cat(input, dim=-1)
         batch_size = input.shape[:-2]
 
-        graph = _batch_from_dense_to_ptg(
-            x=input,
-            edge_index=self.edge_index,
-            pos=pos,
-            vel=vel,
-            self_loops=self.self_loops,
-            edge_radius=self.edge_radius,
-        )
-        forward_gnn_params = {
-            "x": graph.x,
-            "edge_index": graph.edge_index,
-        }
+        if self.is_message_passing:
+            graph = _batch_from_dense_to_ptg(
+                x=input,
+                edge_index=self.edge_index,
+                pos=pos,
+                vel=vel,
+                self_loops=self.self_loops,
+                edge_radius=self.edge_radius,
+            )
+            forward_gnn_params = {"x": graph.x, "edge_index": graph.edge_index}
+        else:
+            forward_gnn_params = {
+                "x": input,
+            }
         if (
             self.position_key is not None or self.velocity_key is not None
         ) and self.gnn_supports_edge_attrs:
@@ -468,7 +488,7 @@ class GnnConfig(ModelConfig):
     topology: str = MISSING
     self_loops: bool = MISSING
 
-    gnn_class: Type[torch_geometric.nn.MessagePassing] = MISSING
+    gnn_class: Type[torch.nn.Module] = MISSING
     gnn_kwargs: Optional[dict] = None
 
     position_key: Optional[str] = None
