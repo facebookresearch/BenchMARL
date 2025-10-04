@@ -1035,7 +1035,7 @@ class Experiment(CallbackNotifier):
             critic_model_config = pickle.load(f)
             callbacks = pickle.load(f)
         task.config = task_config
-        experiment_config.save_folder = experiment_folder
+        experiment_config.save_folder = experiment_folder.parent
         experiment_config.restore_file = restore_file
         experiment = Experiment(
             task=task,
