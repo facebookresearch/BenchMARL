@@ -1006,7 +1006,9 @@ class Experiment(CallbackNotifier):
         return self
 
     @staticmethod
-    def reload_from_file(restore_file: str) -> Experiment:
+    def reload_from_file(
+        restore_file: str, restore_map_location: Optional[Any] = None
+    ) -> Experiment:
         """
         Restores the experiment from the checkpoint file.
 
@@ -1016,6 +1018,7 @@ class Experiment(CallbackNotifier):
 
         Args:
             restore_file (str): The checkpoint file (.pt) of the experiment reload.
+            restore_map_location (Optional[Any]): The map location given to `torch.load()` when reloading.
 
         Returns:
             The reloaded experiment.
@@ -1036,6 +1039,8 @@ class Experiment(CallbackNotifier):
             callbacks = pickle.load(f)
         task.config = task_config
         experiment_config.restore_file = restore_file
+        if restore_map_location is not None:
+            experiment_config.restore_map_location = restore_map_location
         experiment = Experiment(
             task=task,
             algorithm_config=algorithm_config,
