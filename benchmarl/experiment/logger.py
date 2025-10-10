@@ -48,6 +48,8 @@ class Logger:
         self.group_map = group_map
         self.seed = seed
 
+        self.calculate_extra = False # OBS: my litte modification for calculating the success percenetage rate of when evaluating at the end
+
         if experiment_config.create_json:
             self.json_writer = JsonWriter(
                 folder=folder_name,
@@ -239,6 +241,10 @@ class Logger:
                         json_file, base_path=os.path.dirname(json_file)
                     )
 
+
+        if self.calculate_extra: # an attribute that checks if we should caclulate the percentage of envs that are solved and the averag enumber of iterations in those envs. 
+            calculate_solved_stats(rollouts, to_log, group)
+
         self.log(to_log, step=step)
         if video_frames is not None and max_length_rollout_0 > 1:
             video_frames = np.stack(video_frames[: max_length_rollout_0 - 1], axis=0)
@@ -373,14 +379,65 @@ class Logger:
 
         return episode_rewards
 
+    # def _log_min_mean_max(self, to_log: Dict[str, Tensor], key: str, value: Tensor):
+    #     to_log.update(
+    #         {
+    #             key + "_min": value.min().item(),
+    #             key + "_mean": value.mean().item(),
+    #             key + "_max": value.max().item(),
+    #         }
+    #     )
+    ################################################################
+    # OBS MODIFIED
+    ################################################################
     def _log_min_mean_max(self, to_log: Dict[str, Tensor], key: str, value: Tensor):
+        mean = value.mean().item()
+        std = value.std(unbiased=True).item()  # sample std deviation
+        n = value.numel()
+
+        # z-scores for confidence intervals
+        z_95 = 1.96
+        z_90 = 1.645
+
+        ci_95 = z_95 * (std / np.sqrt(n)) if n > 1 else 0.0
+        ci_90 = z_90 * (std / np.sqrt(n)) if n > 1 else 0.0
+
         to_log.update(
             {
                 key + "_min": value.min().item(),
-                key + "_mean": value.mean().item(),
+                key + "_mean": mean,
                 key + "_max": value.max().item(),
+                key + "_ci95_low": mean - ci_95,
+                key + "_ci95_high": mean + ci_95,
+                key + "_ci90_low": mean - ci_90,
+                key + "_ci90_high": mean + ci_90,
             }
         )
+        if self.calculate_extra:
+            print("mean:",mean)
+            print("95% CL:", ci_95)
+
+def calculate_solved_stats(rollouts: List[TensorDictBase], to_log: Dict[str, Tensor], group: str = "agent"):# -> Tuple[float, float]:
+    num_envs = len(rollouts)
+    num_solved = 0
+    total_timesteps_solved = 0
+
+    for td in rollouts:
+        terminated_tensor = td["next", group, "terminated"]  
+        episode_length = td.batch_size[0]
+        last_terminated = terminated_tensor[-1]  
+
+        if last_terminated.all():
+            num_solved += 1
+            total_timesteps_solved += episode_length
+
+    solved_percentage = 100.0 * num_solved / num_envs if num_envs > 0 else 0.0
+    avg_steps_if_solved = total_timesteps_solved / num_solved if num_solved > 0 else 0.0
+    to_log["eval/solved_percentage"] = solved_percentage
+    to_log["eval/solved_avg_length"] = avg_steps_if_solved
+
+    print("solved percentage:", solved_percentage)
+    print("avg length if solved:", avg_steps_if_solved)
 
 
 class JsonWriter:

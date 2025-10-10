@@ -1,0 +1,14 @@
+defaults:
+  #- customenv_info_relay_config
+  - _self_
+
+task: simple_test
+parallel: True
+
+max_cycles: 100
+num_agents: 2
+num_bases: 2
+
+antenna_used: False
+com_used: False
+
