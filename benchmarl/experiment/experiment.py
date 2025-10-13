@@ -73,6 +73,7 @@ class ExperimentConfig:
     gamma: float = MISSING
     lr: float = MISSING
     adam_eps: float = MISSING
+    adam_extra_kwargs: Dict[str, Any] = MISSING
     clip_grad_norm: bool = MISSING
     clip_grad_val: Optional[float] = MISSING
 
@@ -524,7 +525,10 @@ class Experiment(CallbackNotifier):
         self.optimizers = {
             group: {
                 loss_name: torch.optim.Adam(
-                    params, lr=self.config.lr, eps=self.config.adam_eps
+                    params,
+                    lr=self.config.lr,
+                    eps=self.config.adam_eps,
+                    **self.config.adam_extra_kwargs,
                 )
                 for loss_name, params in self.algorithm.get_parameters(group).items()
             }
@@ -1009,7 +1013,9 @@ class Experiment(CallbackNotifier):
         return self
 
     @staticmethod
-    def reload_from_file(restore_file: str) -> Experiment:
+    def reload_from_file(
+        restore_file: str, experiment_patch: Optional[Dict[str, Any]] = None
+    ) -> Experiment:
         """
         Restores the experiment from the checkpoint file.
 
@@ -1019,6 +1025,7 @@ class Experiment(CallbackNotifier):
 
         Args:
             restore_file (str): The checkpoint file (.pt) of the experiment reload.
+            experiment_patch (Optional[Dict[str, Any]]): The patch to apply to the experiment config.
 
         Returns:
             The reloaded experiment.
@@ -1039,6 +1046,11 @@ class Experiment(CallbackNotifier):
             callbacks = pickle.load(f)
         task.config = task_config
         experiment_config.restore_file = restore_file
+        if experiment_patch is not None:
+            for key, value in experiment_patch.items():
+                if not hasattr(experiment_config, key):
+                    raise ValueError(f"Experiment config does not have attribute {key}")
+                setattr(experiment_config, key, value)
         experiment = Experiment(
             task=task,
             algorithm_config=algorithm_config,
