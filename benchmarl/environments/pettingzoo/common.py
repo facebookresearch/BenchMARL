@@ -40,7 +40,6 @@ class PettingZooClass(TaskClass):
         if self.name in {
             "MULTIWALKER",
             "WATERWORLD",
-            "SIMPLE_TAG",
             "SIMPLE_ADVERSARY",
             "SIMPLE_CRYPTO",
             "SIMPLE_PUSH",
@@ -55,7 +54,6 @@ class PettingZooClass(TaskClass):
 
     def supports_discrete_actions(self) -> bool:
         if self.name in {
-            "SIMPLE_TAG",
             "SIMPLE_ADVERSARY",
             "SIMPLE_CRYPTO",
             "SIMPLE_PUSH",
@@ -70,7 +68,6 @@ class PettingZooClass(TaskClass):
 
     def has_state(self) -> bool:
         if self.name in {
-            "SIMPLE_TAG",
             "SIMPLE_ADVERSARY",
             "SIMPLE_CRYPTO",
             "SIMPLE_PUSH",
