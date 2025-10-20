@@ -121,6 +121,7 @@ class ExperimentConfig:
     checkpoint_interval: int = MISSING
     checkpoint_at_end: bool = MISSING
     keep_checkpoints_num: Optional[int] = MISSING
+    exclude_buffer_from_checkpoint: bool = MISSING
 
     def train_batch_size(self, on_policy: bool) -> int:
         """
@@ -963,7 +964,9 @@ class Experiment(CallbackNotifier):
             state=state,
             **{f"loss_{k}": item.state_dict() for k, item in self.losses.items()},
             **{
-                f"buffer_{k}": item.state_dict() if len(item) else None
+                f"buffer_{k}": item.state_dict()
+                if len(item) and not self.config.exclude_buffer_from_checkpoint
+                else None
                 for k, item in self.replay_buffers.items()
             },
         )
