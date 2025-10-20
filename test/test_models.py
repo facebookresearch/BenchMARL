@@ -519,8 +519,10 @@ class TestMlp:
         assert output_spec.expand(batch_size).is_in(out_td)
 
     @pytest.mark.parametrize("share_params", [True, False])
-    @pytest.mark.parametrize("in_features", [((4,), (3, 1)), ((2, 4), (4,))])
-    def test_mlp_num_feature_dims_wrong_input(
+    @pytest.mark.parametrize(
+        "in_features", [((4,), (1,)), ((4, 3), (1,)), ((2, 1, 4), (4, 2, 5))]
+    )
+    def test_mlp_num_feature_dims_wrong_num_feature_dims(
         self,
         share_params,
         in_features,
@@ -534,7 +536,7 @@ class TestMlp:
         torch.manual_seed(0)
 
         config = model_config_registry[model_name].get_from_yaml()
-        config.num_feature_dims = len(in_features[0])
+        config.num_feature_dims = 2
 
         multi_agent_input_shape = (n_agents, *in_features[0])
         other_multi_agent_input_shape = (n_agents, *in_features[1])
@@ -565,7 +567,7 @@ class TestMlp:
                 {"out": Unbounded(shape=(out_features,))},
             )
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="MLP input value"):
             config.get_model(
                 input_spec=input_spec,
                 output_spec=output_spec,
