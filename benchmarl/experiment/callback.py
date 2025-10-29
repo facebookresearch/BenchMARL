@@ -25,7 +25,7 @@ class Callback:
         self.experiment = None
 
     def on_setup(self):
-        """A callback called atexperiment setup."""
+        """A callback called at experiment setup."""
         pass
 
     def on_load_state_dict(self, state_dict: Dict[str, Any]):
