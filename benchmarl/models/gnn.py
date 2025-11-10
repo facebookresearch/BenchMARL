@@ -31,7 +31,7 @@ if _has_torch_geometric:
         def __init__(self):
             pass
 
-        def __call__(self, data):
+        def forward(self, data):
             (row, col), vel, pseudo = data.edge_index, data.vel, data.edge_attr
 
             cart = vel[row] - vel[col]
