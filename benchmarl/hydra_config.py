@@ -6,11 +6,12 @@
 import importlib
 from dataclasses import is_dataclass
 from pathlib import Path
+from typing import List
 
 from benchmarl.algorithms.common import AlgorithmConfig
 from benchmarl.environments import task_config_registry, TaskClass
 from benchmarl.environments.common import _type_check_task_config
-from benchmarl.experiment import Experiment, ExperimentConfig
+from benchmarl.experiment import Callback, Experiment, ExperimentConfig
 from benchmarl.models import model_config_registry
 from benchmarl.models.common import ModelConfig, parse_model_config, SequenceModelConfig
 
@@ -48,6 +49,7 @@ def load_experiment_from_hydra(
     task_config = load_task_config_from_hydra(cfg.task, task_name)
     model_config = load_model_config_from_hydra(cfg.model)
     critic_model_config = load_model_config_from_hydra(cfg.critic_model)
+    _callbacks = load_callbacks_from_hydra(getattr(cfg, "callbacks", None) or {})
 
     return Experiment(
         task=task_config,
@@ -56,7 +58,7 @@ def load_experiment_from_hydra(
         critic_model_config=critic_model_config,
         seed=cfg.seed,
         config=experiment_config,
-        callbacks=callbacks,
+        callbacks=_callbacks + [*callbacks],
     )
 
 
@@ -132,6 +134,16 @@ def load_model_config_from_hydra(cfg: DictConfig) -> ModelConfig:
                 OmegaConf.to_container(cfg, resolve=True, throw_on_missing=True)
             )
         )
+
+
+def load_callbacks_from_hydra(cfg: DictConfig) -> List[Callback]:
+    """Returns a list of :class:`~benchmarl.callbacks.Callback` from hydra config.
+
+    Args:
+        cfg (DictConfig): the callbacks config dictionary from hydra
+
+    """
+    return [OmegaConf.to_object(callback).get_callback() for callback in cfg.values()]
 
 
 def _find_hydra_folder(restore_file: str) -> str:
