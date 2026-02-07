@@ -1,4 +1,5 @@
 
+export PIP_NO_CACHE_DIR=1
 
 python -m pip install --upgrade pip
 python -m pip install flake8 pytest pytest-cov hydra-core tqdm
