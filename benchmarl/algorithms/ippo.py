@@ -80,7 +80,7 @@ class Ippo(Algorithm):
             critic=self.get_critic(group),
             clip_epsilon=self.clip_epsilon,
             entropy_coef=self.entropy_coef,
-            critic_coef=self.critic_coef,
+            critic_coeff=self.critic_coef,
             loss_critic_type=self.loss_critic_type,
             normalize_advantage=False,
         )
