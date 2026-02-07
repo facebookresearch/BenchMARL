@@ -83,7 +83,7 @@ class Mappo(Algorithm):
             actor=policy_for_loss,
             critic=self.get_critic(group),
             clip_epsilon=self.clip_epsilon,
-            entropy_coef=self.entropy_coef,
+            entropy_coeff=self.entropy_coef,
             critic_coeff=self.critic_coef,
             loss_critic_type=self.loss_critic_type,
             normalize_advantage=False,
