@@ -32,6 +32,10 @@ class Callback:
         """A callback called at state_dict load."""
         pass
 
+    def on_load_state_dict(self, state_dict: Dict[str, Any]):
+        """A callback called at state_dict load."""
+        pass
+
     def on_batch_collected(self, batch: TensorDictBase):
         """
         A callback called at the end of every collection step.

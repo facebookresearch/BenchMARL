@@ -1,0 +1,12 @@
+defaults:
+  - lr_scheduler_config
+  - _self_
+
+# Scheduler to use (e.g., "StepLR", "CosineAnnealingLR", "ExponentialLR")
+scheduler_class: torch.optim.lr_scheduler.StepLR
+
+scheduler_params:
+  step_size: 1000  # For StepLR: step size for learning rate decay
+  gamma: 0.9       # For StepLR: multiplicative factor for learning rate decay
+
+log_lr: true
