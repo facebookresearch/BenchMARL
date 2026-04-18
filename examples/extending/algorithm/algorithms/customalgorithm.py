@@ -12,7 +12,7 @@ from benchmarl.models.common import ModelConfig
 
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictModule, TensorDictSequential
-from torchrl.data import CompositeSpec, UnboundedContinuousTensorSpec
+from torchrl.data import Composite, UnboundedContinuous
 from torchrl.modules import EGreedyModule, QValueModule
 from torchrl.objectives import DQNLoss, LossModule, ValueEstimators
 
@@ -102,14 +102,14 @@ class CustomAlgorithm(Algorithm):
         ]
 
         # This is the spec of the policy input for this group
-        actor_input_spec = CompositeSpec(
+        actor_input_spec = Composite(
             {group: self.observation_spec[group].clone().to(self.device)}
         )
         # This is the spec of the policy output for this group
-        actor_output_spec = CompositeSpec(
+        actor_output_spec = Composite(
             {
-                group: CompositeSpec(
-                    {"action_value": UnboundedContinuousTensorSpec(shape=logits_shape)},
+                group: Composite(
+                    {"action_value": UnboundedContinuous(shape=logits_shape)},
                     shape=(n_agents,),
                 )
             }
