@@ -1,0 +1,5 @@
+defaults:
+  - customenv_task_1_config
+  - _self_
+
+game_name: "battle_of_sexes"
