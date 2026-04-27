@@ -11,7 +11,7 @@ from torchrl.envs import EnvBase
 from torchrl.envs.libs import GymWrapper
 from .GameTheoryEnv import TwoPlayerGameTheoryEnv
 
-TWO_PLAYER_GAME_THEORY = "Two Player Game Theory"
+TWO_PLAYER_GAME_THEORY = "game_theory_game" # this is the name for related folders
 
 class TwoPlayerGameTheoryTask(Task):
     # Your task names.
@@ -34,6 +34,7 @@ class TwoPlayerGameTheoryClass(TaskClass):
         continuous_actions: bool,
         seed: Optional[int],
         device: DEVICE_TYPING,
+        **kwargs
     ) -> Callable[[], EnvBase]:
         config = copy.deepcopy(self.config)
         return lambda: TwoPlayerGameTheoryEnv(
@@ -58,10 +59,10 @@ class TwoPlayerGameTheoryClass(TaskClass):
         # Maximum number of steps for a rollout during evaluation
         return 1
 
-    # def group_map(self, env: EnvBase) -> Dict[str, List[str]]:
-    #     # The group map mapping group names to agent names
-    #     # The data in the tensordict will havebe presented this way
-    #     return {"agents": [agent.name for agent in env.agents]}
+    def group_map(self, env: EnvBase) -> Dict[str, List[str]]:
+        if hasattr(env, "group_map"):
+            return env.group_map
+        return {"agents": [agent.name for agent in env.agents]}
 
     def observation_spec(self, env: EnvBase) -> Composite:
         # A spec for the observation.

@@ -5,4 +5,4 @@ from dataclasses import dataclass, MISSING
 
 @dataclass
 class TaskConfig:
-    game_name = "stag_hunt"
+    game_name:str = ""
