@@ -20,7 +20,7 @@ class TwoPlayerGameTheoryTask(Task):
     BATTLE_OF_SEXES   = None
     CHICKEN           = None
     PRISONERS_DILEMMA = None
-    STAGE_HUNT        = None
+    STAG_HUNT         = None
 
     @staticmethod
     def associated_class():
