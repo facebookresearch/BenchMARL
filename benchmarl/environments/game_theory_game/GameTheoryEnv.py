@@ -82,9 +82,9 @@ class TwoPlayerGameTheoryEnv(EnvBase):
                     n=2,
                     shape=torch.Size((self.n_agents,)),
                     device=self.env_device,
-                    dtype=torch.int8
+                    dtype=torch.int64  # Changed to int64 for compatibility
                 ), 
-            shape=torch.Size((self.n_agents,))
+                shape=torch.Size((self.n_agents,))
             )
         )
         
@@ -108,7 +108,7 @@ class TwoPlayerGameTheoryEnv(EnvBase):
         self.reward_spec = Composite(
             agents=Composite(
                 reward=UnboundedContinuous(
-                    shape=torch.Size((self.n_agents, )),
+                    shape=torch.Size((self.n_agents, 1)),  # Removed extra dimension
                     device=self.env_device,
                     dtype=torch.float
                 ),
@@ -140,26 +140,52 @@ class TwoPlayerGameTheoryEnv(EnvBase):
         
     def _step(self, tensordict: TensorDict) -> TensorDict:
         """Execute one step. Input must contain actions for both agents."""
-        actions = tensordict['agents', "action"]  # Shape: (batch, 2, 1)
-
+        actions = tensordict['agents', "action"]  # Shape: (batch, 2)
+        
+        # Handle batch dimension
+        batch_size = actions.shape[:-1] if len(actions.shape) > 1 else torch.Size([1])
+        
+        # Extract actions for both agents - handle potential batch dimension
+        if len(actions.shape) > 1:
+            # Batch case
+            a0 = actions[..., 0].long()
+            a1 = actions[..., 1].long()
+        else:
+            # Single step case
+            a0 = actions[0].long()
+            a1 = actions[1].long()
+            # Add batch dimension
+            a0 = a0.unsqueeze(0)
+            a1 = a1.unsqueeze(0)
+        
         # Compute payoffs for each batch element
-        a0 = int(actions[..., 0].item())
-        a1 = int(actions[..., 1].item())
-        payoffs = self.game_data["payoffs"][(a0, a1)]
-
-        # rewards shape must be (batch, n_agents, 1) to match reward_spec
-        rewards = torch.tensor(payoffs, device=self.device, dtype=torch.float).unsqueeze(-1)
-
-        # Create next tensordict with the same batch size as the input
+        rewards_list = []
+        for i in range(a0.shape[0]):
+            payoff = self.game_data["payoffs"][(a0[i].item(), a1[i].item())]
+            rewards_list.append(payoff)
+        
+        # Stack rewards into shape (batch, n_agents)
+        rewards = torch.tensor(rewards_list, device=self.device, dtype=torch.float).reshape((2,1))
+        
+        # Create next tensordict
         done = torch.ones(1, dtype=torch.bool, device=self.device)
         terminated = torch.ones(1, dtype=torch.bool, device=self.device)
         truncated = torch.zeros(1, dtype=torch.bool, device=self.device)
-
+        
+        # Get state from input or create dummy
+        if 'state' in tensordict.get('agents', {}):
+            state = tensordict['agents', 'state']
+        else:
+            state = torch.zeros((self.n_agents, 1), device=self.device)
+        
+        # Create output tensordict
         next_td = TensorDict(
             {
                 "agents": TensorDict(
-                    {"reward": rewards,
-                     'state': tensordict['agents', 'state']},
+                    {
+                        "reward": rewards,
+                        'state': state
+                    },
                     batch_size=torch.Size([self.n_agents]),
                     device=self.device,
                 ),
@@ -167,22 +193,33 @@ class TwoPlayerGameTheoryEnv(EnvBase):
                 "terminated": terminated,
                 "truncated": truncated,
             },
+            batch_size=batch_size if batch_size != torch.Size([1]) else torch.Size([]),
             device=self.device,
         )
-
+        
         return next_td
     
-    def _reset(self, tensordict: TensorDict, **kwargs) -> TensorDict:
+    def _reset(self, tensordict: Optional[TensorDict] = None, **kwargs) -> TensorDict:
+        # Create initial state
+        initial_state = torch.zeros((self.n_agents, 1), device=self.device)
+        
         out = TensorDict(
             {
+                "agents": TensorDict(
+                    {
+                        "state": initial_state,
+                    },
+                    batch_size=torch.Size([self.n_agents]),
+                    device=self.device,
+                ),
                 "done": torch.zeros(1, dtype=torch.bool, device=self.device),
                 "terminated": torch.zeros(1, dtype=torch.bool, device=self.device),
                 "truncated": torch.zeros(1, dtype=torch.bool, device=self.device),
             },
+            batch_size=torch.Size([]),
             device=self.device,
         )
-        # Add dummy observations
-        out.update(self.observation_spec.rand())
+        
         return out
     
     def _set_seed(self, seed: Optional[int]):
@@ -216,9 +253,9 @@ class TwoPlayerGameTheoryEnv(EnvBase):
     def get_rand_action(self, tensordict: TensorDictBase | None = None) -> TensorDict:
         if tensordict is None:
             tensordict = self.reset()
-        tensordict = tensordict.update(self.action_spec.rand())
+        action_td = self.action_spec.rand()
+        tensordict.update(action_td)
         return tensordict
-
 
 # Example usage and testing
 def test_environment():
@@ -243,10 +280,9 @@ def test_environment():
         test_actions = torch.tensor([[0, 0], [0, 1], [1, 0], [1, 1]], dtype=torch.long)
         
         for actions in test_actions:
-            td = None
-            td = env.get_rand_action(td)
-            td['agents', "action"][0] = actions[0] # Agent 0
-            td['agents', "action"][1] = actions[1] # Agent 1
+            td = env.get_rand_action(td.clone())
+            # Set actions correctly
+            td['agents', "action"] = actions
             td = env.step(td)
 
             print(f"\nActions: {actions.tolist()}")
@@ -257,4 +293,4 @@ if __name__ == "__main__":
     check_env_specs(TwoPlayerGameTheoryEnv())
     
     # Test basic functionality
-    # test_environment()
+    test_environment()
