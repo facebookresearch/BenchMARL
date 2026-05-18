@@ -157,10 +157,10 @@ class Algorithm(ABC):
         memory_size = self.experiment_config.replay_buffer_memory_size(self.on_policy)
         sampling_size = self.experiment_config.train_minibatch_size(self.on_policy)
         if self.has_rnn:
-            sequence_length = -(
-                -self.experiment_config.collected_frames_per_batch(self.on_policy)
-                // self.experiment_config.n_envs_per_worker(self.on_policy)
-            )
+            sequence_length = self.model_config.rnn_sequence_length
+            assert (
+                sequence_length > sampling_size
+            ), "Sequence length must be greater than the training minibatch size"
             memory_size = -(-memory_size // sequence_length)
             sampling_size = -(-sampling_size // sequence_length)
 

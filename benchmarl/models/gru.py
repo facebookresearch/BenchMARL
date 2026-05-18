@@ -165,7 +165,7 @@ class MultiAgentGRU(torch.nn.Module):
         # is_init never has it
 
         assert is_init is not None, "We need to pass is_init"
-        training = h_0 is None
+        training = h_0 is None or input.dim() == 4
 
         missing_batch = False
         if (
@@ -198,24 +198,27 @@ class MultiAgentGRU(torch.nn.Module):
         is_init = is_init.unsqueeze(-2).expand(batch, seq, self.n_agents, 1)
 
         if training:
-            if self.centralised and self.share_params:
-                shape = (
-                    batch,
-                    self.n_layers,
-                    self.hidden_size,
+            if h_0 is None:
+                if self.centralised and self.share_params:
+                    shape = (
+                        batch,
+                        self.n_layers,
+                        self.hidden_size,
+                    )
+                else:
+                    shape = (
+                        batch,
+                        self.n_agents,
+                        self.n_layers,
+                        self.hidden_size,
+                    )
+                h_0 = torch.zeros(
+                    shape,
+                    device=self.device,
+                    dtype=torch.float,
                 )
             else:
-                shape = (
-                    batch,
-                    self.n_agents,
-                    self.n_layers,
-                    self.hidden_size,
-                )
-            h_0 = torch.zeros(
-                shape,
-                device=self.device,
-                dtype=torch.float,
-            )
+                h_0 = h_0[:, 0]
         if self.centralised:
             input = input.view(batch, seq, self.n_agents * self.input_size)
             is_init = is_init[..., 0, :]
@@ -321,7 +324,7 @@ class Gru(Model):
             is_critic=kwargs.pop("is_critic"),
         )
 
-        self.hidden_state_name = (self.agent_group, f"_hidden_gru_{self.model_index}")
+        self.hidden_state_name = (self.agent_group, f"hidden_gru_{self.model_index}")
         self.rnn_keys = unravel_key_list(["is_init", self.hidden_state_name])
         self.in_keys += self.rnn_keys
 
@@ -439,7 +442,7 @@ class Gru(Model):
         )
         h_0 = tensordict.get(self.hidden_state_name, None)
         is_init = tensordict.get("is_init")
-        training = h_0 is None
+        training = h_0 is None or input.dim() == (4 if self.input_has_agent_dim else 3)
 
         # Has multi-agent input dimension
         if self.input_has_agent_dim:
@@ -494,6 +497,7 @@ class GruConfig(ModelConfig):
     bias: bool = MISSING
     dropout: float = MISSING
     compile: bool = MISSING
+    rnn_sequence_length: int = MISSING
 
     mlp_num_cells: Sequence[int] = MISSING
     mlp_layer_class: Type[nn.Module] = MISSING
@@ -514,7 +518,7 @@ class GruConfig(ModelConfig):
     def get_model_state_spec(self, model_index: int = 0) -> Composite:
         spec = Composite(
             {
-                f"_hidden_gru_{model_index}": Unbounded(
+                f"hidden_gru_{model_index}": Unbounded(
                     shape=(self.n_layers, self.hidden_size)
                 )
             }
