@@ -536,6 +536,12 @@ class Experiment(CallbackNotifier):
             for group in self.group_map.keys()
         }
 
+        if self.algorithm.has_rnn:
+            total_seq = self.config.collected_frames_per_batch(
+                self.on_policy
+            ) // self.config.n_envs_per_worker(self.on_policy)
+            self.n_chunks = total_seq // self.model_config.rnn_sequence_length
+
     def _setup_collector(self):
         self.policy = self.algorithm.get_policy_for_collection()
 
@@ -737,6 +743,18 @@ class Experiment(CallbackNotifier):
                 group_batch = self.algorithm.process_batch(group, group_batch)
                 if not self.algorithm.has_rnn:
                     group_batch = group_batch.reshape(-1)
+                else:
+                    n_chunks = self.n_chunks
+                    shape = group_batch.shape
+                    group_batch = group_batch[
+                        :, : n_chunks * self.config.rnn_sequence_length
+                    ]
+                    group_batch = group_batch.reshape(
+                        shape[0], n_chunks, self.config.rnn_sequence_length, *shape[2:]
+                    )
+                    group_batch = group_batch.reshape(
+                        shape[0] * n_chunks, self.config.rnn_sequence_length, *shape[2:]
+                    )
 
                 group_buffer = self.replay_buffers[group]
                 group_buffer.extend(group_batch.to(group_buffer.storage.device))

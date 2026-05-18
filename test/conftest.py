@@ -136,6 +136,7 @@ def gru_mlp_sequence_config() -> ModelConfig:
                 bias=True,
                 dropout=0,
                 compile=False,
+                rnn_sequence_length=5,
             ),
             MlpConfig(num_cells=[4], activation_class=nn.Tanh, layer_class=nn.Linear),
         ],

@@ -6,6 +6,7 @@ n_layers: 1
 bias: True
 dropout: 0
 compile: False
+rnn_sequence_length: 20
 
 mlp_num_cells: [256, 256]
 mlp_layer_class: torch.nn.Linear
