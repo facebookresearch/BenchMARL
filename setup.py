@@ -47,7 +47,8 @@ setup(
     author="Matteo Bettini",
     author_email="mb2389@cl.cam.ac.uk",
     install_requires=[
-        "torchrl>=0.10,<0.12",
+        # "torchrl>=0.10,<0.12",
+        "torchrl",
         "tqdm",
         "hydra-core",
         "torchvision",
