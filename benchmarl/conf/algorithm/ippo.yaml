@@ -12,3 +12,5 @@ lmbda: 0.9
 scale_mapping: "biased_softplus_1.0"
 use_tanh_normal: True
 minibatch_advantage: False
+normalize_advantage: False
+normalize_advantage_exclude_dims: [-2]

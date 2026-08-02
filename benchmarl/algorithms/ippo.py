@@ -5,7 +5,7 @@
 #
 
 from dataclasses import dataclass, MISSING
-from typing import Dict, Iterable, Tuple, Type
+from typing import Dict, Iterable, List, Tuple, Type
 
 import torch
 from tensordict import TensorDictBase
@@ -39,6 +39,13 @@ class Ippo(Algorithm):
         minibatch_advantage (bool): if ``True``, advantage computation is perfomend on minibatches of size
             ``experiment.config.on_policy_minibatch_size`` instead of the full
             ``experiment.config.on_policy_collected_frames_per_batch``, this helps not exploding memory usage
+        normalize_advantage (bool): if ``True``, the advantage will be normalized
+            before being used. Defaults to ``False``.
+            See ``normalize_advantage_exclude_dims`` for which dimensions are kept independent.
+        normalize_advantage_exclude_dims (list[int]): dimensions to exclude from the advantage
+            standardization. Negative dimensions are valid. This is useful in multiagent (or multiobjective) settings
+            where the agent (or objective) dimension may be excluded from the reductions. Default: ``(-2,)``
+            (``[-2]`` in YAML). ``()`` normalizes across all dimensions (including agent 1).
 
     """
 
@@ -53,6 +60,8 @@ class Ippo(Algorithm):
         scale_mapping: str,
         use_tanh_normal: bool,
         minibatch_advantage: bool,
+        normalize_advantage: bool,
+        normalize_advantage_exclude_dims: List[int],
         **kwargs
     ):
         super().__init__(**kwargs)
@@ -66,6 +75,8 @@ class Ippo(Algorithm):
         self.scale_mapping = scale_mapping
         self.use_tanh_normal = use_tanh_normal
         self.minibatch_advantage = minibatch_advantage
+        self.normalize_advantage = normalize_advantage
+        self.normalize_advantage_exclude_dims = normalize_advantage_exclude_dims
 
     #############################
     # Overridden abstract methods
@@ -82,7 +93,8 @@ class Ippo(Algorithm):
             entropy_coeff=self.entropy_coef,
             critic_coeff=self.critic_coef,
             loss_critic_type=self.loss_critic_type,
-            normalize_advantage=False,
+            normalize_advantage=self.normalize_advantage,
+            normalize_advantage_exclude_dims=self.normalize_advantage_exclude_dims,
         )
         loss_module.set_keys(
             reward=(group, "reward"),
@@ -309,6 +321,8 @@ class IppoConfig(AlgorithmConfig):
     scale_mapping: str = MISSING
     use_tanh_normal: bool = MISSING
     minibatch_advantage: bool = MISSING
+    normalize_advantage: bool = MISSING
+    normalize_advantage_exclude_dims: List[int] = MISSING
 
     @staticmethod
     def associated_class() -> Type[Algorithm]:
