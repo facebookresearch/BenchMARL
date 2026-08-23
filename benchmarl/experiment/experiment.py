@@ -837,6 +837,16 @@ class Experiment(CallbackNotifier):
 
     def _optimizer_loop(self, group: str) -> TensorDictBase:
         subdata = self.replay_buffers[group].sample().to(self.config.train_device)
+        
+        # --- Fix shape mismatch when off_policy_use_prioritized_replay_buffer = True ---
+        if "priority_weight" in subdata.keys() and subdata["priority_weight"].dim() == 1:
+            # Extract the number of agents using the experiment's group map
+            n_agents = len(self.group_map[group])
+            
+            # Expand priority_weight from [128] to [128, n_agents]
+            subdata["priority_weight"] = subdata["priority_weight"].unsqueeze(-1).expand(-1, n_agents)
+        # --- End of fix---
+        
         loss_vals = self.losses[group](subdata)
         training_td = loss_vals.detach()
         loss_vals = self.algorithm.process_loss_vals(group, loss_vals)
@@ -1014,8 +1024,24 @@ class Experiment(CallbackNotifier):
     def _load_experiment(self) -> Experiment:
         """Load trainer from checkpoint"""
         loaded_dict: OrderedDict = torch.load(
-            self.config.restore_file, map_location=self.config.restore_map_location
+            self.config.restore_file, 
+            map_location=self.config.restore_map_location,
+            weights_only=False  # Fix loading checkpoint restriction
         )
+        # --- Fix tracking the number of checkpoints when restoring from a checkpoint
+        checkpoint_folder = self.folder_name / "checkpoints"
+        if checkpoint_folder.exists():
+            import re
+            
+            def extract_frame_number(filepath: Path) -> int:
+                match = re.search(r"checkpoint_(\d+)\.pt", filepath.name)
+                return int(match.group(1)) if match else -1
+                
+            checkpoints = list(checkpoint_folder.glob("checkpoint_*.pt"))
+            checkpoints.sort(key=extract_frame_number)
+            self._checkpointed_files = deque(checkpoints)
+        # -----
+        
         self.load_state_dict(loaded_dict)
         return self
 
