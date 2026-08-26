@@ -30,11 +30,11 @@ class UrbanEnvClass(TaskClass):
         )
 
     def supports_continuous_actions(self) -> bool:
-        scenario = load_scenario(self.name, self.config)
+        scenario = load_scenario(self.name.lower(), self.config)
         return scenario.continuous_actions
 
     def supports_discrete_actions(self) -> bool:
-        scenario = load_scenario(self.name, self.config)
+        scenario = load_scenario(self.name.lower(), self.config)
         return scenario.discrete_actions
 
     def has_render(self, env: EnvBase) -> bool:
