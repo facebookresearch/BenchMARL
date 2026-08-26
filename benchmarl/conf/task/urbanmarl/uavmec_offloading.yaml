@@ -5,11 +5,8 @@ defaults:
 
 
 # name: "uavmec_offloading"
-# num_envs: 2
-# device: "cpu"
-# task_name: "UAVMEC_OFFLOADING"
 num_uavs: 3
-num_ues: 50
+num_ues: 10
 max_time_slots: 100
 volume_size: [500, 500, 200]
 max_horizontal_speed: 49.0

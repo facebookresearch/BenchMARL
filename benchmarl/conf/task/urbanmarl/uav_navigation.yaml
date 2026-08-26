@@ -5,9 +5,6 @@ defaults:
 
 
 # name: "uav_navigation"
-# num_envs: from 2 to 360 depends on memory ang GPU capacity
-# device: "cpu"
-# task_name: "UAV_NAVIGATION"
 num_uavs: 3
 num_ues: 10
 max_time_slots: 100

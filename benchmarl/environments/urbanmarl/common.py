@@ -7,8 +7,9 @@ import torch
 from tensordict import TensorDictBase
 from torchrl.data import Composite
 from torchrl.envs import EnvBase
-# from urbanmarl.envs.urbanmarl_env import UrbanEnv
+# 
 from urbanmarl.envs.base_env import UrbanEnv
+from urbanmarl.scenarios import load_scenario
 
 class UrbanEnvClass(TaskClass):
     def get_env_fun(
@@ -29,10 +30,12 @@ class UrbanEnvClass(TaskClass):
         )
 
     def supports_continuous_actions(self) -> bool:
-        return True
+        scenario = load_scenario(self.name, self.config)
+        return scenario.continuous_actions
 
     def supports_discrete_actions(self) -> bool:
-        return True
+        scenario = load_scenario(self.name, self.config)
+        return scenario.discrete_actions
 
     def has_render(self, env: EnvBase) -> bool:
         return True
