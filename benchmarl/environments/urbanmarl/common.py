@@ -95,17 +95,17 @@ class UrbanEnvClass(TaskClass):
             for key in batch.keys(True, True):
                 if isinstance(key, tuple):
                     if key[0] == "next" and key[-1] == "reward":
-                        reward = batch.get(key)[i].mean()
+                        reward = batch.get(key)[i].mean().item()
             info[name] = reward
             if ('next', 'info', 'collisions') in batch.keys(True, True):
                 col_name = f"collisions_{alpha.item():.2f}_{int(beta.item())}_{gamma.item():.2f}_{E.item():.4f}"
-                info[col_name] = batch.get(('next', 'info', 'collisions'))[i].mean()
+                info[col_name] = batch.get(('next', 'info', 'collisions'))[i].mean().item()
             if ('next', 'info', 'velocity') in batch.keys(True, True):
                 vel_name = f"velocity_{alpha.item():.2f}_{int(beta.item())}_{gamma.item():.2f}_{E.item():.4f}"
-                info[vel_name] = batch.get(('next', 'info', 'velocity'))[i].mean()
+                info[vel_name] = batch.get(('next', 'info', 'velocity'))[i].mean().item()
             if ('next', 'info', 'los') in batch.keys(True, True):
                 los_name = f"los_{alpha.item():.2f}_{int(beta.item())}_{gamma.item():.2f}_{E.item():.4f}"
-                info[los_name] = batch.get(('next', 'info', 'los'))[i].mean()
+                info[los_name] = batch.get(('next', 'info', 'los'))[i].mean().item()
                 
         return info
         
