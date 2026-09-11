@@ -56,6 +56,7 @@ setup(
         "numpy",
     ],
     extras_require={
+        "urbanmarl": ["urbanmarl>=0.3.0"],
         "vmas": ["vmas>=1.3.4"],
         "pettingzoo": ["pettingzoo[all]>=1.24.3"],
         "meltingpot": ["dm-meltingpot"],

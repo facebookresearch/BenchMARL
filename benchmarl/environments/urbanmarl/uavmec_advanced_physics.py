@@ -15,21 +15,20 @@ class TaskConfig:
     g2a_bandwidth: float = MISSING
     noise_figure_db: float = MISSING
 
-    # MEC task workload and computing configuration
+    # Dynamic Task Workload
     task_arrival_rate: float = MISSING
-    task_data_size_min: float = MISSING
-    task_data_size_max: float = MISSING
+    task_data_min: float = MISSING
+    task_data_max: float = MISSING
     cpu_cycles_per_bit: float = MISSING
-    max_latency_deadline: float = MISSING
-    ue_tx_power: float = MISSING
-    uav_cpu_freq: float = MISSING
-    uav_num_cores: int = MISSING
-    distance_weight: float = MISSING
+    task_deadline: float = MISSING
 
-    # Multi-objective reward weights
+    # MEC Server Capacity
+    uav_num_cores: int = MISSING
+    uav_cpu_freq: float = MISSING
+
+    # Multi-Objective Reward Weights
     w_tasks: float = MISSING
-    w_latency: float = MISSING
+    w_delay: float = MISSING
     w_energy: float = MISSING
     w_collision: float = MISSING
     w_sojourn: float = MISSING
-    extended_mec_obs: bool = MISSING

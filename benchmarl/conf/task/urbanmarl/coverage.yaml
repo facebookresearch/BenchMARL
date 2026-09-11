@@ -4,7 +4,10 @@ defaults:
 
 
 
-# name: "coverage"
+# name: "uavmec_offloading"
+# num_envs: 2
+# device: "cpu"
+# task_name: "UAVMEC_OFFLOADING"
 num_uavs: 3
 num_ues: 10
 max_time_slots: 100

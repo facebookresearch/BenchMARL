@@ -1,0 +1,32 @@
+defaults:
+  - _self_
+
+# UrbanMARL Task Configuration: UAVMEC_ADVANCED_PHYSICS
+num_uavs: 3
+num_ues: 10
+max_time_slots: 100
+volume_size: [500, 500, 200]
+max_horizontal_speed: 49.0
+max_vertical_speed: 12.0
+max_transmit_power: 5.0
+frequency_ghz: 29.0
+g2a_bandwidth: 10000000.0
+noise_figure_db: 7.0
+
+# Dynamic Task Workload
+task_arrival_rate: 2.5
+task_data_min: 500000.0
+task_data_max: 2000000.0
+cpu_cycles_per_bit: 800.0
+task_deadline: 0.2
+
+# MEC Server Capacity
+uav_num_cores: 4
+uav_cpu_freq: 2000000000.0
+
+# Multi-Objective Reward Weights
+w_tasks: 2.0
+w_delay: 1.5
+w_energy: 0.5
+w_collision: 5.0
+w_sojourn: 0.5

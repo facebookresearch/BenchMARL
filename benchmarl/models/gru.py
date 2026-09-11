@@ -151,7 +151,7 @@ class MultiAgentGRU(torch.nn.Module):
             )
             # Remove all parameters
             TensorDict.from_module(self._empty_gru).data.to("meta").to_module(
-                self._empty_gru
+                self._empty_gru, preserve_module_state=False
             )
 
     def forward(
@@ -249,7 +249,7 @@ class MultiAgentGRU(torch.nn.Module):
                     (-2, -3),
                 )(self.params, input, is_init, h_0)
         else:
-            with self.params.to_module(self._empty_gru):
+            with self.params.to_module(self._empty_gru, preserve_module_state=False):
                 if self.centralised:
                     output, h_n = self._empty_gru(input, is_init, h_0)
                 else:
@@ -261,7 +261,7 @@ class MultiAgentGRU(torch.nn.Module):
 
     def vmap_func_module(self, module, *args, **kwargs):
         def exec_module(params, *input):
-            with params.to_module(module):
+            with params.to_module(module, preserve_module_state=False):
                 return module(*input)
 
         return torch.vmap(exec_module, *args, **kwargs)

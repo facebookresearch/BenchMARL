@@ -104,6 +104,12 @@ pip install -e BenchMARL
 
 All enviornment dependencies are optional in BenchMARL and can be installed separately.
 
+##### UrbanMARL
+
+```bash
+pip install urbanmarl
+```
+
 ##### VMAS
 
 ```bash
@@ -251,12 +257,13 @@ They differ based on many aspects, here is a table with the current environments
 
 | Environment                                                         | Tasks                                | Cooperation               | Global state | Reward function               | Action space          |    Vectorized    |
 |---------------------------------------------------------------------|--------------------------------------|---------------------------|--------------|-------------------------------|-----------------------|:----------------:|
-| [VMAS](https://github.com/proroklab/VectorizedMultiAgentSimulator)  | [27](benchmarl/conf/task/vmas)       | Cooperative + Competitive | No           | Shared + Independent + Global | Continuous + Discrete |       Yes        |    
+| [VMAS](https://github.com/proroklab/VectorizedMultiAgentSimulator)  | [27](benchmarl/conf/task/vmas)       | Cooperative + Competitive | No           | Shared + Independent + Global | Continuous + Discrete |       Yes        |
 | [SMACv2](https://github.com/oxwhirl/smacv2)                         | [15](benchmarl/conf/task/smacv2)     | Cooperative               | Yes          | Global                        | Discrete              |        No        |
 | [MPE](https://github.com/openai/multiagent-particle-envs)           | [8](benchmarl/conf/task/pettingzoo)  | Cooperative + Competitive | Yes          | Shared + Independent          | Continuous + Discrete |        No        |
 | [SISL](https://github.com/sisl/MADRL)                               | [2](benchmarl/conf/task/pettingzoo)  | Cooperative               | No           | Shared                        | Continuous            |        No        |
 | [MeltingPot](https://github.com/google-deepmind/meltingpot)         | [49](benchmarl/conf/task/meltingpot) | Cooperative + Competitive | Yes          | Independent                   | Discrete              |        No        |
 | [MAgent2](https://github.com/Farama-Foundation/magent2)             | [1](benchmarl/conf/task/magent)      | Cooperative + Competitive | Yes          | Global in groups              | Discrete              |        No        |
+| [UrbanMARL](https://github.com/yemenlinux/vUrbanMARL)               | [8](benchmarl/conf/task/urbanmarl)   | Cooperative + Competitive | Yes          | Shared + Independent + Global | Continuous + Discrete |       Yes        |
 
 
 > [!NOTE]  
