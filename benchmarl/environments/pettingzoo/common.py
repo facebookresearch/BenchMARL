@@ -15,6 +15,44 @@ from benchmarl.environments.common import Task, TaskClass
 from benchmarl.utils import DEVICE_TYPING
 
 
+try:
+    import numpy as np
+    import pymunk
+
+    if hasattr(pymunk, "Body") and hasattr(pymunk.Body, "_set_velocity"):
+        _orig_set_velocity = pymunk.Body._set_velocity
+
+        def _set_velocity(self, vel):
+            v0 = (
+                float(np.asarray(vel[0]).item())
+                if hasattr(vel[0], "item")
+                else float(vel[0])
+            )
+            v1 = (
+                float(np.asarray(vel[1]).item())
+                if hasattr(vel[1], "item")
+                else float(vel[1])
+            )
+            return _orig_set_velocity(self, (v0, v1))
+
+        pymunk.Body._set_velocity = _set_velocity
+        pymunk.Body.velocity = property(pymunk.Body._get_velocity, _set_velocity)
+except ImportError:
+    pass
+
+try:
+    import pygame
+
+    # Prevent pygame.quit() from destroying the global pygame.freetype font cache across environments
+    def _safe_pygame_quit():
+        if hasattr(pygame, "display") and hasattr(pygame.display, "quit"):
+            pygame.display.quit()
+
+    pygame.quit = _safe_pygame_quit
+except ImportError:
+    pass
+
+
 class PettingZooClass(TaskClass):
     def get_env_fun(
         self,

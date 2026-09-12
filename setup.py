@@ -47,14 +47,16 @@ setup(
     author="Matteo Bettini",
     author_email="mb2389@cl.cam.ac.uk",
     install_requires=[
-        "torchrl>=0.10,<0.12",
+        # "torchrl>=0.10,<0.12",
+        "torchrl",
         "tqdm",
         "hydra-core",
         "torchvision",
-        "av<14",
+        "av",
         "numpy",
     ],
     extras_require={
+        "urbanmarl": ["urbanmarl>=0.3.0"],
         "vmas": ["vmas>=1.3.4"],
         "pettingzoo": ["pettingzoo[all]>=1.24.3"],
         "meltingpot": ["dm-meltingpot"],

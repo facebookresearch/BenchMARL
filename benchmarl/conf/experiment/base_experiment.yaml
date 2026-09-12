@@ -102,7 +102,7 @@ evaluation_deterministic_actions: True
 evaluation_static: False
 
 # List of loggers to use, options are: wandb, csv, tensorboard, mflow
-loggers: [csv,wandb]
+loggers: [csv, wandb]
 # Wandb project name (kept for backward compatibility)
 project_name: "benchmarl"
 # Wandb extra kwargs passed to the WandbLogger (~superset of wandb.init kwargs)
@@ -129,6 +129,6 @@ checkpoint_interval: 0
 checkpoint_at_end: False
 # How many checkpoints to keep. As new checkpoints are taken, temporally older checkpoints are deleted to keep this number of
 # checkpoints. The checkpoint at the end is included in this number. Set to `null` to keep all checkpoints.
-keep_checkpoints_num: 3
+keep_checkpoints_num: 1
 # Whether to exclude the replay buffers from the checkpoint
 exclude_buffer_from_checkpoint: False

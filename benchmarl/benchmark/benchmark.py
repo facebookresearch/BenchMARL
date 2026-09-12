@@ -70,7 +70,7 @@ class Benchmark:
     def run_sequential(self):
         """Run all the experiments in the benchmark in a sequence."""
         for i, experiment in enumerate(self.get_experiments()):
-            print(f"\nRunning experiment {i+1}/{self.n_experiments}.\n")
+            print(f"\nRunning experiment {i + 1}/{self.n_experiments}.\n")
             try:
                 experiment.run()
             except KeyboardInterrupt as interrupt:

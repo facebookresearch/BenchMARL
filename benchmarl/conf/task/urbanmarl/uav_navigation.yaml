@@ -1,0 +1,20 @@
+defaults:
+  - urbanmarl_uav_navigation_config
+  - _self_
+
+
+
+# name: "uav_navigation"
+# num_envs: from 2 to 360 depends on memory ang GPU capacity
+# device: "cpu"
+# task_name: "UAV_NAVIGATION"
+num_uavs: 3
+num_ues: 10
+max_time_slots: 100
+volume_size: [500, 500, 200]
+max_horizontal_speed: 49.0
+max_vertical_speed: 12.0
+max_transmit_power: 5.0
+frequency_ghz: 29.0
+g2a_bandwidth: 10000000.0
+noise_figure_db: 7.0 

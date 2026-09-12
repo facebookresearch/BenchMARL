@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import copy
 import importlib
-
 import os
 import pickle
 import shutil
@@ -17,14 +16,14 @@ import warnings
 from collections import deque, OrderedDict
 from dataclasses import dataclass, MISSING
 from pathlib import Path
-
 from typing import Any, Dict, List, Optional, Union
 
 import torch
 from tensordict import TensorDictBase
 from tensordict.nn import TensorDictSequential
-from torchrl.collectors import SyncDataCollector
 
+# from torchrl.collectors import SyncDataCollector
+from torchrl.collectors import Collector
 from torchrl.envs import ParallelEnv, SerialEnv, TransformedEnv
 from torchrl.envs.transforms import Compose
 from torchrl.envs.utils import ExplorationType, set_exploration_type, step_mdp
@@ -32,7 +31,6 @@ from torchrl.record.loggers import generate_exp_name
 from tqdm import tqdm
 
 from benchmarl.algorithms import IppoConfig, MappoConfig
-
 from benchmarl.algorithms.common import AlgorithmConfig
 from benchmarl.environments import Task, TaskClass
 from benchmarl.experiment.callback import Callback, CallbackNotifier
@@ -546,7 +544,7 @@ class Experiment(CallbackNotifier):
             self.group_policies.update({group: group_policy[0]})
 
         if not self.config.collect_with_grad:
-            self.collector = SyncDataCollector(
+            self.collector = Collector(
                 self.env_func,
                 self.policy,
                 device=self.config.sampling_device,
@@ -558,6 +556,7 @@ class Experiment(CallbackNotifier):
                     if not self.on_policy
                     else 0
                 ),
+                auto_register_policy_transforms=True,  # Fix warning
             )
         else:
             if self.config.off_policy_init_random_frames and not self.on_policy:
@@ -815,15 +814,33 @@ class Experiment(CallbackNotifier):
     def close(self):
         """Close the experiment."""
         if not self.config.collect_with_grad:
-            self.collector.shutdown()
+            if hasattr(self, "collector") and self.collector is not None:
+                self.collector.shutdown()
         else:
-            self.rollout_env.close()
-        self.test_env.close()
-        self.logger.finish()
+            if hasattr(self, "rollout_env") and self.rollout_env is not None:
+                self.rollout_env.close()
+        if hasattr(self, "test_env") and self.test_env is not None:
+            self.test_env.close()
+        if hasattr(self, "logger") and self.logger is not None:
+            self.logger.finish()
 
-        for buffer in self.replay_buffers.values():
-            if hasattr(buffer.storage, "scratch_dir"):
-                shutil.rmtree(buffer.storage.scratch_dir, ignore_errors=False)
+        if hasattr(self, "replay_buffers"):
+            for buffer in self.replay_buffers.values():
+                if hasattr(buffer.storage, "scratch_dir"):
+                    shutil.rmtree(buffer.storage.scratch_dir, ignore_errors=False)
+                if hasattr(buffer, "empty"):
+                    buffer.empty()
+            self.replay_buffers.clear()
+
+        self.collector = None
+        self.test_env = None
+        self.rollout_env = None
+
+        import gc
+
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
 
     def _get_excluded_keys(self, group: str):
         excluded_keys = []
@@ -835,6 +852,21 @@ class Experiment(CallbackNotifier):
 
     def _optimizer_loop(self, group: str) -> TensorDictBase:
         subdata = self.replay_buffers[group].sample().to(self.config.train_device)
+
+        # --- Fix shape mismatch when off_policy_use_prioritized_replay_buffer = True ---
+        if (
+            "priority_weight" in subdata.keys()
+            and subdata["priority_weight"].dim() == 1
+        ):
+            # Extract the number of agents using the experiment's group map
+            n_agents = len(self.group_map[group])
+
+            # Expand priority_weight from [128] to [128, n_agents]
+            subdata["priority_weight"] = (
+                subdata["priority_weight"].unsqueeze(-1).expand(-1, n_agents)
+            )
+        # --- End of fix---
+
         loss_vals = self.losses[group](subdata)
         training_td = loss_vals.detach()
         loss_vals = self.algorithm.process_loss_vals(group, loss_vals)
@@ -964,9 +996,11 @@ class Experiment(CallbackNotifier):
             state=state,
             **{f"loss_{k}": item.state_dict() for k, item in self.losses.items()},
             **{
-                f"buffer_{k}": item.state_dict()
-                if len(item) and not self.config.exclude_buffer_from_checkpoint
-                else None
+                f"buffer_{k}": (
+                    item.state_dict()
+                    if len(item) and not self.config.exclude_buffer_from_checkpoint
+                    else None
+                )
                 for k, item in self.replay_buffers.items()
             },
         )
@@ -1012,8 +1046,24 @@ class Experiment(CallbackNotifier):
     def _load_experiment(self) -> Experiment:
         """Load trainer from checkpoint"""
         loaded_dict: OrderedDict = torch.load(
-            self.config.restore_file, map_location=self.config.restore_map_location
+            self.config.restore_file,
+            map_location=self.config.restore_map_location,
+            weights_only=False,  # Fix loading checkpoint restriction
         )
+        # --- Fix tracking the number of checkpoints when restoring from a checkpoint
+        checkpoint_folder = self.folder_name / "checkpoints"
+        if checkpoint_folder.exists():
+            import re
+
+            def extract_frame_number(filepath: Path) -> int:
+                match = re.search(r"checkpoint_(\d+)\.pt", filepath.name)
+                return int(match.group(1)) if match else -1
+
+            checkpoints = list(checkpoint_folder.glob("checkpoint_*.pt"))
+            checkpoints.sort(key=extract_frame_number)
+            self._checkpointed_files = deque(checkpoints)
+        # -----
+
         self.load_state_dict(loaded_dict)
         return self
 

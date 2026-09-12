@@ -9,16 +9,13 @@ import os
 import warnings
 from collections.abc import MutableMapping, Sequence
 from pathlib import Path
-
 from typing import Any, Dict, List, Optional
 
 import numpy as np
 import torch
 import torchrl
-
 from tensordict import TensorDictBase
 from torch import Tensor
-
 from torchrl.record import TensorboardLogger
 from torchrl.record.loggers import get_logger
 from torchrl.record.loggers.wandb import WandbLogger
@@ -256,7 +253,8 @@ class Logger:
                             )
                     # End of check
 
-                    logger.log_video("eval_video", vid, step=step)
+                    # logger.log_video("eval_video", vid step=step)
+                    logger.log_video("eval_video", vid, fps=20, step=step)
 
     def commit(self):
         for logger in self.loggers:
@@ -277,6 +275,11 @@ class Logger:
                 import wandb
 
                 wandb.finish()
+            elif isinstance(logger, TensorboardLogger):
+                if hasattr(logger, "experiment") and hasattr(
+                    logger.experiment, "close"
+                ):
+                    logger.experiment.close()
 
     def _get_reward(
         self, group: str, td: TensorDictBase, remove_agent_dim: bool = False
@@ -415,12 +418,43 @@ class JsonWriter:
         seed: int,
     ):
         self.path = Path(folder) / Path(name)
-        self.run_data = {"absolute_metrics": {}}
-        self.data = {
-            environment_name: {
-                task_name: {algorithm_name: {f"seed_{seed}": self.run_data}}
+
+        # Fix overwriting the JSON file when resuming an experiment by
+        # checking if the file already exists and loading it if it does
+        # Check if the JSON file already exists when experiment is resumed
+        if self.path.exists():
+            with open(self.path, "r") as f:
+                self.data = json.load(f)
+
+            # Navigate the nested dictionary and
+            # initialize missing keys if necessary
+            if environment_name not in self.data:
+                self.data[environment_name] = {}
+            if task_name not in self.data[environment_name]:
+                self.data[environment_name][task_name] = {}
+            if algorithm_name not in self.data[environment_name][task_name]:
+                self.data[environment_name][task_name][algorithm_name] = {}
+            if (
+                f"seed_{seed}"
+                not in self.data[environment_name][task_name][algorithm_name]
+            ):
+                self.data[environment_name][task_name][algorithm_name][
+                    f"seed_{seed}"
+                ] = {"absolute_metrics": {}}
+
+            # Link the run_data pointer to the existing historical data
+            self.run_data = self.data[environment_name][task_name][algorithm_name][
+                f"seed_{seed}"
+            ]
+
+        else:
+            # Standard initialization for a fresh experiment
+            self.run_data = {"absolute_metrics": {}}
+            self.data = {
+                environment_name: {
+                    task_name: {algorithm_name: {f"seed_{seed}": self.run_data}}
+                }
             }
-        }
 
     def write(
         self, total_frames: int, metrics: Dict[str, List[Tensor]], evaluation_step: int

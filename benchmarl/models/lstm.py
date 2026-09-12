@@ -151,7 +151,7 @@ class MultiAgentLSTM(torch.nn.Module):
             )
             # Remove all parameters
             TensorDict.from_module(self._empty_lstm).data.to("meta").to_module(
-                self._empty_lstm
+                self._empty_lstm, preserve_module_state=False
             )
 
     def forward(
@@ -253,7 +253,7 @@ class MultiAgentLSTM(torch.nn.Module):
                     (-2, -3, -3),
                 )(self.params, input, is_init, h_0, c_0)
         else:
-            with self.params.to_module(self._empty_lstm):
+            with self.params.to_module(self._empty_lstm, preserve_module_state=False):
                 if self.centralised:
                     output, h_n, c_n = self._empty_lstm(input, is_init, h_0, c_0)
                 else:
@@ -267,7 +267,7 @@ class MultiAgentLSTM(torch.nn.Module):
 
     def vmap_func_module(self, module, *args, **kwargs):
         def exec_module(params, *input):
-            with params.to_module(module):
+            with params.to_module(module, preserve_module_state=False):
                 return module(*input)
 
         return torch.vmap(exec_module, *args, **kwargs)
