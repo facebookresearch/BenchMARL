@@ -119,7 +119,7 @@ class Qmix(Algorithm):
                 (group, "action_value"),
                 (group, "chosen_action_value"),
             ],
-            spec=self.action_spec[group, "action"],
+            spec=Composite({group: self.action_spec[group]}),
             action_space=None,
         )
 

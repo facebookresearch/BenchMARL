@@ -24,7 +24,6 @@ from utils import _has_urbanmarl
 from utils_experiment import ExperimentUtils
 
 
-
 @pytest.mark.skipif(not _has_urbanmarl, reason="UrbanMARL not found")
 class TestUrbanMARL:
     @pytest.mark.parametrize("algo_config", algorithm_config_registry.values())
@@ -54,7 +53,7 @@ class TestUrbanMARL:
             and not algo_config.supports_continuous_actions()
         ):
             pytest.skip()
-        
+
         experiment_config.prefer_continuous_actions = prefer_continuous
         experiment_config.render = False
         experiment = Experiment(
@@ -115,9 +114,7 @@ class TestUrbanMARL:
         )
         experiment.run()
 
-    @pytest.mark.parametrize(
-        "algo_config", [IppoConfig, IsacConfig, IddpgConfig]
-    )
+    @pytest.mark.parametrize("algo_config", [IppoConfig, IsacConfig, IddpgConfig])
     @pytest.mark.parametrize("task", [UrbanEnvTask.UAV_NAVIGATION])
     def test_gnn(
         self,
@@ -136,7 +133,7 @@ class TestUrbanMARL:
             and not algo_config.supports_continuous_actions()
         ):
             pytest.skip()
-        
+
         experiment_config.render = False
         experiment = Experiment(
             algorithm_config=algo_config.get_from_yaml(),
@@ -174,7 +171,7 @@ class TestUrbanMARL:
             and not algo_config.supports_continuous_actions()
         ):
             pytest.skip()
-        
+
         experiment_config.render = False
         experiment = Experiment(
             algorithm_config=algo_config,
@@ -213,7 +210,7 @@ class TestUrbanMARL:
             and not algo_config.supports_continuous_actions()
         ):
             pytest.skip()
-        
+
         experiment = Experiment(
             algorithm_config=algo_config,
             model_config=lstm_mlp_sequence_config,
@@ -290,7 +287,7 @@ class TestUrbanMARL:
             task=task,
         )
         experiment.run()
-        
+
     @pytest.mark.parametrize("algo_config", [MasacConfig])
     @pytest.mark.parametrize("task", list(UrbanEnvTask))
     def test_render(
@@ -319,4 +316,3 @@ class TestUrbanMARL:
             task=task,
         )
         experiment.run()
-

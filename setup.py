@@ -52,7 +52,7 @@ setup(
         "tqdm",
         "hydra-core",
         "torchvision",
-        "av<14",
+        "av",
         "numpy",
     ],
     extras_require={

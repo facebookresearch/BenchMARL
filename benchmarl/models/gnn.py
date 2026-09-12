@@ -285,7 +285,7 @@ class Gnn(Model):
                 if pos.shape[-1] != self.pos_features - 1:
                     raise ValueError(
                         f"Position key in tensordict is {pos.shape[-1]}-dimensional, "
-                        f"while model was configured with pos_features={self.pos_features-1}"
+                        f"while model was configured with pos_features={self.pos_features - 1}"
                     )
             else:
                 pos = tensordict.get(self._full_position_key)

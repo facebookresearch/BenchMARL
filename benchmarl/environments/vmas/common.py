@@ -13,6 +13,24 @@ from torchrl.envs.libs.vmas import VmasEnv
 from benchmarl.environments.common import Task, TaskClass
 from benchmarl.utils import DEVICE_TYPING
 
+try:
+    import matplotlib
+    import matplotlib.cm as cm
+
+    if not hasattr(cm, "get_cmap"):
+
+        def _get_cmap(name=None, lut=None):
+            cmap = (
+                matplotlib.colormaps[name]
+                if name is not None
+                else matplotlib.colormaps["viridis"]
+            )
+            return cmap.resampled(lut) if lut is not None else cmap
+
+        cm.get_cmap = _get_cmap
+except ImportError:
+    pass
+
 
 class VmasClass(TaskClass):
     def get_env_fun(

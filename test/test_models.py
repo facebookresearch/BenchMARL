@@ -108,7 +108,7 @@ def test_loading_sequence_models(model_name, intermediate_size=10):
                 f"model/layers@model.layers.l1={model_name}",
                 f"model/layers@model.layers.l2={model_name}",
                 f"+model/layers@model.layers.l3={model_name}",
-                f"model.intermediate_sizes={[intermediate_size,intermediate_size]}",
+                f"model.intermediate_sizes={[intermediate_size, intermediate_size]}",
             ],
         )
         hydra_model_config = load_model_config_from_hydra(cfg.model)
